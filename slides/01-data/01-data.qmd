@@ -1,8 +1,14 @@
 ---
-title: "What is Data Science? \\ What is Data?"
+title: "Data"
 format: revealjs
 editor: visual
 ---
+
+## Outline
+- What is data science?
+- What is data?
+- The data science process.
+
 
 ## Quarto
 
