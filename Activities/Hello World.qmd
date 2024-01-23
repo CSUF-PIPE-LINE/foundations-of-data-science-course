@@ -1,0 +1,155 @@
+---
+title: "Hello World!"
+author: "Your name here!"
+format: html
+editor: visual
+---
+
+## Hello World!
+
+In this activity, we are going to create our first Quarto document. Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+First we will insert an executable code chunk:
+
+To run the chunk, click the green arrow ("Play" button) to the right of the chunk. You should see the output immediately below the chunk.
+
+We can do some other cool stuff in Quarto. Let's write a quadratic equation using $\LaTeX$:
+
+We can also make text **bold** or *italicized* by clicking the appropriate icon in the text editor. We can even insert emojis:
+
+## Basic Functions
+
+You've already seen one basic function, `print`. Let's look at some other basic capabilities of R. You can use R as a simple calculator:
+
+```{r}
+#| label: R is a calculator
+
+2 + 8
+13 * 10
+```
+
+We can also create *variables* and assign numbers to them, then do arithmetic with the numbers:
+
+```{r}
+#| label: calculations part 2
+ 
+x <- 3
+y <- 7
+x + y
+y^x
+```
+
+We use an *assignment operator* `<-` to assign the code on the right to the variable name on the left.
+
+When you ran the last chunk, you should have seen two variables appear in your *Environment* pane, `x` and `y`, with the values you assigned to them. This pane will keep track of all of the variables we have created and the values we have assigned to them.
+
+We don't need to stop at one number. We can create *vectors* of numbers and do arithmetic with them:
+
+```{r}
+#| label: calculations part 3
+
+x <- c(1, 2, 3)
+y <- c(4, 5, 6)
+
+x + y
+x/y
+```
+
+Notice the following:
+
+1.  The values of `x` and `y` have been overwritten (they take the new values we gave them). This will happen every time we define the same variable and run a different chunk. When we create the final document to turn in, it is very important to order your chunks so that the variables are overwritten in the correct order. Typically, data scientists don't like dealing with this hassle, so they'll use different variable names. (It's not uncommon for me to have variables named `data1`, `data2`, etc.)
+2.  Each variable `x` and `y` now has a variable *type* (in this case "num" representing a numerical variable).
+3.  R performed *element-wise* calculations. That is, when we ran `x + y`, R added the first number in each vector together, then the second number in each vector, then the third number in each vector.
+
+R can use many different types of variables. We can create a matrix in R:
+
+```{r}
+#| label: create a matrix
+
+m <- matrix(
+  c(1, 2, 3, 4, 5, 6, 7, 8, 9),
+  nrow = 3,
+  ncol = 3
+)
+print(m)
+```
+
+Notice the following:
+
+1.  A new section in the *Environment* pane has been created, labeled "Data", and our variable `m` is now listed in that section instead. Generally, any time we create an object with 2 or more dimensions, it will get listed in *Data* rather than *Values*.
+2.  If we do not include quotation marks inside `print`, R will assume that whatever we typed inside `print` is a variable, then print out whatever we assigned to that variable. This means we can assign "Hello World!" to a variable and print it:
+
+```{r}
+#| label: print hello world again
+
+hello <- "Hello World!"
+print(hello)
+```
+
+## Plotting a Mathematical Function Using `curve`
+
+[Source](http://www.countbio.com/web_pages/left_object/R_for_biology/R_fundamentals/curve_to_function_R.html)
+
+```{r}
+curve(expr = 3*x^2 + x, 
+      from=1, to=10, 
+      n=300, 
+      xlab="x-value", ylab="y-value", 
+      col="blue", 
+      lwd=2, 
+      main="Plot of (3x^2 + x)")
+```
+
+### User-Defined Functions
+
+To create a function, we define the function name and arguments, then write the code the function should execute between curly braces:
+
+```{r}
+#| label: sin x plus cos x
+
+sin_plus_cos <- function(x){
+  y <- sin(x) + cos(x)
+  return(y)
+}
+```
+
+A few very important things to point out here:
+
+1.  The function to define a function is `function`.
+2.  When we name our function, we use a descriptive name that indicates *what the function is designed to do*. If the function name has multiple words, we put an underscore `_` in between the words. Make the function name as long as you need to specify what it does, but don't overdo it.
+3.  The last line of the function should almost always include `return`, specifying what the function should return. Strictly speaking, R will return whatever it executes on the very last line of the function, but it's much better practice to explicitly indicate what is being returned.
+4.  When we run this chunk, our function is shown in a new section of the *Environment* pane named "Functions". The function itself is not executed. To execute our function, we must call it:
+
+```{r}
+#| label: call a function
+
+sin_plus_cos(y)
+```
+
+### Environments
+
+Notice that we have a variable `y` in our Environment and we also defined a variable `y` inside our function. How does R not get these two things confused?
+
+The Environment we are storing variables in is called the Global Environment. When R runs the function, it creates a *new* environment that exists only while the function runs. Notice that our input variable was called `x`. So when we execute `sin_plus_cos(y)`, R actually does the following:
+
+1.  Create a temporary environment that exists only for the function and will disappear once we return something
+2.  Look in our Global Environment for the variable `y`, and assign it to the variable `x` in the temporary environment!
+3.  Create and assign values to the variable `y` in the temporary environment
+4.  Return the value of `y` in the temporary environment
+
+There are a lot of weird quirks in R surrounding functions and environments, and we're mostly going to ignore them unless (or until) doing so would cause our R code to do something different than what we want. But you can do things like pass a function to another function:
+
+```{r}
+#| label: plotting our custom function
+curve(sin_plus_cos, 
+      from=0, to=2*pi, 
+      n=200, 
+      xlab="Y", ylab="X", 
+      col="blue",
+      lwd=2, 
+      main="Plot of  Y = sin(X)+cos(X)")
+```
+
+## Rendering and Submitting
+
+When you are ready to create an output file, click the *Render* button. For assignments in this class, we recommend rendering as HTML and then manually printing/saving the file as a pdf. There are *a lot* of fiddly bits that go into directly rendering a pdf and we generally don't recommend it until you have enough experience with both R Studio and $\LaTeX$ to feel confident that you can both diagnose and fix the inevitable rendering issue.
