@@ -5,9 +5,49 @@ editor: visual
 ---
 
 ## Outline
-- What is data science?
-- What is data?
-- The data science process.
+
+-   What is data science?
+-   What is data?
+-   The data science process.
+
+## Icebreaker Discussion
+
+"Data science" means different things to different people. With your group, discuss:
+
+-   "Buzzwords" that come to mind when you think about data science
+-   Data Science components/disciplines that you know about or have heard about
+-   What data science means to you and what attracted you to signing up for this class
+
+## What is Data?
+Data is a byproduct of careful decisions about who/what to observe, what to record about them, and how (if at all) to manipulate them
+
+## What Is Data Science?
+
+-   There is no singularly agreed-upon definition of data science.
+
+-   A modern discipline - the job "data scientist" has been around for less than 20 years
+
+-   One possible definition: data science is the *craft* of extracting *relevant insights* from data *at scale*
+
+-   There are *wrong* answers but there is not always a singular *right* one
+
+
+## Three Pillars of Data Science
+
+-   Application Domain: Provides the *motivation* for collecting and analyzing data and the relevant *context* for what the data means
+
+-   Mathematics and Statistics: Provides the *conceptual* tools and thought processes that guide *how* we should collect and analyze data
+
+-   Computer Science: Provides the *computational* tools and thought processes that allow us to collect and analyze data *at scale*
+
+## Jack of All Trades, Master of Some
+
+-   Very few people (certainly not undergraduates!) are experts in all three areas
+
+-   A data scientist typically specializes in one of these areas and "knows enough" about the others to talk intelligently with experts
+
+-   By the end of this course, you will have started critical reflection about which areas you feel strongest in and are most motivated to continue developing in
+
 
 
 ## Quarto
