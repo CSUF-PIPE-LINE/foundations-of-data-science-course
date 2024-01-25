@@ -31,6 +31,10 @@ Data is a byproduct of careful decisions about who/what to observe, what to reco
 
 -   There are *wrong* answers but there is not always a singular *right* one
 
+## Data science brings together {.center}
+<center>Application - Computer Science - Mathematics - Statistics <center>
+
+
 
 ## Three Pillars of Data Science
 
@@ -49,22 +53,143 @@ Data is a byproduct of careful decisions about who/what to observe, what to reco
 -   By the end of this course, you will have started critical reflection about which areas you feel strongest in and are most motivated to continue developing in
 
 
+## The Data Science Pipeline
+-   The Data Science Pipeline is a six-step process that most data science projects follow
 
-## Quarto
+-   The pipeline is not unidirectional: often insights in a later step lead to refinement in an earlier step, or new data comes in that requires us to look at an earlier step with fresh eyes
 
-Quarto enables you to weave together content and executable code into a finished presentation. To learn more about Quarto presentations see <https://quarto.org/docs/presentations/>.
 
-## Bullets
+## The Data Science Pipeline
 
-When you click the **Render** button a document will be generated that includes:
+Step 1: Science and Context
 
--   Content authored with markdown
--   Output from executable code
+Step 2: Design and Data Collection
 
-## Code
+Step 3: Data Massaging
 
-When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
+Step 4: Exploratory Data Analysis
 
-```{r}
-1 + 1
-```
+Step 5: Modeling
+
+Step 6: Optimization of Decisions and Communication
+
+## Step 1: Science and Context
+-   Critical aspect in being able to successfully complete a data science project 
+
+-   Encourage students to learn more about the application area
+Additionally, having students learning more about the context of the data, helps them in formalizing the objectives of the problem
+
+## It is critical to have well-defined research questions/objectives/goals
+-   It is critical to have well-defined research questions/objectives/goals
+
+-   Research questions are often messy and vague
+
+-   Every discipline has strategies for refining the question
+
+-   In data science, refine the question by rephrasing it in terms of the variables
+
+
+<center>“Far better an approximate answer to the right question, which is often vague,  than an exact answer to the wrong question, which can always be made precise.” -  John Tukey<center>
+
+
+## Step 2: Design and Data Collection
+-   Data is often produced/generated, not naturally occurring
+
+      +   Collected data comes in many forms: Spreadsheet, text, image, audio, video, etc.
+      
+      +   Data can be collected manually (by humans) or automatically (using sensors and/or computers)
+      
+-   It is a byproduct of careful decisions about who/what to observe, what to record about them, and how (if at all) to manipulate them
+
+## Data scientists use statistical thinking to design studies attending to:
+-   Bias: systematic deviations from the truth
+
+-   Variance: non-systematic deviations due to uncertainty or natural variability
+
+### Example: Design and Data Collection Fail … Customer satisfaction survey using a phone keypad
+
+## Step 3: Software and Data Massaging
+-   Cleaning - Data is messy
+
+      + Values may be incorrectly reported or transcribed
+      
+      + Values may be missing
+      
+      + Artifacts from processing
+
+## Step 3: Software and Data Massaging
+-   Wrangling
+
+      + Format the data in a way that is conducive to answering the question
+      
+      + Subset rows/columns of a dataset to include only what you need
+      
+      + Create new variables that describe what you’re actually interested in
+      
+      + Merge datasets containing different information
+
+## Step 4: Exploratory Data Analysis (EDA)
+Strategically create graphical and numerical summaries that provide insight into the defined research question
+
+-   Always start by exploring variables of interest individually
+
+-   Move on to exploring relationships between two variables
+
+-   Gradually increase complexity
+
+<center>**A “picture” is worth a thousand words** <center>
+
+
+
+## Step 4: Exploratory Data Analysis (EDA)
+-   Search for patterns (or lack thereof) and unusual values that can provide a fuller account of the context being investigated
+
+-   EDA is detective work
+
+-   “Good” EDA should lead to patterns/trends/relationships that may motivate modeling aspects
+
+## Step 5: Modeling
+-   Often we start with very simple models and gradually build up complexity
+
+-   Modeling is an iterative process, we don’t expect to be right the first time
+
+-   Data is “noisy” - there are sources of uncertainty and variability we may not even begin to fathom
+
+-   Modeling allows us to extract a “signal” (trend or pattern) from data
+
+## Step 5: Modeling - Why do we model?
+-   Inferential models: To build a mechanism for exploring the effect of predictors on the response
+
+-   Predictive models: Use the collective information from the predictors to build reliable predictions for the response variable of upcoming observations
+
+## Step 6: Decisions and Communication
+<center>
+Which comes first?
+
+What decision was made? 
+
+Why was it made? 
+
+What evidence supports this decision?
+<center>
+
+## Step 6: Decisions and Communication
+
+#### Decisions: Non - Technical
+
+-   Did you even ask the right question in the first place?
+
+-   How will disseminating your results, or implementing your recommendations, change what the data might look like in the future?
+
+#### Decisions: Technical
+
+-   What assumptions are baked into your analysis and how sensitive are you to those assumptions being wrong?
+
+<center>Use the insights gained from EDA and modeling to optimize decisions <center>
+
+
+-   Data ethics
+
+-   Data privacy
+
+-   Issues of transparency and reproducibility

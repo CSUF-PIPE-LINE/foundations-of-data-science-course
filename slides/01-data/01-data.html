@@ -338,30 +338,195 @@
 <li>The data science process.</li>
 </ul>
 </section>
-<section id="quarto" class="slide level2">
-<h2>Quarto</h2>
-<p>Quarto enables you to weave together content and executable code into a finished presentation. To learn more about Quarto presentations see <a href="https://quarto.org/docs/presentations/" class="uri">https://quarto.org/docs/presentations/</a>.</p>
-</section>
-<section id="bullets" class="slide level2">
-<h2>Bullets</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes:</p>
+<section id="icebreaker-discussion" class="slide level2">
+<h2>Icebreaker Discussion</h2>
+<p>“Data science” means different things to different people. With your group, discuss:</p>
 <ul>
-<li>Content authored with markdown</li>
-<li>Output from executable code</li>
+<li>“Buzzwords” that come to mind when you think about data science</li>
+<li>Data Science components/disciplines that you know about or have heard about</li>
+<li>What data science means to you and what attracted you to signing up for this class</li>
 </ul>
 </section>
-<section id="code" class="slide level2">
-<h2>Code</h2>
-<p>When you click the <strong>Render</strong> button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
-</div>
-</div>
+<section id="what-is-data" class="slide level2">
+<h2>What is Data?</h2>
+<p>Data is a byproduct of careful decisions about who/what to observe, what to record about them, and how (if at all) to manipulate them</p>
+</section>
+<section id="what-is-data-science" class="slide level2">
+<h2>What Is Data Science?</h2>
+<ul>
+<li><p>There is no singularly agreed-upon definition of data science.</p></li>
+<li><p>A modern discipline - the job “data scientist” has been around for less than 20 years</p></li>
+<li><p>One possible definition: data science is the <em>craft</em> of extracting <em>relevant insights</em> from data <em>at scale</em></p></li>
+<li><p>There are <em>wrong</em> answers but there is not always a singular <em>right</em> one</p></li>
+</ul>
+</section>
+<section id="data-science-brings-together" class="slide level2 center">
+<h2>Data science brings together</h2>
+<center>
+Application - Computer Science - Mathematics - Statistics
+<center>
+</center></center></section>
+<section id="three-pillars-of-data-science" class="slide level2">
+<h2>Three Pillars of Data Science</h2>
+<ul>
+<li><p>Application Domain: Provides the <em>motivation</em> for collecting and analyzing data and the relevant <em>context</em> for what the data means</p></li>
+<li><p>Mathematics and Statistics: Provides the <em>conceptual</em> tools and thought processes that guide <em>how</em> we should collect and analyze data</p></li>
+<li><p>Computer Science: Provides the <em>computational</em> tools and thought processes that allow us to collect and analyze data <em>at scale</em></p></li>
+</ul>
+</section>
+<section id="jack-of-all-trades-master-of-some" class="slide level2">
+<h2>Jack of All Trades, Master of Some</h2>
+<ul>
+<li><p>Very few people (certainly not undergraduates!) are experts in all three areas</p></li>
+<li><p>A data scientist typically specializes in one of these areas and “knows enough” about the others to talk intelligently with experts</p></li>
+<li><p>By the end of this course, you will have started critical reflection about which areas you feel strongest in and are most motivated to continue developing in</p></li>
+</ul>
+</section>
+<section id="the-data-science-pipeline" class="slide level2">
+<h2>The Data Science Pipeline</h2>
+<ul>
+<li><p>The Data Science Pipeline is a six-step process that most data science projects follow</p></li>
+<li><p>The pipeline is not unidirectional: often insights in a later step lead to refinement in an earlier step, or new data comes in that requires us to look at an earlier step with fresh eyes</p></li>
+</ul>
+</section>
+<section id="the-data-science-pipeline-1" class="slide level2">
+<h2>The Data Science Pipeline</h2>
+<p>Step 1: Science and Context</p>
+<p>Step 2: Design and Data Collection</p>
+<p>Step 3: Data Massaging</p>
+<p>Step 4: Exploratory Data Analysis</p>
+<p>Step 5: Modeling</p>
+<p>Step 6: Optimization of Decisions and Communication</p>
+</section>
+<section id="step-1-science-and-context" class="slide level2">
+<h2>Step 1: Science and Context</h2>
+<ul>
+<li><p>Critical aspect in being able to successfully complete a data science project</p></li>
+<li><p>Encourage students to learn more about the application area Additionally, having students learning more about the context of the data, helps them in formalizing the objectives of the problem</p></li>
+</ul>
+</section>
+<section id="it-is-critical-to-have-well-defined-research-questionsobjectivesgoals" class="slide level2">
+<h2>It is critical to have well-defined research questions/objectives/goals</h2>
+<ul>
+<li><p>It is critical to have well-defined research questions/objectives/goals</p></li>
+<li><p>Research questions are often messy and vague</p></li>
+<li><p>Every discipline has strategies for refining the question</p></li>
+<li><p>In data science, refine the question by rephrasing it in terms of the variables</p></li>
+</ul>
+<center>
+“Far better an approximate answer to the right question, which is often vague, than an exact answer to the wrong question, which can always be made precise.” - John Tukey
+<center>
+</center></center></section>
+<section id="step-2-design-and-data-collection" class="slide level2">
+<h2>Step 2: Design and Data Collection</h2>
+<ul>
+<li><p>Data is often produced/generated, not naturally occurring</p>
+<ul>
+<li><p>Collected data comes in many forms: Spreadsheet, text, image, audio, video, etc.</p></li>
+<li><p>Data can be collected manually (by humans) or automatically (using sensors and/or computers)</p></li>
+</ul></li>
+<li><p>It is a byproduct of careful decisions about who/what to observe, what to record about them, and how (if at all) to manipulate them</p></li>
+</ul>
+</section>
+<section id="data-scientists-use-statistical-thinking-to-design-studies-attending-to" class="slide level2">
+<h2>Data scientists use statistical thinking to design studies attending to:</h2>
+<ul>
+<li><p>Bias: systematic deviations from the truth</p></li>
+<li><p>Variance: non-systematic deviations due to uncertainty or natural variability</p></li>
+</ul>
+<h3 id="example-design-and-data-collection-fail-customer-satisfaction-survey-using-a-phone-keypad">Example: Design and Data Collection Fail … Customer satisfaction survey using a phone keypad</h3>
+</section>
+<section id="step-3-software-and-data-massaging" class="slide level2">
+<h2>Step 3: Software and Data Massaging</h2>
+<ul>
+<li><p>Cleaning - Data is messy</p>
+<ul>
+<li><p>Values may be incorrectly reported or transcribed</p></li>
+<li><p>Values may be missing</p></li>
+<li><p>Artifacts from processing</p></li>
+</ul></li>
+</ul>
+</section>
+<section id="step-3-software-and-data-massaging-1" class="slide level2">
+<h2>Step 3: Software and Data Massaging</h2>
+<ul>
+<li><p>Wrangling</p>
+<ul>
+<li><p>Format the data in a way that is conducive to answering the question</p></li>
+<li><p>Subset rows/columns of a dataset to include only what you need</p></li>
+<li><p>Create new variables that describe what you’re actually interested in</p></li>
+<li><p>Merge datasets containing different information</p></li>
+</ul></li>
+</ul>
+</section>
+<section id="step-4-exploratory-data-analysis-eda" class="slide level2">
+<h2>Step 4: Exploratory Data Analysis (EDA)</h2>
+<p>Strategically create graphical and numerical summaries that provide insight into the defined research question</p>
+<ul>
+<li><p>Always start by exploring variables of interest individually</p></li>
+<li><p>Move on to exploring relationships between two variables</p></li>
+<li><p>Gradually increase complexity</p></li>
+</ul>
+<center>
+<strong>A “picture” is worth a thousand words</strong>
+<center>
+</center></center></section>
+<section id="step-4-exploratory-data-analysis-eda-1" class="slide level2">
+<h2>Step 4: Exploratory Data Analysis (EDA)</h2>
+<ul>
+<li><p>Search for patterns (or lack thereof) and unusual values that can provide a fuller account of the context being investigated</p></li>
+<li><p>EDA is detective work</p></li>
+<li><p>“Good” EDA should lead to patterns/trends/relationships that may motivate modeling aspects</p></li>
+</ul>
+</section>
+<section id="step-5-modeling" class="slide level2">
+<h2>Step 5: Modeling</h2>
+<ul>
+<li><p>Often we start with very simple models and gradually build up complexity</p></li>
+<li><p>Modeling is an iterative process, we don’t expect to be right the first time</p></li>
+<li><p>Data is “noisy” - there are sources of uncertainty and variability we may not even begin to fathom</p></li>
+<li><p>Modeling allows us to extract a “signal” (trend or pattern) from data</p></li>
+</ul>
+</section>
+<section id="step-5-modeling---why-do-we-model" class="slide level2">
+<h2>Step 5: Modeling - Why do we model?</h2>
+<ul>
+<li><p>Inferential models: To build a mechanism for exploring the effect of predictors on the response</p></li>
+<li><p>Predictive models: Use the collective information from the predictors to build reliable predictions for the response variable of upcoming observations</p></li>
+</ul>
+</section>
+<section id="step-6-decisions-and-communication" class="slide level2">
+<h2>Step 6: Decisions and Communication</h2>
+<center>
+<p>Which comes first?</p>
+<p>What decision was made?</p>
+<p>Why was it made?</p>
+What evidence supports this decision?
+<center>
+</center></center></section>
+<section id="step-6-decisions-and-communication-1" class="slide level2">
+<h2>Step 6: Decisions and Communication</h2>
+<h4 id="decisions-non---technical">Decisions: Non - Technical</h4>
+<ul>
+<li><p>Did you even ask the right question in the first place?</p></li>
+<li><p>How will disseminating your results, or implementing your recommendations, change what the data might look like in the future?</p></li>
+</ul>
+<h4 id="decisions-technical">Decisions: Technical</h4>
+<ul>
+<li>What assumptions are baked into your analysis and how sensitive are you to those assumptions being wrong?</li>
+</ul>
+<center>
+Use the insights gained from EDA and modeling to optimize decisions
+<center>
+<ul>
+<li><p>Data ethics</p></li>
+<li><p>Data privacy</p></li>
+<li><p>Issues of transparency and reproducibility</p></li>
+</ul>
 <div class="footer footer-default">
 
 </div>
-</section>
+</center></center></section>
     </div>
   </div>
 
@@ -573,44 +738,6 @@
         ]
       });
     </script>
-    
-    <script>
-      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
-      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
-      // slide changes (different for each slide format).
-      (function () {
-        // dispatch for htmlwidgets
-        function fireSlideEnter() {
-          const event = window.document.createEvent("Event");
-          event.initEvent("slideenter", true, true);
-          window.document.dispatchEvent(event);
-        }
-
-        function fireSlideChanged(previousSlide, currentSlide) {
-          fireSlideEnter();
-
-          // dispatch for shiny
-          if (window.jQuery) {
-            if (previousSlide) {
-              window.jQuery(previousSlide).trigger("hidden");
-            }
-            if (currentSlide) {
-              window.jQuery(currentSlide).trigger("shown");
-            }
-          }
-        }
-
-        // hookup for slidy
-        if (window.w3c_slidy) {
-          window.w3c_slidy.add_observer(function (slide_num) {
-            // slide_num starts at position 1
-            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
-          });
-        }
-
-      })();
-    </script>
-
     <script id="quarto-html-after-body" type="application/javascript">
     window.document.addEventListener("DOMContentLoaded", function (event) {
       const toggleBodyColorMode = (bsSheetEl) => {
