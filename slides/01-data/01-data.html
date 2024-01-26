@@ -8,7 +8,7 @@
 <link href="01-data_files/libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="01-data_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="01-data_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.3.450">
+  <meta name="generator" content="quarto-1.3.353">
 
   <title>Data</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -349,7 +349,7 @@
 </section>
 <section id="what-is-data" class="slide level2">
 <h2>What is Data?</h2>
-<p>Data is a byproduct of careful decisions about who/what to observe, what to record about them, and how (if at all) to manipulate them</p>
+<p>Data is a byproduct of <em>human decisions</em> about who/what to observe, what to record about them, and how (if at all) to manipulate them</p>
 </section>
 <section id="what-is-data-science" class="slide level2">
 <h2>What Is Data Science?</h2>
@@ -363,7 +363,7 @@
 <section id="data-science-brings-together" class="slide level2 center">
 <h2>Data science brings together</h2>
 <center>
-Application - Computer Science - Mathematics - Statistics
+<p>Application - Computer Science - Mathematics - Statistics</p>
 <center>
 </center></center></section>
 <section id="three-pillars-of-data-science" class="slide level2">
@@ -389,73 +389,84 @@ Application - Computer Science - Mathematics - Statistics
 <li><p>The pipeline is not unidirectional: often insights in a later step lead to refinement in an earlier step, or new data comes in that requires us to look at an earlier step with fresh eyes</p></li>
 </ul>
 </section>
-<section id="the-data-science-pipeline-1" class="slide level2">
-<h2>The Data Science Pipeline</h2>
-<p>Step 1: Science and Context</p>
-<p>Step 2: Design and Data Collection</p>
-<p>Step 3: Data Massaging</p>
-<p>Step 4: Exploratory Data Analysis</p>
-<p>Step 5: Modeling</p>
-<p>Step 6: Optimization of Decisions and Communication</p>
+<section id="steps-in-the-data-science-pipeline" class="slide level2">
+<h2>Steps in the Data Science Pipeline</h2>
+<ol type="1">
+<li><p>Science and Context</p></li>
+<li><p>Design and Data Collection</p></li>
+<li><p>Data Massaging</p></li>
+<li><p>Exploratory Data Analysis</p></li>
+<li><p>Modeling</p></li>
+<li><p>Communication and Optimization of Decisions</p></li>
+</ol>
 </section>
 <section id="step-1-science-and-context" class="slide level2">
 <h2>Step 1: Science and Context</h2>
 <ul>
-<li><p>Critical aspect in being able to successfully complete a data science project</p></li>
-<li><p>Encourage students to learn more about the application area Additionally, having students learning more about the context of the data, helps them in formalizing the objectives of the problem</p></li>
+<li><p>Research questions are often messy and vague</p></li>
+<li><p>Learning more about the problem’s context helps us convert the problem into one we can approach using data science</p></li>
 </ul>
 </section>
 <section id="it-is-critical-to-have-well-defined-research-questionsobjectivesgoals" class="slide level2">
 <h2>It is critical to have well-defined research questions/objectives/goals</h2>
-<ul>
-<li><p>It is critical to have well-defined research questions/objectives/goals</p></li>
-<li><p>Research questions are often messy and vague</p></li>
-<li><p>Every discipline has strategies for refining the question</p></li>
-<li><p>In data science, refine the question by rephrasing it in terms of the variables</p></li>
-</ul>
 <center>
-“Far better an approximate answer to the right question, which is often vague, than an exact answer to the wrong question, which can always be made precise.” - John Tukey
+<p>“Far better an approximate answer to the right question, which is often vague, than an exact answer to the wrong question, which can always be made precise.” - John Tukey</p>
 <center>
 </center></center></section>
 <section id="step-2-design-and-data-collection" class="slide level2">
 <h2>Step 2: Design and Data Collection</h2>
 <ul>
-<li><p>Data is often produced/generated, not naturally occurring</p>
+<li><p>Collected data comes in many forms</p>
 <ul>
-<li><p>Collected data comes in many forms: Spreadsheet, text, image, audio, video, etc.</p></li>
-<li><p>Data can be collected manually (by humans) or automatically (using sensors and/or computers)</p></li>
+<li>Spreadsheet, text, image, audio, video, etc.</li>
 </ul></li>
-<li><p>It is a byproduct of careful decisions about who/what to observe, what to record about them, and how (if at all) to manipulate them</p></li>
+<li><p>Data can be collected manually (by humans) or automatically (using sensors and/or computers)</p></li>
 </ul>
 </section>
-<section id="data-scientists-use-statistical-thinking-to-design-studies-attending-to" class="slide level2">
-<h2>Data scientists use statistical thinking to design studies attending to:</h2>
+<section id="statistical-concerns-in-design-and-data-collection" class="slide level2">
+<h2>Statistical Concerns in Design and Data Collection</h2>
 <ul>
 <li><p>Bias: systematic deviations from the truth</p></li>
 <li><p>Variance: non-systematic deviations due to uncertainty or natural variability</p></li>
 </ul>
-<h3 id="example-design-and-data-collection-fail-customer-satisfaction-survey-using-a-phone-keypad">Example: Design and Data Collection Fail … Customer satisfaction survey using a phone keypad</h3>
 </section>
-<section id="step-3-software-and-data-massaging" class="slide level2">
-<h2>Step 3: Software and Data Massaging</h2>
+<section id="non-statistical-concerns-in-design-and-data-collection" class="slide level2">
+<h2>Non-Statistical Concerns in Design and Data Collection</h2>
 <ul>
-<li><p>Cleaning - Data is messy</p>
+<li><p>Practicality: time, money, equipment, etc. requirements</p></li>
+<li><p>Ethics: respect for human and animal rights</p></li>
+</ul>
+</section>
+<section id="pay-attention-to-practical-concerns" class="slide level2">
+<h2>Pay Attention to Practical Concerns!</h2>
+<div class="columns">
+<div class="column">
+<p>“On a scale from 0-10, how satisfied are you with our service? Press the corresponding key on your phone keypad.”</p>
+</div><div class="column">
+<p><img data-src="images/phone_keypad.png" alt="Phone Keypad"></p>
+</div>
+</div>
+</section>
+<section id="step-3-data-massaging" class="slide level2">
+<h2>Step 3: Data Massaging</h2>
+<ul>
+<li><p>Data is messy and needs to be cleaned</p>
 <ul>
 <li><p>Values may be incorrectly reported or transcribed</p></li>
 <li><p>Values may be missing</p></li>
-<li><p>Artifacts from processing</p></li>
+<li><p>Artifacts from processing may be present</p></li>
 </ul></li>
 </ul>
 </section>
-<section id="step-3-software-and-data-massaging-1" class="slide level2">
-<h2>Step 3: Software and Data Massaging</h2>
+<section id="data-massaging" class="slide level2">
+<h2>Data Massaging</h2>
 <ul>
-<li><p>Wrangling</p>
+<li><p>Data is unwieldy and needs to be wrangled</p>
 <ul>
-<li><p>Format the data in a way that is conducive to answering the question</p></li>
-<li><p>Subset rows/columns of a dataset to include only what you need</p></li>
-<li><p>Create new variables that describe what you’re actually interested in</p></li>
-<li><p>Merge datasets containing different information</p></li>
+<li><p>Data may not be formatted in a way that is conducive to answering the question</p></li>
+<li><p>Information may be spread across multiple data files</p></li>
+<li><p>You may have a bunch of rows/columns that are irrelevant to your question</p></li>
+<li><p>Important variables may need to be created from existing ones</p></li>
 </ul></li>
 </ul>
 </section>
@@ -468,17 +479,19 @@ Application - Computer Science - Mathematics - Statistics
 <li><p>Gradually increase complexity</p></li>
 </ul>
 <center>
-<strong>A “picture” is worth a thousand words</strong>
+<p><strong>A “picture” is worth a thousand words</strong></p>
 <center>
 </center></center></section>
-<section id="step-4-exploratory-data-analysis-eda-1" class="slide level2">
-<h2>Step 4: Exploratory Data Analysis (EDA)</h2>
+<section id="exploratory-data-analysis-is-a-mindset" class="slide level2">
+<h2>Exploratory Data Analysis Is a Mindset</h2>
 <ul>
 <li><p>Search for patterns (or lack thereof) and unusual values that can provide a fuller account of the context being investigated</p></li>
-<li><p>EDA is detective work</p></li>
 <li><p>“Good” EDA should lead to patterns/trends/relationships that may motivate modeling aspects</p></li>
 </ul>
-</section>
+<center>
+<p>“Exploratory data analysis is detective work” - John Tukey</p>
+<center>
+</center></center></section>
 <section id="step-5-modeling" class="slide level2">
 <h2>Step 5: Modeling</h2>
 <ul>
@@ -488,41 +501,28 @@ Application - Computer Science - Mathematics - Statistics
 <li><p>Modeling allows us to extract a “signal” (trend or pattern) from data</p></li>
 </ul>
 </section>
-<section id="step-5-modeling---why-do-we-model" class="slide level2">
-<h2>Step 5: Modeling - Why do we model?</h2>
+<section id="why-do-we-model" class="slide level2">
+<h2>Why do we model?</h2>
 <ul>
 <li><p>Inferential models: To build a mechanism for exploring the effect of predictors on the response</p></li>
 <li><p>Predictive models: Use the collective information from the predictors to build reliable predictions for the response variable of upcoming observations</p></li>
 </ul>
 </section>
-<section id="step-6-decisions-and-communication" class="slide level2">
-<h2>Step 6: Decisions and Communication</h2>
-<center>
-<p>Which comes first?</p>
-<p>What decision was made?</p>
-<p>Why was it made?</p>
-What evidence supports this decision?
-<center>
-</center></center></section>
-<section id="step-6-decisions-and-communication-1" class="slide level2">
-<h2>Step 6: Decisions and Communication</h2>
-<h4 id="decisions-non---technical">Decisions: Non - Technical</h4>
+<section id="step-6-communication-and-decision-making" class="slide level2">
+<h2>Step 6: Communication and Decision Making</h2>
 <ul>
-<li><p>Did you even ask the right question in the first place?</p></li>
-<li><p>How will disseminating your results, or implementing your recommendations, change what the data might look like in the future?</p></li>
+<li><p>A data science project typically “ends” (or at least restarts) once a <em>conclusion</em> or <em>decision</em> has been communicated</p></li>
+<li><p>Data scientists often do not <em>make</em> the conclusions/decisions, but rather <em>recommend</em> and <em>justify</em> them</p></li>
 </ul>
-<h4 id="decisions-technical">Decisions: Technical</h4>
-<ul>
-<li>What assumptions are baked into your analysis and how sensitive are you to those assumptions being wrong?</li>
-</ul>
+</section>
+<section id="four-critical-questions-for-data-science-communication" class="slide level2">
+<h2>Four Critical Questions for Data Science Communication</h2>
 <center>
-Use the insights gained from EDA and modeling to optimize decisions
+<p>What conclusion/decision should be made?</p>
+<p>What evidence supports it?</p>
+<p>What assumptions have you made?</p>
+<p>How sensitive is your analysis to those assumptions being wrong?</p>
 <center>
-<ul>
-<li><p>Data ethics</p></li>
-<li><p>Data privacy</p></li>
-<li><p>Issues of transparency and reproducibility</p></li>
-</ul>
 <div class="footer footer-default">
 
 </div>
