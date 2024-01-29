@@ -1,5 +1,5 @@
 ---
-title: "Data"
+title: "Introduction to Data"
 format: revealjs
 editor: visual
 ---
@@ -8,7 +8,7 @@ editor: visual
 
 -   What is data science?
 -   What is data?
--   The data science process.
+-   The data science process
 
 ## Icebreaker Discussion
 
@@ -17,10 +17,6 @@ editor: visual
 -   "Buzzwords" that come to mind when you think about data science
 -   Data Science components/disciplines that you know about or have heard about
 -   What data science means to you and what attracted you to signing up for this class
-
-## What is Data?
-
-Data is a byproduct of *human decisions* about who/what to observe, what to record about them, and how (if at all) to manipulate them
 
 ## What Is Data Science?
 
@@ -38,7 +34,7 @@ Data is a byproduct of *human decisions* about who/what to observe, what to reco
 
 Application - Computer Science - Mathematics - Statistics
 
-<center>
+</center>
 
 ## Three Pillars of Data Science
 
@@ -55,6 +51,10 @@ Application - Computer Science - Mathematics - Statistics
 -   A data scientist typically specializes in one of these areas and "knows enough" about the others to talk intelligently with experts
 
 -   By the end of this course, you will have started critical reflection about which areas you feel strongest in and are most motivated to continue developing in
+
+## What is Data?
+
+Data is a byproduct of *human decisions* about who/what to observe, what to record about them, and how (if at all) to manipulate them
 
 ## The Data Science Pipeline
 
@@ -82,13 +82,13 @@ Application - Computer Science - Mathematics - Statistics
 
 -   Learning more about the problem's context helps us convert the problem into one we can approach using data science
 
-## It is critical to have well-defined research questions/objectives/goals
+## It is critical to have well-defined research questions/objectives/goals {.center}
 
 <center>
 
 "Far better an approximate answer to the right question, which is often vague, than an exact answer to the wrong question, which can always be made precise." - John Tukey
 
-<center>
+</center>
 
 ## Step 2: Design and Data Collection
 
@@ -113,18 +113,14 @@ Application - Computer Science - Mathematics - Statistics
 ## Pay Attention to Practical Concerns!
 
 ::: columns
-
-::: {.column}
-
+::: column
 "On a scale from 0-10, how satisfied are you with our service? Press the corresponding key on your phone keypad."
-
 :::
 
-::: {.column}
+::: column
 ![](images/phone_keypad.png){fig-alt="Phone Keypad"}
 :::
-
-::::
+:::
 
 ## Step 3: Data Massaging
 
@@ -143,9 +139,9 @@ Application - Computer Science - Mathematics - Statistics
     -   Data may not be formatted in a way that is conducive to answering the question
 
     -   Information may be spread across multiple data files
-    
-    -   You may have a bunch of rows/columns that are irrelevant to your question 
-    
+
+    -   You may have a bunch of rows/columns that are irrelevant to your question
+
     -   Important variables may need to be created from existing ones
 
 ## Step 4: Exploratory Data Analysis (EDA)
@@ -162,7 +158,7 @@ Strategically create graphical and numerical summaries that provide insight into
 
 **A "picture" is worth a thousand words**
 
-<center>
+</center>
 
 ## Exploratory Data Analysis Is a Mindset
 
@@ -174,7 +170,7 @@ Strategically create graphical and numerical summaries that provide insight into
 
 "Exploratory data analysis is detective work" - John Tukey
 
-<center>
+</center>
 
 ## Step 5: Modeling
 
@@ -186,28 +182,30 @@ Strategically create graphical and numerical summaries that provide insight into
 
 -   Modeling allows us to extract a "signal" (trend or pattern) from data
 
+<center>
+
+**Models should be as simple as possible...but not too simple**
+
+</center>
+
 ## Why do we model?
 
--   Inferential models: To build a mechanism for exploring the effect of predictors on the response
+-   Inferential models: To build a mechanism for describing the effect of predictors on the response
 
--   Predictive models: Use the collective information from the predictors to build reliable predictions for the response variable of upcoming observations
+-   Predictive models: To use the collective information from the predictors to build reliable predictions of the response for upcoming observations
 
 ## Step 6: Communication and Decision Making
 
-- A data science project typically "ends" (or at least restarts) once a *conclusion* or *decision* has been communicated
+-   A data science project typically "ends" (or at least restarts) once a *conclusion* or *decision* has been communicated
 
-- Data scientists often do not *make* the conclusions/decisions, but rather *recommend* and *justify* them
+-   Data scientists often do not *make* the conclusions/decisions, but rather *recommend* and *justify* them
 
 ## Four Critical Questions for Data Science Communication
 
-<center>
+1.  What conclusion/decision should be made?
 
-What conclusion/decision should be made?
+2.  What evidence supports it?
 
-What evidence supports it?
+3.  What assumptions have you made?
 
-What assumptions have you made?
-
-How sensitive is your analysis to those assumptions being wrong?
-
-<center>
+4.  How sensitive is your analysis to assumptions being wrong?
