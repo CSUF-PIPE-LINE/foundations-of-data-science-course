@@ -1,0 +1,402 @@
+---
+title: "Summarizing Categorical Data with R: Student Version"
+format: html
+editor: visual
+---
+
+This is a copy of the lecture slides, but you can write your own notes and run the code yourself.
+
+## Step 1: Load Packages
+
+Every time we create a new analysis notebook, our *very first* code chunk should load the packages we will be using in the analysis
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+library(janitor)
+```
+
+-   Loading `tidyverse` actually loads several packages, most importantly `dplyr` and `ggplot2`
+
+## Step 2: Import Data
+
+-   The second code chunk in our data science notebook should import the data that we will be analyzing
+
+-   We will be working with the *alzheimers* dataset again
+
+-   You may have already loaded this data into RStudio
+
+    -   However, this notebook has no idea that you've loaded the data
+
+    -   This means that when you Render the notebook you will get an error
+
+## Importing Data with Code
+
+-   Click *Import Dataset* from the RStudio *Environment* panel
+-   Select *From Text (readr)*
+    -   This will open a new dialog that will create the code to import a .csv file
+-   Click *Browse* and find the file
+-   In the *Import Options* section, change the *Name* of the dataset to `alz`
+-   Copy the code from the *Code Preview* panel into a new chunk, then run it
+
+```{r}
+#| label: import data 
+# Copy your code into this chunk!
+
+```
+
+## The here Package
+
+-   Your file path is different from my file path
+
+-   The `here` package standardizes the file path
+
+    -   Default: the root directory where your project is
+
+-   If your data is in a subfolder, you need to specify the subfolder first, then the file name
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+```
+
+## Use here::here
+
+-   Every time we load a package, we actually load an Environment with the function names
+
+-   R may pick the function from the wrong Environment (package)
+
+    -   Especially when we have a function in our Global Environment with the same name!
+
+-   To ensure the right function, use the syntax `package_name::function`
+
+## Checking Our Data
+
+-   Recall that `alz` has 85 obs. of 14 variables
+
+-   When we clicked the arrow to the left of the name, we saw the variable names and types and the first few values of each variable
+
+-   To show in our notebook that we did this check, we use the `glimpse` function from `dplyr`
+
+## Glimpse the Data
+
+```{r}
+#| label: glimpse data
+alz |>
+  glimpse()
+```
+
+## The Pipe Operator `|>`
+
+-   `|>` is read "then"
+
+-   On the left of the pipe is the dataset that we are working with
+
+-   On the right side of the pipe is what we want to do with it
+
+-   My convention: once I include a pipe, that ends the line
+
+    -   Indentation and line breaks typically do not matter in R
+
+## Why Use the Pipe?
+
+-   The single easiest way to turn our thought process into usable R code:
+
+    -   Write out "pseudocode" describing step-by-step what you want to do with the data
+
+    -   Always start your pseudocode with: "Step 1: Start with the \[data\] dataset"
+
+    -   Every time you include "then" or a new step, replace it with the pipe
+
+-   Using the pipe this way prevents us from getting bogged down in parentheses issues
+
+## Describing One Categorical Variable with Numbers
+
+To summarize categorical data, we use **counts** and **proportions**. Let's start by seeing how many people in the dataset had Alzheimer's vs. didn't.
+
+-   Pseudocode:
+
+    -   Step 1: Start with the `alz` dataset, then
+    -   Step 2: Count the number of people with and without Alzheimer's
+
+## Code to Count Diagnosis
+
+```{r}
+#| label: count alzheimer's
+alz |> 
+  count(diagnosis)
+```
+
+## Automatically Calculating Percentages
+
+-   Pseudocode:
+
+    -   Step 1: Start with the `alz` dataset, then
+    -   Step 2: Count the number of people with and without Alzheimer's, then
+    -   Step 3: Convert the counts to proportions
+
+## Code to Convert to Proportions
+
+The `tabyl` function in the `janitor` package will do both of the last two steps in our pseudocode at once:
+
+```{r}
+#| label: percent Alzheimer's
+alz |> 
+  tabyl(diagnosis)
+```
+
+## Describing One Categorical Variable with Graphs
+
+-   Bar graph or pie chart
+
+-   99% of the time, bar graph
+
+    -   Most of the time we are comparing counts between categories
+
+    -   It is *much* easier to make this comparison with bar graphs
+
+## Creating Graphs with `ggplot2`
+
+```{r}
+#| label: first bar graph
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = diagnosis)) +
+# Step 2: Add the plot
+  geom_bar() +
+# Step 3: Add features to the plot
+  labs(x = "Patient Diagnosis", 
+       y = "Number of Patients") +
+  scale_x_discrete(
+    labels = c("Alzheimer's", "No Alzheimer's")) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Step 1: Set Up the Plot
+
+-   Use `ggplot` function to set up the plot
+
+-   Two arguments
+
+    -   data: the dataset the variables are contained in
+
+    -   mapping: a function (`aes`) that maps features of the plot to variables in the dataset
+
+## Plotting After Just Step 1
+
+```{r}
+#| label: Step 1 only
+ggplot(data = alz, 
+       mapping = aes(x = diagnosis))
+```
+
+## Step 2: Add a Plot
+
+-   For historical reasons, we use `+` rather than `|>` with `ggplot2`
+
+-   We can think of the `+` as meaning "add" something to the plot
+
+-   All plot types start with `geom_`
+
+## Plotting After Step 2
+
+```{r}
+#| label: add bar graph
+ggplot(data = alz, 
+       mapping = aes(x = diagnosis)) +
+  geom_bar()
+```
+
+## Step 3: Add Features to the Plot
+
+-   Here we add custom axis labels and custom tick mark labels for the x-axis, and make the fonts bigger
+
+-   Some common functions:
+
+    -   `labs`: adds title and axis labels
+
+    -   `scale_`: customizes plot attributes (x-axis, color, etc.)
+
+    -   `theme`: customizes almost everything else
+
+-   Google is your friend!
+
+## Plotting After Step 3
+
+```{r}
+#| label: customization-bar-graph
+ggplot(data = alz, 
+       mapping = aes(x = diagnosis)) +
+  geom_bar() +
+  labs(x = "Patient Diagnosis", 
+       y = "Number of Patients") +
+  scale_x_discrete(
+    labels = c("Alzheimer's", 
+               "No Alzheimer's")) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Changing a Variable Type to Categorical
+
+-   In our dataset, `sex` is treated as numerical
+
+-   Pseudocode:
+
+    -   Step 1: Start with the `alz` dataset, then
+
+    -   Step 2: Change `sex` from numeric to categorical
+
+## Changing a Variable Type Using `mutate`
+
+Our all-purpose tool for working with variables *inside* a data frame is `mutate` from `dplyr`
+
+```{r}
+#| label: change sex to factor
+#| code-line-numbers: "2-4"
+alz_sex_cat <- alz |>
+  mutate(
+    sex = factor(sex, labels = c("female", "male"))
+  )
+```
+
+-   `factor` allows us to just add the category labels
+
+## Describing Two Categorical Variables with Numbers
+
+-   Two-way tables describe the number of observations in each *combination* of categories
+
+-   For most "basic" table stuff, functions in the `janitor` package are easiest to use
+
+    -   Especially once we start getting used to the `|>` pipe!
+
+## Creating a Two-Way Table
+
+```{r}
+#| label: table of sex and diagnosis
+alz_sex_cat |>
+  tabyl(sex, diagnosis)
+```
+
+## Adding Totals
+
+-   We can use another function in the `janitor` package:
+
+```{r}
+#| label: table of sex and diagnosis with totals
+alz_sex_cat |>
+  tabyl(sex, diagnosis) |>
+  adorn_totals(c("row", "col"))
+```
+
+## Calculating Conditional Proportions
+
+-   A `conditional proportion` is the proportion of observations in one group, *looking only at* the observations in a different group
+
+```{r}
+#| label: conditional proportions part 1a
+alz_sex_cat |>
+  tabyl(sex, diagnosis) |>
+  adorn_percentages(denominator = "row")
+```
+
+-   50% of female patients had Alzheimer's and 50% didn't
+
+-   45% of male patients had Alzheimer's and 55% didn't
+
+## Watch Out: Condition Correctly!
+
+```{r}
+#| label: conditional proportions part 1b
+alz_sex_cat |>
+  tabyl(sex, diagnosis) |>
+  adorn_percentages(denominator = "col")
+```
+
+-   45% Alzheimer's patients were female and 55% were male
+
+-   40% of healthy patients were female and 60% were male
+
+## Making Percentages Actually Percentages
+
+```{r}
+#| label: conditional proportions with percent
+alz_sex_cat |>
+  tabyl(sex, diagnosis) |>
+  adorn_percentages(denominator = "row") |>
+  adorn_pct_formatting(digits = 1)
+```
+
+## Describing Two Categorical Variables with Graphs
+
+```{r}
+#| label: stack-bar-graph
+# Step 1: Set up the graph
+ggplot(data = alz_sex_cat, 
+       mapping = aes(x = sex, fill = diagnosis)) +
+# Step 2: Add the plot
+  geom_bar() +
+# Step 3: Add features to the plot
+  labs(x = "Patient Sex", 
+       y = "Number of Patients") +
+  scale_fill_manual(
+    name = "Diagnosis",
+    values = c("pink", "black"),
+    labels = c("Alzheimer's", 
+               "No Alzheimer's")) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Making the Bars Side-By-Side
+
+```{r}
+#| label: dodge-bar-graph
+# Step 1: Set up the graph
+ggplot(data = alz_sex_cat, 
+       mapping = aes(x = sex, fill = diagnosis)) +
+# Step 2: Add the plot
+  geom_bar(position = "dodge") +
+# Step 3: Add features to the plot
+  labs(x = "Patient Sex", 
+       y = "Number of Patients") +
+  scale_fill_manual(
+    name = "Diagnosis",
+    values = c("pink", "black"),
+    labels = c("Alzheimer's", 
+               "No Alzheimer's")) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Making Two-Variable "Pie Charts"
+
+```{r}
+#| label: fill-bar-graph
+# Step 1: Set up the graph
+ggplot(data = alz_sex_cat, 
+       mapping = aes(x = sex, fill = diagnosis)) +
+# Step 2: Add the plot
+  geom_bar(position = "fill") +
+# Step 3: Add features to the plot
+  labs(x = "Patient Sex", 
+       y = "Number of Patients") +
+  scale_fill_manual(
+    name = "Diagnosis",
+    values = c("pink", "black"),
+    labels = c("Alzheimer's", 
+               "No Alzheimer's")) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```

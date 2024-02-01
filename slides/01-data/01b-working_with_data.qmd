@@ -1,0 +1,200 @@
+---
+title: "A Brief Introduction to Working with Data in R"
+format: revealjs
+editor: visual
+---
+
+## Importing Data
+
+Let's import the alzheimers dataset from Canvas.
+
+-   Download the dataset
+-   Click *Import Dataset* from the RStudio *Environment* panel
+-   Select *From Text (readr)*
+    -   This will open a new dialog that will create the code to import a .csv file
+-   Click *Browse* and find the file
+-   In the *Import Options* section, change the *Name* of the dataset to `alz`
+
+```{r}
+#| label: import data
+#| echo: false
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+```
+
+## Never Attach Data
+
+-   Some instructors may ask you to `attach` the dataset immediately after you import it
+
+-   When you attach a dataset, R creates a new permanent environment that contains every variable in the dataset, and allows you to search *that* environment for variable names in addition to the Global Environment
+
+-   This is *terrible* practice if you're trying to write reproducible analyses in R!
+
+## What to Do Once You've Imported
+
+-   Look to see what is contained in the dataset
+
+    -   A new tab in the *Source* pane shows the data
+
+    -   A new variable `alz` has appeared in the Data section of the *Environment* pane
+
+## Checking Information About Our Data
+
+-   The information about `alz` indicates that there are "85 obs. of 14 variables"
+
+-   Click the arrow to the left of the name to see a list of the variable names and types
+
+    -   We should also be able to see the first few values of each variable
+
+Soon we are going to learn the code to do this, so that we can show in our notebook that we did this check. But for now it's enough to just check in R Studio.
+
+## Observations vs Variables
+
+-   **Observations** (also called **cases** or **units**) refer to who or what the data is collected about
+
+-   **Variables** describe what information is collected about them
+
+-   In **tidy data** format:
+
+    -   Each row contains data collected from a single observation
+
+    -   Each column contains the values of a single variable
+
+## Identifying the Observations
+
+-   One of the most critical first steps is to figure out what one row in the dataset represents
+
+    -   Identifying what a row "should" represent is helpful when converting data to tidy format
+
+-   Often a single "ID" or "label" column uniquely identifies each observation
+
+    -   Watch for observations being defined by a unique *combination* of columns
+
+## Types of Variables (Statistics)
+
+-   **Numerical**: values are numbers for which arithmetic makes sense
+
+-   **Categorical**: values represent categories or groups into which observations can be divided
+
+Download the data dictionary for the `alzheimers` dataset from Canvas. Which variables in this dataset are numerical and which are categorical?
+
+## Types of Variables in R
+
+-   **Numerical** includes type *int* and *dbl*
+
+    -   R will call both types *num* (numeric)
+
+-   **Categorical** includes type *chr* and *fct*
+
+    -   Character variables (strings) contain text in quotes
+
+    -   Factor variables contain integer values mapped to character values ("levels")
+
+    -   Generally we prefer to work with strings unless there is a sensible non-alphabetical level order (e.g., day of week)
+
+## Logical Variables in R
+
+-   **Logical** (Boolean) includes type *lgl*
+
+    -   Should only contain the values `TRUE`, `FALSE`, and `NA` (missing)
+
+-   Logical variables can be treated as either numerical or categorical
+
+```{r}
+#| label: logical variable
+#| echo: TRUE
+tf <- c(TRUE, FALSE, T, T, F, T)
+sum(tf) # number of TRUE
+table(tf) # count TRUE vs FALSE
+```
+
+## Confirming Dimensionality
+
+```{r}
+#| label: basic dimensionality checking commands  
+#| echo: TRUE
+nrow(alz) 
+ncol(alz) 
+dim(alz)
+```
+
+## Previewing First or Last Few Rows
+
+```{r}
+#| label: previewing rows
+#| echo: TRUE
+head(alz, 3) # first 3 rows 
+tail(alz, 5) # last 5 rows
+```
+
+## What Is a Tibble?
+
+-   R imports spreadsheet data as a variable type called a data frame (or `data.frame`)
+
+-   When we import the data using the `readr` package, R converts it to a special kind of data frame called a `tibble`
+
+    -   Anything you can do with a data frame, you can do with a tibble
+
+    -   Tibbles get rid of some weird quirks of data frames so that they behave the way you expect
+
+## Subsetting with "Regular" R
+
+-   Later in this course, we are going to learn some powerful methods for creating custom subsets of data frames using the `dplyr` package
+
+-   When we want to get out just a single row, single column, or single entry in the data frame, it is often easier to treat a data frame like a matrix and use matrix subsetting functions
+
+## Subsetting a Matrix
+
+```{r}
+#| label: subsetting a matrix  
+#| echo: TRUE
+m <- matrix(
+  c(1, 2, 3, 4, 5, 6, 7, 8, 9),
+  nrow = 3,
+  ncol = 3
+)
+
+m[1, ] # first row of m 
+m[ , 2] # second column of m 
+m[2, 3] # second row, third column
+```
+
+## Subsetting a Data Frame
+
+We can do the same thing with our `alz` dataset:
+
+```{r}
+#| label: subsetting a data frame
+#| echo: TRUE  
+alz[1, ] # first row
+```
+
+## Subsetting a Single Column
+
+```{r}
+#| label: subsetting a data frame-2
+#| echo: TRUE
+alz[ ,2] # second column 
+```
+
+## Subsetting to Individual Values
+
+```{r}
+#| label: subsetting a data frame-3
+#| echo: TRUE
+alz[2, 3] # second row, third column
+alz[c(5,8), 1:4] # fifth and eighth rows, columns 1-4
+```
+
+## Extracting a Variable
+
+-   Notice that we still got out tibbles with these subsets
+
+    -   With regular data frames, sometimes we do and sometimes we don't
+
+-   To extract the variable itself as a vector, use `$` followed by the name of the variable
+
+```{r}
+#| label: extract vector from data frame  
+#| echo: TRUE
+alz$diagnosis
+```
