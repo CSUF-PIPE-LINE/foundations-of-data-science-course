@@ -122,20 +122,45 @@ A few very important things to point out here:
 
 ```{r}
 #| label: call a function
-
-sin_plus_cos(y)
+sin_plus_cos(pi)
 ```
 
+What does R do when we execute this code?
+
+1.  Create a variable named `x` and assign it the value `pi` ($\pi$)
+2.  Compute `sin(pi) + cos(pi)` by essentially "plug and chug"
+3.  Create a variable named `y` and assign it the value output in Step 2
+4.  Return the value of `y`
+
+```{r}
+#| label: call a function
+angle <- pi/2
+sin_plus_cos(angle)
+```
+
+What does R do when we execute this code?
+
+1.  Create a variable named `x` and assign it the value we gave `angle`
+2.  Compute `sin(pi/2) + cos(pi/2)` by essentially "plug and chug"
+3.  Create a variable named `y` and assign it the value output in Step 2
+4.  Return the value of `y`
+
 ### Environments
+
+```{r}
+#| label: call a function of a variable
+sin_plus_cos(y)
+```
 
 Notice that we have a variable `y` in our Environment and we also defined a variable `y` inside our function. How does R not get these two things confused?
 
 The Environment we are storing variables in is called the Global Environment. When R runs the function, it creates a *new* environment that exists only while the function runs. Notice that our input variable was called `x`. So when we execute `sin_plus_cos(y)`, R actually does the following:
 
 1.  Create a temporary environment that exists only for the function and will disappear once we return something
-2.  Look in our Global Environment for the variable `y`, and assign it to the variable `x` in the temporary environment!
-3.  Create and assign values to the variable `y` in the temporary environment
-4.  Return the value of `y` in the temporary environment
+2.  Create a variable named `x` in this temporary environment and assign it the value we gave `y` in the Global Environment
+3.  "Plug and chug" `sin(x) + cos(x)` for each value in the vector
+4.  Create a variable in the *temporary environment* named `y` and assign it the value output in Step 3
+5.  Return the value of `y` in the temporary environment
 
 There are a lot of weird quirks in R surrounding functions and environments, and we're mostly going to ignore them unless (or until) doing so would cause our R code to do something different than what we want. But you can do things like pass a function to another function:
 
