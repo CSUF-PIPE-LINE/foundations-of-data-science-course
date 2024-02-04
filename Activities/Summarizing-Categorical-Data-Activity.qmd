@@ -1,0 +1,252 @@
+---
+title: "Summarizing Categorical Data: Housing Loan Denial Rates in Orange County"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, we are going to explore roughly 25,000 applications submitted by people trying to get a mortgage to buy a house in Orange County in 2021.
+
+We will use the tools we have learned to summarize categorical data to try to answer the following questions:
+
+1.  What is the overall non-approval rate for mortgage applications in Orange County?
+2.  How does this rate change based on the applicant's race and ethnicity?
+
+## Load Packages
+
+Every time we create a new notebook, our *very first* code chunk should just load the packages we will be using in the analysis. Here we are going to use the `tidyverse` set of packages, which can be loaded all at once, and the `janitor` package, which will help us clean up our tables.
+
+```{r}
+#| label: load packages
+library(tidyverse)
+library(janitor)
+```
+
+## Get the Data
+
+The second code chunk in your data science notebook should import the data that you will be analyzing.
+
+In this activity, we will be importing the *loans_OC* dataset. To load this data, click *Import Dataset* from the RStudio *Environment* panel, then select *From Text (readr)* to open a new dialog that will create the code to import a .csv file. Click *Browse* and find the file. In the *Import Options* section on the bottom left, change the *Name* of the dataset to `loans`. When you are done, copy the code from the *Code Preview* panel to the chunk below, then run the chunk.
+
+```{r}
+#| label: import data 
+
+# Copy-Paste from the Import Dataset dialog 
+```
+
+```{r}
+#| label: glimpse data
+loans |>
+  glimpse()
+```
+
+### Understanding the Data
+
+By looking at the dataset in the *Source* and *Environment* panes, and looking at the output of `glimpse()`, answer the following questions:
+
+1.  How many loan applications (exact number) are in this dataset? How many variables?
+2.  Which variable indicates whether the loan was approved?
+3.  Which variables are categorical? Which variables are numerical? Which variables are logical?
+
+## Describing One Categorical Variable with Numbers
+
+To summarize categorical data, we use **counts** and **proportions**.
+
+```{r}
+#| label: count race
+loans |>
+  tabyl(race) |>
+  adorn_pct_formatting()
+```
+
+### Your Turn
+
+1.  Based on the output above, what races could the applicant(s) identify as? How many applicants identified as White? What percentage is that?
+
+2.  How many loan applications were not approved? What percentage is that? Write code in the chunk below to support your answer.
+
+```{r}
+#| label: tabulating actions
+
+```
+
+## Describing One Categorical Variable with Graphs
+
+We can visualize the distribution of a single categorical variable using either a bar graph or a pie chart. Statisticians and data scientists overwhelmingly prefer bar graphs, and they are much cleaner to make and interpret.
+
+We are going to use the `ggplot2` package, part of the tidyverse, to make our graphs. Recall from lecture the 3 general steps to creating any graph using this package:
+
+```{r}
+#| label: first bar graph
+
+# Step 1: Set up the graph
+ggplot(data = loans, mapping = aes(x = race)) +
+# Step 2: Add the plot
+  geom_bar() +
+# Step 3: Add features to the plot
+  labs(x = "Applicant Race", 
+       y = "Number of Applications") +
+  theme(axis.text.x = element_text(hjust = 1, angle = 90))
+```
+
+### Your Turn
+
+1.  What do you think `theme(axis.text.x = element_text(hjust = 1, angle = 90))` did? (Hint: try copying and running the code without that line)
+
+2.  Fill in the chunk below with the Step 1 and Step 2 steps, then run the chunk to create a bar plot of `action` in this dataset:
+
+```{r}
+#| label: bar graph of action taken
+
+# Step 1: Set up the graph
+
+# Step 2: Add the plot
+
+# Step 3: Add features to the plot
+  labs(x = "Action Taken", 
+       y = "Number of Applications") 
+```
+
+## Describing Two Categorical Variables with Numbers
+
+We use two-way tables to describe the number of observations in each *combination* of categories. The base R functions for creating and manipulating tables are very powerful, but there's some nuance about when to use `table` vs `xtabs` vs `tabulate`, and once you have a table, it can take a lot of trial and error to manipulate correctly. For most "basic" table stuff, functions in the `janitor` package are easier to use, especially once we start getting used to the `|>` pipe.
+
+```{r}
+#| label: first tabulation of race and action
+loans |>
+  tabyl(race, action)
+```
+
+Notice that, by default, totals are not included. We can use another function in the `janitor` package to get totals:
+
+```{r}
+#| label: tabulate race and action with totals
+loans |>
+  tabyl(race, action) |>
+  adorn_totals(c("row", "col"))
+```
+
+The weird thing that takes some getting used to (or at least it did for me) is that R considers these outputs to be data frames rather than tables, so you can do anything to these outputs that you would with data frames, but you have to use the special `janitor` functions to do things you would normally do with tables.
+
+### Calculating Conditional Proportions with a Two-Way Table
+
+```{r}
+#| label: conditional proportions part 1a
+loans |>
+  tabyl(race, action) |>
+  adorn_percentages(denominator = "row")
+```
+
+```{r}
+#| label: conditional proportions part 1b
+loans |>
+  tabyl(race, action) |>
+  adorn_percentages(denominator = "row") |>
+  adorn_pct_formatting(digits = 1)
+```
+
+```{r}
+#| label: conditional proportions part 2
+loans |>
+  tabyl(race, action) |>
+  adorn_percentages(denominator = "col") |>
+  adorn_pct_formatting(digits = 1)
+```
+
+### Your Turn
+
+1.  What are we computing with `denominator = "row"` vs. `denominator = "col"` ? Which set of proportions is more useful for answering our research questions?
+
+2.  Typically, when we look at multiple variables, we refer to the variable that contains the *outcomes* we are interested in as the *response* variable and the variable that could *explain* differences in the outcomes as the *explanatory* variable. In these tables, which variable is which?
+
+3.  In the chunk below, write code to find the number of applicants of each ethnicity, and percentage of applicants of each ethnicity that were Approved vs. Not approved.
+
+```{r}
+#| label: tabulate ethnicity and action
+
+```
+
+## Describing Two Categorical Variables with Graphs
+
+We can adapt our bar graphs to work with a second variable. Typically we keep our *explanatory* variable on the `x` axis and use different `fill` (different bar colors) based on the *response* variable.
+
+There are a few different ways to arrange the bars:
+
+```{r}
+#| label: graph stack
+ggplot(
+  data = loans,
+  mapping = aes(x = race, fill = action),
+  ) +
+  geom_bar() +
+  labs(x = "Race",
+       y = "Number of Applications") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
+#| label: graph dodge
+ggplot(
+  data = loans,
+  mapping = aes(x = race, fill = action),
+  ) +
+  geom_bar(position = "dodge") +
+  labs(x = "Race",
+       y = "Number of Applications") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
+#| label: graph fill
+
+ggplot(
+  data = loans,
+  mapping = aes(x = race, fill = action),
+  ) +
+  geom_bar(position = "fill") +
+  labs(x = "Race",
+       y = "Proportion of Applications") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+### Your Turn
+
+1.  Which of the three graphs would be easiest to use to compare between the different races in terms of...
+
+```{=html}
+<!-- -->
+```
+i)  The total number of applications submitted?
+
+ii) The number of applications that were not approved?
+
+iii) The proportion of applications that were not approved?
+
+```{=html}
+<!-- -->
+```
+2.  In the chunks below, create the same set of three graphs, but put `ethnicity` on the x-axis (and change the x-axis label appropriately). Also, change the color scheme so that `Approved` applications are in one color (of your choice) and `Not approved` applications are in a different color (of your choice).
+
+```{r}
+#| label: stack with ethnicity
+
+```
+
+```{r}
+#| label: dodge with ethnicity
+ 
+```
+
+```{r}
+#| label: fill with ethnicity
+
+```
+
+3.  Based on what you have done in this activity, answer the following questions:
+
+```{=html}
+<!-- -->
+```
+i)  In 2021, what was the overall non-approval rate for mortgage applications in Orange County?
+
+ii) How did this rate change based on the applicant's race and ethnicity?
