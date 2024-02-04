@@ -464,7 +464,7 @@ alz_sex_cat |>
 #| label: stacked-1
 #| echo: TRUE
 #| eval: FALSE
-#| code-line-numbers: "1-3"
+#| code-line-numbers: "1-5"
 # Step 1: Set up the graph
 ggplot(data = alz_sex_cat, 
        mapping = aes(x = sex, fill = diagnosis)) +
@@ -584,7 +584,7 @@ ggplot(data = alz_sex_cat,
   geom_bar(position = "fill") +
 # Step 3: Add features to the plot
   labs(x = "Patient Sex", 
-       y = "Number of Patients") +
+       y = "Proportion of Patients") +
   scale_fill_manual(
     name = "Diagnosis",
     values = c("pink", "black"),
@@ -610,7 +610,7 @@ ggplot(data = alz_sex_cat,
   geom_bar(position = "fill") +
 # Step 3: Add features to the plot
   labs(x = "Patient Sex", 
-       y = "Number of Patients") +
+       y = "Proportion of Patients") +
   scale_fill_manual(
     name = "Diagnosis",
     values = c("pink", "black"),
@@ -621,5 +621,59 @@ ggplot(data = alz_sex_cat,
     axis.text = element_text(size = 16)
   )
 ```
+:::
+:::
+
+## Describing Graphs
+
+-   When presenting graphs to someone else, you should always include a short description to orient the reader/listener
+
+    -   Can be a caption, part of the main text, or said aloud in a presentation
+
+    -   Goal 1: Indicate how to read the graph
+
+    -   Goal 2: Highlight important insights
+
+## Describing Graphs: The TAME Strategy
+
+-   **T**opic: what data is being graphed (at minimum, the observational units or data source)
+
+-   **A**xes: what variables are being plotted and what aspect of the graph (axes, color, shape, etc.) depicts each variable's values
+
+-   **M**ain point: the most important takeaway someone needs to get from this graph
+
+-   **E**xtra information: other things that you may want to point out if you have time/space
+
+## TAME Strategy: Example
+
+::: columns
+::: {.column width="40%"}
+```{r}
+#| label: TAME-graph
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+# Step 1: Set up the graph
+ggplot(data = alz_sex_cat, 
+       mapping = aes(x = sex, fill = diagnosis)) +
+# Step 2: Add the plot
+  geom_bar(position = "fill") +
+# Step 3: Add features to the plot
+  labs(x = "Patient Sex", 
+       y = "Proportion of Patients") +
+  scale_fill_manual(
+    name = "Diagnosis",
+    values = c("pink", "black"),
+    labels = c("Alzheimer's", 
+               "No Alzheimer's")) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="60%"}
+This graph depicts the relationship between sex and Alzheimer's diagnosis in a sample of 85 elderly patients. The x-axis represents the patient's sex and the y-axis represents the proportion of patients diagnosed with Alzheimer's disease (pink) or not (black). A slightly higher proportion of female patients were diagnosed with Alzheimer's disease compared to male patients.
 :::
 :::

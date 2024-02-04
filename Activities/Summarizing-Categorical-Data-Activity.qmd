@@ -213,18 +213,12 @@ ggplot(
 
 1.  Which of the three graphs would be easiest to use to compare between the different races in terms of...
 
-```{=html}
-<!-- -->
-```
 i)  The total number of applications submitted?
 
 ii) The number of applications that were not approved?
 
 iii) The proportion of applications that were not approved?
 
-```{=html}
-<!-- -->
-```
 2.  In the chunks below, create the same set of three graphs, but put `ethnicity` on the x-axis (and change the x-axis label appropriately). Also, change the color scheme so that `Approved` applications are in one color (of your choice) and `Not approved` applications are in a different color (of your choice).
 
 ```{r}
