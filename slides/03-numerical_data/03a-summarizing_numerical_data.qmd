@@ -1,0 +1,645 @@
+---
+title: "Summarizing Numerical Data with R"
+format: revealjs
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## Steps 1 and 2: Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+```
+
+We will primarily focus on the `gmv` variable, representing the amount of gray matter (volume of cell bodies) in a person's brain.
+
+## Distribution of a Variable
+
+-   The distribution of a variable indicates:
+
+    -   What values were observed
+
+    -   How often each value was observed
+
+-   For categorical data, this is represented by:
+
+    -   The levels of the variable
+
+    -   The count or proportion of observations at each level
+
+## Distribution of a Numerical Variable
+
+-   The distribution of a numerical variable is more complicated to describe
+
+-   We consider "3+1" properties of the distribution
+
+    -   Center: where the values tend to be on the number line
+
+    -   Variability: how spread out the values tend to be along the number line
+
+    -   Shape: where the values tend to be *relative to each other*
+    
+    -   Outliers: the possible presence of unusual values
+    
+## Center: Mean and Median
+
+- The mean is the *average value* of the variable
+
+- The median is the value of the *average observation* (middle value)
+
+```{r}
+#| label: mean and median
+
+alz |>
+  summarize(
+    mean_gmv = mean(gmv),
+    median_gmv = median(gmv)
+  )
+```
+## Center and Variability Together
+
+-   When we choose *mean* as our measure of center, the typical associated measure of variability is *standard deviation*
+
+    -   Think of standard deviation as the "average distance from the mean"
+
+-   When we choose *median* as our measure of center, the typical associated measure of variability is *interquartile range* (IQR)
+
+    -   Distance between minimum and maximum values in the *middle 50%* of the dataset
+
+## Center and Variability with Code
+
+```{r}
+#| label: mean and sd
+
+alz |>
+  summarize(
+    mean_gmv = mean(gmv),
+    sd_gmv = sd(gmv)
+  )
+```
+
+```{r}
+#| label: median and IQR
+
+alz |>
+  summarize(
+    median_gmv = median(gmv),
+    iqr_gmv = IQR(gmv)
+  )
+```
+
+## Five Number Summary
+
+- The *five number summary* divides the dataset into four quarters
+
+    -   Each quarter contains 25% of the data
+
+```{r}
+#| label: five number summary with summarize
+
+alz |>
+  summarize(
+    min_gmv = min(gmv), # minimum
+    q1_gmv = quantile(gmv, 0.25), # lower quartile
+    med_gmv = median(gmv), # median
+    q3_gmv = quantile(gmv, 0.75), # upper quartile
+    max_gmv = max(gmv) # maximum
+  )
+```
+
+## Describing Shape and Outliers
+
+- Typically done visually
+
+- Two main options for graphing the distribution:
+
+    -   Histogram
+    
+    -   Box plot
+    
+## Creating a Histogram
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: hist1-1
+#| echo: TRUE
+#| eval: FALSE
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = gmv)) +
+# Step 2: Add the plot
+  geom_histogram() +
+# Step 3: Add features to the plot
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Number of Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: hist1-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = gmv)) +
+# Step 2: Add the plot
+  geom_histogram() +
+# Step 3: Add features to the plot
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Number of Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+## Reading a Histogram
+
+-   A histogram is a bar graph whose x-axis is the number line
+
+-   We create a categorical variable by "binning" the values into intervals along the number line
+
+    -   By convention, intervals are equally spaced
+    
+    -   However, we have control over their center and width
+    
+-   We then place the bar over that interval on the x-axis
+
+    -   This means the bars are contiguous (touching)
+    
+    -   A gap between the bars really means a bar of height 0
+
+## Customizing a Histogram
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: hist2-1
+#| echo: TRUE
+#| eval: FALSE
+#| code-line-numbers: "5-8"
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = gmv)) +
+# Step 2: Add the plot
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 500,
+                 binwidth = 20) +
+# Step 3: Add features to the plot
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Number of Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: hist2-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = gmv)) +
+# Step 2: Add the plot
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 500,
+                 binwidth = 20) +
+# Step 3: Add features to the plot
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Number of Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+## Describing Shape with Histograms: Skewed Right
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: skewed right
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = csf)) +
+# Step 2: Add the plot
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 275,
+                 binwidth = 50) +
+# Step 3: Add features to the plot
+  labs(x = "Cerebrospinal Fluid Volume (cc)",
+       y = "Number of Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+
+-   Major peak on the left side of the graph
+    
+-   Long "tail" to the right side
+    
+-   Looks similar to tracing your right foot
+
+:::
+:::
+
+## Describing Shape with Histograms: Skewed Left
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: skewed left
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = mmse)) +
+# Step 2: Add the plot
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 29,
+                 binwidth = 2) +
+# Step 3: Add features to the plot
+  labs(x = "Mini-Mental State Examination Score",
+       y = "Number of Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+
+-   Major peak on the right side of the graph
+    
+-   Long "tail" to the left side
+    
+-   Looks similar to tracing your left foot
+
+:::
+:::
+
+## Describing Shape with Histograms: Roughly Symmetric
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: roughly symmetric
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = wmv)) +
+# Step 2: Add the plot
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 480,
+                 binwidth = 40) +
+# Step 3: Add features to the plot
+  labs(x = "White Matter Volume (cc)",
+       y = "Number of Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+
+-   Left and right halves of histogram look roughly like mirror images
+    
+-   With real data, we shouldn't expect perfect symmetry
+    
+-   If it's difficult to tell which direction the skew is in, call it roughly symmetric
+
+:::
+:::
+
+## Identifying Outliers on Histograms
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: weight outlier
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = weight)) +
+# Step 2: Add the plot
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 75,
+                 binwidth = 10) +
+# Step 3: Add features to the plot
+  labs(x = "Weight (kg)",
+       y = "Number of Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+
+-   Unusually small or large values
+    
+    -   Judgment call how "unusual" 
+    
+-   Look for values on the left or right side separated from the bulk of the data by a gap of several "height 0" bars 
+    
+:::
+:::
+
+## Creating a Boxplot
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: boxplot1-1
+#| echo: TRUE
+#| eval: FALSE
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = gmv)) +
+# Step 2: Add the plot
+  geom_boxplot(fill = "blue") +
+# Step 3: Add features to the plot
+  labs(x = "Gray Matter Volume (cc)",
+       y = "") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: boxplot1-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = gmv)) +
+# Step 2: Add the plot
+  geom_boxplot(fill = "blue") +
+# Step 3: Add features to the plot
+  labs(x = "Gray Matter Volume (cc)",
+       y = "") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+## Reading a Boxplot
+
+-   "Box" spans from lower to upper quartile
+
+    -   Median as a thick line in the middle of the box
+
+-   "Whiskers" extend to smallest and largest points that are *not outliers*
+
+-   Outliers are marked as individual dots
+
+## Convention: Outliers on Boxplots
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: boxplot with outliers
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+# Step 1: Set up the graph
+ggplot(data = alz, 
+       mapping = aes(x = weight)) +
+# Step 2: Add the plot
+  geom_boxplot(fill = "blue") +
+# Step 3: Add features to the plot
+  labs(x = "Weight (kg)",
+       y = "") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+
+- We compute invisible fences:
+
+$$
+Lower \ Fence = Q_1 - 1.5 \times IQR
+$$
+
+$$
+Upper \ Fence = Q_3 + 1.5 \times IQR
+$$
+
+- Any data value *not* between the fences is considered an outlier
+
+:::
+:::
+
+
+## Comparing Groups with Numerical Summaries
+
+```{r}
+#| label: five number summary by group
+#| code-line-numbers: "2-3"
+alz |>
+  group_by(diagnosis) |>
+  summarize(
+    mean_gmv = mean(gmv),
+    median_gmv = median(gmv),
+    sd_gmv = sd(gmv),
+    IQR_gmv = IQR(gmv)
+  )
+```
+
+## Comparing Groups with Boxplots
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: multiple boxplots-1
+#| echo: TRUE
+#| eval: FALSE
+ggplot(data = alz, 
+       mapping = aes(x = diagnosis, 
+                     y = gmv)) +
+  geom_boxplot() +
+  labs(x = "Diagnosis",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: multiple boxplots-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = diagnosis, 
+                     y = gmv)) +
+  geom_boxplot() +
+  labs(x = "Diagnosis",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+- Compare center and variability between groups by reading median and IQR off the boxplots
+
+## Customizing Boxplots by Group
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: multiple boxplots-2-1
+#| echo: TRUE
+#| eval: FALSE
+#| code-line-numbers: "3, 8-11"
+ggplot(data = alz, 
+       mapping = aes(x = diagnosis, 
+                     fill = diagnosis, 
+                     y = gmv)) +
+  geom_boxplot() +
+  labs(x = "Diagnosis",
+       y = "Gray Matter Volume (cc)") +
+  scale_x_discrete(labels = c("Alzheimer's", "Normal")) +
+  scale_fill_manual(name = "Diagnosis",
+                    labels = c("Alzheimer's", "Normal"), 
+                    values = c("red4","red")) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: multiple boxplots-2-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = diagnosis, 
+                     fill = diagnosis, 
+                     y = gmv)) +
+  geom_boxplot() +
+  labs(x = "Diagnosis",
+       y = "Gray Matter Volume (cc)") +
+  scale_x_discrete(labels = c("Alzheimer's", "Normal")) +
+  scale_fill_manual(name = "Diagnosis",
+                    labels = c("Alzheimer's", "Normal"), 
+                    values = c("red4","red")) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+## Comparing Shape Between Groups
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: multi-hist-1
+#| echo: TRUE
+#| eval: FALSE
+#| code-line-numbers: "9"
+ggplot(data = alz, 
+       mapping = aes(x = gmv)) +
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 500,
+                 binwidth = 20) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Number of Patients") +
+  facet_wrap(vars(diagnosis)) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: multi-hist-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = gmv)) +
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 500,
+                 binwidth = 20) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Number of Patients") +
+  facet_wrap(vars(diagnosis)) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
