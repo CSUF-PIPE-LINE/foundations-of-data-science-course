@@ -545,6 +545,25 @@ $$
 :::
 :::
 
+## Transforming Variables
+
+- Change units of measurement
+
+- Create new variables as functions of existing variables
+
+```{r}
+#| label: transform variables
+#| code-line-numbers: "2-5"
+alz_transform <- alz |>
+  mutate(
+    weight_lbs = weight * 2.2, # convert kg to lbs
+    total_cell_volume = gmv + wmv
+  ) |>
+  select(weight, weight_lbs, gmv, wmv, total_cell_volume)
+
+head(alz_transform, 3)
+```
+
 ## Comparing Groups
 
 Let's compare the distribution of `gmv` between Alzheimer's patients and healthy controls
