@@ -1,0 +1,363 @@
+---
+title: "Manipulating a Single Dataset with R"
+format: revealjs
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## Steps 1 and 2: Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+
+head(alz, 5)
+```
+
+## Rearranging Columns
+
+- To move variables to the "front" (left side) of the dataset, use `relocate`
+
+```{r}
+#| label: use relocate
+#| code-line-numbers: "2"
+alz |>
+  relocate(diagnosis) |>
+  head(5)
+```
+
+- Other arguments to `relocate` may allow us to group variables together
+
+## Rearranging Rows
+
+- To sort rows by values of a variable, use `arrange`
+
+- To sort in *ascending* order, just give the variable name
+
+```{r}
+#| label: sort ascending order
+#| code-line-numbers: "2"
+alz |>
+  arrange(age) |>
+  select(subject_ID, diagnosis, age) |>
+  head(5)
+```
+
+## Sorting Data in Descending Order
+
+- To sort in *descending* order, wrap the variable name in `desc`
+
+```{r}
+#| label: sort descending order
+#| code-line-numbers: "2"
+alz |>
+  arrange(desc(age)) |>
+  select(subject_ID, diagnosis, age) |>
+  head(5)
+```
+
+## Sorting by Categorical Variables
+
+- Usually, will sort in alphabetical order (or reverse alphabetical order if we use `desc`)
+
+```{r}
+#| label: sort categorical ascending order
+#| code-line-numbers: "2"
+alz |>
+  arrange(subject_ID) |>
+  select(subject_ID, diagnosis, age) |>
+  head(5)
+```
+
+## Sorting by Multiple Variables
+
+- List each variable separated by commas
+
+- R will sort in ascending (or descending) order by the first variable listed, then break ties by the second variable, third variable, etc.
+
+```{r}
+#| label: sort by multiple variables
+#| code-line-numbers: "2"
+alz |>
+  arrange(cdr, moca, desc(age)) |>
+  select(subject_ID, diagnosis, cdr, moca, age) |>
+  head(5)
+```
+
+## Sorting with Missing Data
+
+```{r}
+#| label: sort with missing data
+#| code-line-numbers: "2"
+alz |>
+  arrange(moca) |>
+  select(subject_ID, diagnosis, cdr, moca, age) |>
+  tail(5)
+```
+
+## Missing Data Always Goes at the End
+
+```{r}
+#| label: in either order
+#| code-line-numbers: "2"
+alz |>
+  arrange(desc(moca)) |>
+  select(subject_ID, diagnosis, cdr, moca, age) |>
+  tail(5)
+```
+
+## Selecting Specific Rows and Columns
+
+- We can always select rows and columns using the matrix subsetting `[row, column]` that we learned earlier
+
+- This does not work well with the pipe
+
+- We can use tidyverse-specific functions in the `dplyr` package to select rows and columns
+
+## Selecting Variables
+
+- To select columns, use `select`
+
+```{r}
+#| label: use select
+#| code-line-numbers: "2"
+alz_gmv <- alz |>
+  select(diagnosis, gmv)
+
+head(alz_gmv, 5)
+```
+
+- List multiple variables in a comma-separated list
+
+- For advanced use: Many helper functions can identify multiple variables at once
+
+## Selecting a Variable as a Vector
+
+- To pull a variable out of the data set as a vector, use `pull`
+
+```{r}
+#| label: use pull
+#| code-line-numbers: "2"
+alz |>
+  pull(gmv)
+```
+
+## Selecting Rows by Number
+
+- To subset to specific numbered rows, use `slice`
+
+```{r}
+#| label: use slice
+#| code-line-numbers: "6"
+alz |>
+  # add row numbers as a column
+  mutate(row_number = seq(1, n())) |>
+  # put row number in the leftmost column
+  relocate(row_number) |>
+  slice(39:43, 48)
+```
+
+## Selecting Observations that Meet Conditions
+
+- To subset to rows that meet a specific condition, use `filter`
+
+- Arguments should be one or more expressions that can evaluate to `TRUE` or `FALSE`
+
+## Boolean Expressions in R
+
+- Equations and inequalities work with either numerical or categorical variables:
+
+    -   `==` for "equals" (2 = signs!)
+    
+    -   `!=` for "not equals"
+
+    -   `%in%` to match one or more values in a vector
+
+- Inequalities (usually) only work with numerical variables
+
+    -   `<` or `>` for "less than"/"greater than"
+
+    -   `<=` or `>=` for "at most"/"at least"
+
+## Filtering with Categorical Variables
+
+```{r}
+#| label: use filter-1
+#| code-line-numbers: "2"
+alz |>
+  filter(diagnosis == "HC") |>
+  head(5)
+```
+
+## Filtering with Numerical Variables
+
+```{r}
+#| label: use filter-2
+#| code-line-numbers: "2"
+alz |>
+  filter(age >= 80) |>
+  select(subject_ID, diagnosis, age) |>
+  head(5)
+```
+
+## Filtering with Multiple Conditions
+
+-   Generally put each condition on its own line within `filter`
+
+-   Use `&` ("and") and `|` ("or") when necessary
+
+```{r}
+#| label: use filter-3
+#| code-line-numbers: "2-5"
+alz |>
+  filter(
+    diagnosis == "HC",
+    age >= 80 | age <= 70
+    ) |>
+  select(subject_ID, diagnosis, age) |>
+  head(5)
+```
+
+## Sorting and Selecting Rows in One Line
+
+```{r}
+#| label: oldest 3
+#| code-line-numbers: "2"
+alz |>
+  slice_max(age, n = 3) |>
+  select(subject_ID, diagnosis, age)
+```
+
+```{r}
+#| label: lowest 3 ages
+#| code-line-numbers: "2"
+alz |>
+  slice_min(age, n = 3) |>
+  select(subject_ID, diagnosis, age)
+```
+
+## Sorting and Selecting within Groups
+
+```{r}
+#| label: oldest 2 in each group
+#| code-line-numbers: "2"
+alz |>
+  slice_max(age, n = 2, by = diagnosis) |>
+  select(subject_ID, diagnosis, age)
+```
+
+```{r}
+#| label: youngest 2 in each group
+#| code-line-numbers: "2"
+alz |>
+  slice_min(age, n = 2, by = diagnosis) |>
+  select(subject_ID, diagnosis, age)
+```
+
+## Transforming Variables
+
+- To transform variables, use `mutate`
+
+- With > 1 variables, put every variable on its own line
+
+```{r}
+#| label: transform variables
+#| code-line-numbers: "2-6"
+alz |>
+  mutate(
+    sex = factor(sex, labels = c("female", "male")),
+    weight_lbs = weight * 2.2, # convert kg to lbs
+    total_cell_volume = gmv + wmv
+  ) |>
+  select(sex, weight, weight_lbs, total_cell_volume) |>
+  head(5)
+```
+
+## The `if_else` Function
+
+-   Use `if_else` within `mutate` to change values conditionally
+
+```{r}
+#| label: transform variables with if-else
+#| code-line-numbers: "2-8"
+alz |>
+  mutate(
+    cognition = if_else(
+      mmse >= 24, # condition
+      "Normal", # value if condition is true
+      "Impaired", # value if condition is false
+    )
+    ) |>
+  select(subject_ID, mmse, cognition) |>
+  head(5)
+```
+
+
+## How Does R Evaluate This Statement?
+
+- R creates two new vectors: one of values assuming everything is `TRUE` and one assuming everything is `FALSE`
+
+    - number of elements = number of rows in the data frame
+    
+    - individual values will be repeated *n* times
+  
+- R then creates a third vector and puts in it the value from the `TRUE` or `FALSE` vector as appropriate for each element
+
+- This means we can use *vectors* as outcomes, not just individual values!
+
+## Transform Under Different Conditions with `if_else`
+
+```{r}
+#| label: change one value with if-else
+#| code-line-numbers: "2-8"
+alz |>
+  mutate(
+    diagnosis_group = if_else(
+      diagnosis == "AD", # condition
+      diagnosis, # keep the value if condition is true
+      "Control", # change to "Control" if condition is false
+    )
+    ) |>
+  select(subject_ID, diagnosis, diagnosis_group) |>
+  slice(39:43)
+```
+
+## The `case_when` Function
+
+-   Use `case_when` instead if you have multiple conditions
+
+```{r}
+#| label: transform variables with case-when
+#| code-line-numbers: "2-9"
+alz |>
+  mutate(
+    cognition = case_when(
+      moca >= 26 ~ "Normal", # condition ~ value
+      moca >= 18 ~ "Mild Impairment",
+      moca >= 10 ~ "Moderate Impairment",
+      moca >= 0 ~ "Severe Impairment",
+      TRUE ~ "Unknown")
+    ) |>
+  select(subject_ID, moca, cognition) |>
+  head(3)
+```
+
+
+## Tips on Using `if_else` and `case_when`
+
+- Use `if_else` if there are only 2 possible outcomes
+
+- Use `case_when` if there are more than 2 possible outcomes
+
+- `case_when` will return the value for the *first* condition that it evaluates as `TRUE`
+
+    -   With some thought, can structure nested inequalities
+
+    -   Always put `TRUE ~ (some default value)` as the last line to ensure something will be returned
+
