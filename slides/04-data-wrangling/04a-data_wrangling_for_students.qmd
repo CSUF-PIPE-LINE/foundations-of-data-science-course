@@ -1,9 +1,7 @@
 ---
-title: "Manipulating a Single Dataset with R"
-format: revealjs
+title: "Manipulating a Single Dataset with R: Student Version"
+format: html
 editor: visual
-execute:
-  echo: TRUE
 ---
 
 ## Steps 1 and 2: Load Packages and Import Data
@@ -20,19 +18,97 @@ alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
 head(alz, 5)
 ```
 
-## Rearranging Columns
+## Selecting Specific Rows and Columns
 
-- To move variables to the "front" (left side) of the dataset, use `relocate`
+- We can always select rows and columns using the matrix subsetting `[row, column]` that we learned earlier
+
+- This does not work well with the pipe
+
+- We can use tidyverse-specific functions in the `dplyr` package to select rows and columns
+
+## Selecting Variables
+
+- To select columns, use `select`
 
 ```{r}
-#| label: use relocate
-#| code-line-numbers: "2"
+#| label: use select
+alz_gmv <- alz |>
+  select(diagnosis, gmv)
+
+head(alz_gmv, 5)
+```
+
+- List multiple variables in a comma-separated list
+
+## Selecting a Variable as a Vector
+
+- To pull a variable out of the data set as a vector, use `pull`
+
+```{r}
+#| label: use pull
 alz |>
-  relocate(diagnosis) |>
+  pull(gmv)
+```
+
+## Selecting Observations that Meet Conditions
+
+- To select rows that meet a specific condition, use `filter`
+
+- Arguments should be one or more expressions that can evaluate to `TRUE` or `FALSE`
+
+- Any rows in which all conditions evaluate to `TRUE` will remain in the new subset
+
+## Boolean Expressions in R
+
+- Equations and inequalities that work with either numerical or categorical variables:
+
+    -   `==` for "equals" (2 = signs!)
+    
+    -   `!=` for "not equals"
+
+    -   `%in%` to match one or more values in a vector
+
+- Inequalities that (usually) only work with numerical variables:
+
+    -   `<` or `>` for "less than"/"greater than"
+
+    -   `<=` or `>=` for "at most"/"at least"
+
+## Filtering with Categorical Variables
+
+```{r}
+#| label: use filter-1
+alz |>
+  filter(diagnosis == "HC") |>
   head(5)
 ```
 
-- Other arguments to `relocate` may allow us to group variables together
+## Filtering with Numerical Variables
+
+```{r}
+#| label: use filter-2
+alz |>
+  filter(age >= 80) |>
+  select(subject_ID, diagnosis, age) |>
+  head(5)
+```
+
+## Filtering with Multiple Conditions
+
+-   Generally put each condition on its own line within `filter`
+
+-   Use `&` ("and") and `|` ("or") when necessary
+
+```{r}
+#| label: use filter-3
+alz |>
+  filter(
+    diagnosis == "HC",
+    age >= 80 | age <= 70
+    ) |>
+  select(subject_ID, diagnosis, age) |>
+  head(5)
+```
 
 ## Rearranging Rows
 
@@ -42,7 +118,6 @@ alz |>
 
 ```{r}
 #| label: sort ascending order
-#| code-line-numbers: "2"
 alz |>
   arrange(age) |>
   select(subject_ID, diagnosis, age) |>
@@ -68,7 +143,6 @@ alz |>
 
 ```{r}
 #| label: sort categorical ascending order
-#| code-line-numbers: "2"
 alz |>
   arrange(subject_ID) |>
   select(subject_ID, diagnosis, age) |>
@@ -83,7 +157,6 @@ alz |>
 
 ```{r}
 #| label: sort by multiple variables
-#| code-line-numbers: "2"
 alz |>
   arrange(cdr, moca, desc(age)) |>
   select(subject_ID, diagnosis, cdr, moca, age) |>
@@ -94,7 +167,6 @@ alz |>
 
 ```{r}
 #| label: sort with missing data
-#| code-line-numbers: "2"
 alz |>
   arrange(moca) |>
   select(subject_ID, diagnosis, cdr, moca, age) |>
@@ -105,159 +177,10 @@ alz |>
 
 ```{r}
 #| label: in either order
-#| code-line-numbers: "2"
 alz |>
   arrange(desc(moca)) |>
   select(subject_ID, diagnosis, cdr, moca, age) |>
   tail(5)
-```
-
-## Selecting Specific Rows and Columns
-
-- We can always select rows and columns using the matrix subsetting `[row, column]` that we learned earlier
-
-- This does not work well with the pipe
-
-- We can use tidyverse-specific functions in the `dplyr` package to select rows and columns
-
-## Selecting Variables
-
-- To select columns, use `select`
-
-```{r}
-#| label: use select
-#| code-line-numbers: "2"
-alz_gmv <- alz |>
-  select(diagnosis, gmv)
-
-head(alz_gmv, 5)
-```
-
-- List multiple variables in a comma-separated list
-
-- For advanced use: Many helper functions can identify multiple variables at once
-
-## Selecting a Variable as a Vector
-
-- To pull a variable out of the data set as a vector, use `pull`
-
-```{r}
-#| label: use pull
-#| code-line-numbers: "2"
-alz |>
-  pull(gmv)
-```
-
-## Selecting Rows by Number
-
-- To subset to specific numbered rows, use `slice`
-
-```{r}
-#| label: use slice
-#| code-line-numbers: "6"
-alz |>
-  # add row numbers as a column
-  mutate(row_number = seq(1, n())) |>
-  # put row number in the leftmost column
-  relocate(row_number) |>
-  slice(39:43, 48)
-```
-
-## Selecting Observations that Meet Conditions
-
-- To subset to rows that meet a specific condition, use `filter`
-
-- Arguments should be one or more expressions that can evaluate to `TRUE` or `FALSE`
-
-## Boolean Expressions in R
-
-- Equations and inequalities work with either numerical or categorical variables:
-
-    -   `==` for "equals" (2 = signs!)
-    
-    -   `!=` for "not equals"
-
-    -   `%in%` to match one or more values in a vector
-
-- Inequalities (usually) only work with numerical variables
-
-    -   `<` or `>` for "less than"/"greater than"
-
-    -   `<=` or `>=` for "at most"/"at least"
-
-## Filtering with Categorical Variables
-
-```{r}
-#| label: use filter-1
-#| code-line-numbers: "2"
-alz |>
-  filter(diagnosis == "HC") |>
-  head(5)
-```
-
-## Filtering with Numerical Variables
-
-```{r}
-#| label: use filter-2
-#| code-line-numbers: "2"
-alz |>
-  filter(age >= 80) |>
-  select(subject_ID, diagnosis, age) |>
-  head(5)
-```
-
-## Filtering with Multiple Conditions
-
--   Generally put each condition on its own line within `filter`
-
--   Use `&` ("and") and `|` ("or") when necessary
-
-```{r}
-#| label: use filter-3
-#| code-line-numbers: "2-5"
-alz |>
-  filter(
-    diagnosis == "HC",
-    age >= 80 | age <= 70
-    ) |>
-  select(subject_ID, diagnosis, age) |>
-  head(5)
-```
-
-## Sorting and Selecting Rows in One Line
-
-```{r}
-#| label: oldest 3
-#| code-line-numbers: "2"
-alz |>
-  slice_max(age, n = 3) |>
-  select(subject_ID, diagnosis, age)
-```
-
-```{r}
-#| label: lowest 3 ages
-#| code-line-numbers: "2"
-alz |>
-  slice_min(age, n = 3) |>
-  select(subject_ID, diagnosis, age)
-```
-
-## Sorting and Selecting within Groups
-
-```{r}
-#| label: oldest 2 in each group
-#| code-line-numbers: "2"
-alz |>
-  slice_max(age, n = 2, by = diagnosis) |>
-  select(subject_ID, diagnosis, age)
-```
-
-```{r}
-#| label: youngest 2 in each group
-#| code-line-numbers: "2"
-alz |>
-  slice_min(age, n = 2, by = diagnosis) |>
-  select(subject_ID, diagnosis, age)
 ```
 
 ## Transforming Variables
@@ -268,7 +191,6 @@ alz |>
 
 ```{r}
 #| label: transform variables
-#| code-line-numbers: "2-6"
 alz |>
   mutate(
     sex = factor(sex, labels = c("female", "male")),
@@ -285,7 +207,6 @@ alz |>
 
 ```{r}
 #| label: transform variables with if-else
-#| code-line-numbers: "2-8"
 alz |>
   mutate(
     cognition = if_else(
@@ -315,7 +236,6 @@ alz |>
 
 ```{r}
 #| label: change one value with if-else
-#| code-line-numbers: "2-8"
 alz |>
   mutate(
     diagnosis_group = if_else(
@@ -334,7 +254,6 @@ alz |>
 
 ```{r}
 #| label: transform variables with case-when
-#| code-line-numbers: "2-9"
 alz |>
   mutate(
     cognition = case_when(
