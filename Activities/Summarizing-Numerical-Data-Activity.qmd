@@ -1,0 +1,306 @@
+---
+title: "Summarizing Numerical Data: Housing Loan Applications in Fullerton"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, we are going to explore roughly 763 applications submitted by people trying to get a mortgage to buy a house in Fullerton in 2021.
+
+## Load Packages and Import Data
+
+We still need the `ggplot2` and `dplyr` packages from tidyverse.
+
+```{r}
+#| label: load packages
+library(tidyverse)
+```
+
+We are still working with the loans_OC datset. Copy and run your code from the "Summarizing Categorical Data" activity to import it.
+
+```{r}
+#| label: import data 
+
+```
+
+## Data Wrangling
+
+In this activity we are only concerned about the 763 housing loan applications for Fullerton. This means we must *subset* the data to include only the *rows* corresponding to the loan applications from Fullerton.
+
+```{r}
+#| label: subset rows 
+loans_fullerton <- loans |>
+  filter(city == "Fullerton") # remember: 2 = signs!
+```
+
+We are going to be working with the loan amount and property value variables, which are in dollars (and thus can be very large). To make it a bit easier to visualize, we are going to *transform* these variables to report them in thousands of dollars.
+
+```{r}
+#| label: transform variables 
+
+loans_fullerton2 <- loans_fullerton |>
+  mutate(
+    loan_amount_1000 = loan_amount/1000, # only 1 = sign!
+    property_value_1000 = property_value/1000) 
+```
+
+### Your Turn
+
+1.  Remember that `mutate` can also create new variables as combinations of other variables! Complete the chunk below to create a new variable `loan_to_value_ratio`, equal to `loan_amount_1000/property_value_1000`.
+
+```{r}
+#| label: loan_to_value_ratio
+loans_fullerton2 <- loans_fullerton2 |>
+  # Fill in the rest of the chunk!
+
+```
+
+## Summarizing One Variable
+
+Let's start by summarizing the distribution of property values.
+
+```{r}
+#| label: summarize property values
+
+loans_fullerton2 |>
+  summarize(
+    mean_prop_value = mean(property_value_1000),
+    sd_prop_value = sd(property_value_1000)
+    )
+```
+
+This isn't good - it says the mean and standard deviation are `NA` (missing)! This usually happens when we have missing data values. Let's get a sense for this missingness:
+
+```{r}
+#| label: missing property values
+
+loans_fullerton2 |>
+  summarize(
+    n = n(), # number of observations total
+    n_missing = sum(is.na(property_value_1000)) # is.na returns TRUE if missing and FALSE if not missing
+    )
+```
+
+30 out of the 763 loan applications do not have a listed property value. This isn't a huge amount (around 4%), so we're probably okay to keep analyzing this variable, but we should at some point check to see whether there are clear patterns in which loan applications are missing property values.
+
+To get around the missingness, we have two options. One way is to filter out the missingness before summarizing.
+
+```{r}
+#| label: summarize non-missing property values-1
+
+loans_fullerton2 |>
+  filter(!is.na(property_value_1000)) |> # !is.na means "not missing"
+  summarize(
+    mean_prop_value = mean(property_value_1000),
+    sd_prop_value = sd(property_value_1000)
+    )
+```
+
+Alternatively, we can tell `mean` and `sd` to explicitly ignore the missing values.
+
+```{r}
+#| label: summarize non-missing property values-2
+
+loans_fullerton2 |>
+  summarize(
+    mean_prop_value = mean(property_value_1000, na.rm = TRUE),
+    # na.rm = TRUE means "remove NAs before calculating"
+    sd_prop_value = sd(property_value_1000, na.rm = TRUE)
+    )
+```
+
+We can also get out the five-number summary:
+
+```{r}
+#| label: five number summary for property value
+loans_fullerton2 |>
+  filter(!is.na(property_value_1000)) |>
+  summarize(
+    min_prop_value = min(property_value_1000), 
+    q1_prop_value = quantile(property_value_1000, 0.25), 
+    med_prop_value = median(property_value_1000),
+    q3_prop_value = quantile(property_value_1000, 0.75),
+    max_prop_value = max(property_value_1000)
+  )
+```
+
+### Your Turn
+
+1.  Do you suspect that this dataset contains outlier (unusually high or low) property values? Why or why not?
+
+2.  Check how many values of `loan_to_value_ratio` are missing. Then, obtain the mean, standard deviation, and five number summary of `loan_to_value_ratio` (excluding any missing values).
+
+3.  Do you suspect that this dataset contains outlier (unusually high or low) loan-to-property-value ratios? Why or why not?
+
+## Graphing One Numerical Variable
+
+By default, when we plot the variable, `ggplot2` will remove the missing values and give us a warning message about how many values were removed.
+
+```{r}
+#| label: boxplot of property values
+
+ggplot(data = loans_fullerton2,
+       mapping = aes(
+         x = property_value_1000
+       )) +
+  geom_boxplot(fill = "darkorange") +
+  labs(
+    x = "Property Value (1000s of $)",
+    y = "" # no y-axis label
+  )
+```
+
+```{r}
+#| label: histogram of property values
+
+ggplot(data = loans_fullerton2,
+       mapping = aes(
+         x = property_value_1000
+       )) +
+  geom_histogram(
+    center = 700,
+    binwidth = 100,
+    fill = "darkorange",
+    color = "black") +
+  labs(
+    x = "Property Value (1000s of $)",
+    y = "Number of Applications"
+  )
+```
+
+### Your Turn
+
+1.  Identify the shape of the distribution of property values and explain why you think it has that shape.
+
+2.  Create a boxplot of `loan_to_value_ratio`.
+
+3.  Create a histogram of `loan_to_value_ratio`. Play around with the `center` and `binwidth` arguments (i.e., change them and re-run the chunk) until you find a histogram that "looks nice" and provides good information about the shape of the distribution.
+
+4.  Identify the shape of the distribution of loan-to-property-value ratios and explain why you think it has that shape.
+
+## Comparing Groups
+
+Let's compare the property values for loans that were approved vs. not approved.
+
+```{r}
+#| label: summarize non-missing property values by group
+
+loans_fullerton2 |>
+  group_by(action) |>
+  summarize(
+    n = n(), # count the number in each group in summarize
+    n_obs = sum(!is.na(property_value_1000)),
+    mean_prop_value = mean(property_value_1000, na.rm = TRUE),
+    sd_prop_value = sd(property_value_1000, na.rm= TRUE)
+    )
+```
+
+```{r}
+#| label: five number summary for property value by group
+loans_fullerton2 |>
+  filter(!is.na(property_value_1000)) |>
+  group_by(action) |>
+  summarize(
+    n = n(), # Note that filter removed the rows with missing values before counting     
+    min_prop_value = min(property_value_1000), 
+    q1_prop_value = quantile(property_value_1000, 0.25), 
+    med_prop_value = median(property_value_1000),
+    q3_prop_value = quantile(property_value_1000, 0.75),
+    max_prop_value = max(property_value_1000)
+  )
+```
+
+When we compare groups using boxplots, we should consider whether the grouping (categorical) variable is the *explanatory* or *response* variable. In this case, the action taken makes more sense as the response variable, so we put it on the y-axis and make the boxplots horizontal. If it makes more sense as the explanatory variable (like `diagnosis` did in the `alz` dataset from the lecture notes), then we put it on the x-axis and make the boxplots vertical.
+
+```{r}
+#| label: boxplot of property values by group
+
+ggplot(data = loans_fullerton2,
+       mapping = aes(
+         x = property_value_1000,
+         y = action
+       )) +
+  geom_boxplot() +
+  labs(
+    x = "Property Value (1000s of $)",
+    y = "Action Taken"
+  )
+```
+
+### Your Turn
+
+1.  Did Approved or Not approved loans tend to be for higher-valued properties? In which group was there more variation in property values? Explain.
+
+2.  Create grouped summaries and a set of boxplots comparing `loan_to_value_ratio` between Approved and Not approved loans.
+
+3.  Did Approved or Not approved loans tend to have higher loan-to-property-value ratios? In which group was there more variation? Explain.
+
+4.  Create grouped summaries and a set of boxplots comparing `loan_to_value_ratio` in the different `ethnicity` groups. Briefly summarize what you notice about the relationship.
+
+## Using `group_by` and `summarize` to Change the Observation
+
+For the next part of the activity, we are going to look at the relationship between demographics of the census tract and the median property value in the tract. This means that we will need to change the observation from the application to the census tract.
+
+```{r}
+#| label: summarize each tract
+
+fullerton_tracts <- loans_fullerton2 |>
+  group_by(census_tract) |>
+  summarize(
+    applications = n(),
+    population = mean(tract_population),
+    minority = mean(tract_minority_population_percent),
+    income = mean(tract_to_msa_income_percentage),
+    median_value = median(property_value_1000, na.rm = TRUE)
+  )
+```
+
+Since `tract_minority_population_percent`, `tract_housing_median_age`, and `tract_to_msa_income_percentage` should have the same values for each application in the same census tract, it doesn't matter whether we use `mean`, `median`, or even `first` (first data value we encounter) as our summary. We just need to get that value out.
+
+```{r}
+#| label: check summary by census tract
+glimpse(fullerton_tracts)
+```
+
+### Your Turn
+
+1.  How many census tracts are entirely or mostly within the city of Fullerton?
+
+2.  Refer back to the data dictionary for the loans dataset. What does a value of 118 for `income` mean? (It's *not* a median income of \$118,000!)
+
+## Summarizing Relationships Between Numerical Variables
+
+Let's look at the relationship between the median property value (response) and the proportion of minority residents (explanatory). Note that this isn't necessarily a good estimate of the median property value (because some properties may be counted multiple times, and only properties for sale are included), but it's the best one we have with this data!
+
+```{r}
+#| label: scatterplot of median property values vs minority
+
+ggplot(data = fullerton_tracts,
+       mapping = aes(
+         x = minority,
+         y = median_value
+       )) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "darkblue", 
+              linetype = "dashed", se = FALSE) +
+  geom_smooth(method = "loess", color = "darkred", se = FALSE) +
+  labs(
+    title = "Housing Values in Fullerton Census Tracts",
+    x = "Percentage of Minorities in Tract",
+    y = "Median Property Value (1000s of $)"
+  )
+```
+
+### Your Turn
+
+1.  In general, as the percentage of minorities increases, what happens to the median property value?
+
+2.  Generally, we prefer models that are simpler to models that are more complex. By comparing how well the `lm` vs. `loess` smoothing methods fit the data, do you think this relationship might be modeled well using a linear (line) trend? Or is the relationship clearly nonlinear?
+
+3.  How tightly does the relationship follow the linear (`lm`) or nonlinear (`loess`) smoothed trend?
+
+4.  Are there any tracts with unusual minority percentages, unusual median housing values, or unusual combinations of the two?
+
+5.  Create a scatterplot showing the relationship between `median_value` and `income`. Answer Questions 1-4 for that relationship.
+
+6.  Create a scatterplot showing the relationship between `income` and `minority`. Answer Questions 1-4 for that relationship.
