@@ -1,0 +1,568 @@
+census_tract,city
+001101,La Habra
+001102,La Habra
+001103,La Habra
+001201,La Habra
+001202,La Habra
+001301,La Habra
+001303,La Habra
+001304,La Habra
+001401,La Habra
+001402,La Habra
+001403,Brea
+001404,La Habra
+001501,Brea
+001503,Brea
+001504,Brea
+001505,Fullerton
+001506,Brea
+001507,Brea
+001602,Fullerton
+001704,Fullerton
+001705,Fullerton
+001706,Fullerton
+001708,Fullerton
+001801,Fullerton
+001802,Fullerton
+001901,Fullerton
+001902,Fullerton
+001903,Fullerton
+011000,Fullerton
+011101,Fullerton
+011102,Fullerton
+011200,Fullerton
+011300,Fullerton
+011401,Fullerton
+011402,Fullerton
+011403,Fullerton
+011502,Fullerton
+011503,Fullerton
+011504,Fullerton
+011601,Fullerton
+011602,Fullerton
+011707,Fullerton
+011708,Fullerton
+011709,Placentia
+011710,Placentia
+011711,Fullerton
+011712,Placentia
+011714,Anaheim
+011715,Placentia
+011716,Placentia
+011717,Placentia
+011718,Placentia
+011720,Placentia
+011721,Placentia
+011722,Placentia
+021802,Yorba Linda
+021807,Anaheim
+021809,Yorba Linda
+021810,Placentia
+021812,Anaheim
+021813,Anaheim
+021814,Brea
+021816,Yorba Linda
+021817,Yorba Linda
+021820,Yorba Linda
+021821,Placentia
+021822,Yorba Linda
+021823,Yorba Linda
+021824,Yorba Linda
+021825,Yorba Linda
+021826,Yorba Linda
+021827,Yorba Linda
+021828,Yorba Linda
+021829,Yorba Linda
+021830,Yorba Linda
+021903,Anaheim
+021905,Anaheim
+021912,Orange
+021913,Orange
+021914,Orange
+021915,Anaheim
+021916,Anaheim
+021917,Orange
+021918,Orange
+021919,Anaheim
+021920,Anaheim
+021921,Anaheim
+021922,Anaheim
+021923,Anaheim
+021924,Anaheim
+032002,Mission Viejo
+032003,Mission Viejo
+032011,Silverado
+032012,Mission Viejo
+032013,Mission Viejo
+032014,Lake Forest
+032015,Mission Viejo
+032020,Mission Viejo
+032022,Mission Viejo
+032027,Lake Forest
+032028,Mission Viejo
+032029,Lake Forest
+032030,Mission Viejo
+032031,Mission Viejo
+032032,Mission Viejo
+032033,Mission Viejo
+032034,Mission Viejo
+032035,Mission Viejo
+032036,Mission Viejo
+032037,Mission Viejo
+032038,Mission Viejo
+032039,Mission Viejo
+032040,Mission Viejo
+032041,Rancho Santa Margarita
+032042,Rancho Santa Margarita
+032043,Coto De Caza
+032044,Coto De Caza
+032045,Coto De Caza
+032046,Coto De Caza
+032047,Mission Viejo
+032048,Mission Viejo
+032049,Rancho Santa Margarita
+032050,Rancho Santa Margarita
+032051,Rancho Santa Margarita
+032053,Rancho Santa Margarita
+032054,Rancho Santa Margarita
+032055,Rancho Santa Margarita
+032057,Ladera Ranch
+032058,Ladera Ranch
+032059,Ladera Ranch
+032061,San Juan Capistrano
+042106,San Clemente
+042107,San Clemente
+042108,San Clemente
+042109,San Clemente
+042111,San Clemente
+042112,San Clemente
+042113,San Clemente
+042114,San Clemente
+042201,Dana Point
+042203,San Juan Capistrano
+042205,San Clemente
+042206,San Clemente
+042305,Laguna Beach
+042307,Laguna Hills
+042311,San Juan Capistrano
+042312,San Juan Capistrano
+042313,Dana Point
+042315,San Juan Capistrano
+042317,Laguna Niguel
+042319,Laguna Niguel
+042320,Aliso Viejo
+042323,Dana Point
+042324,Laguna Niguel
+042325,Laguna Niguel
+042326,Laguna Niguel
+042327,Laguna Hills
+042328,Laguna Hills
+042329,Laguna Niguel
+042330,Laguna Niguel
+042331,Laguna Niguel
+042332,Laguna Niguel
+042333,Laguna Hills
+042334,Laguna Niguel
+042335,Laguna Niguel
+042336,Laguna Niguel
+042337,Laguna Niguel
+042338,Dana Point
+042339,Dana Point
+052408,Lake Forest
+052410,Irvine
+052411,Lake Forest
+052415,Lake Forest
+052416,Lake Forest
+052417,Irvine
+052419,Tustin
+052421,Irvine
+052422,Lake Forest
+052423,Lake Forest
+052424,Lake Forest
+052425,Lake Forest
+052427,Lake Forest
+052428,Lake Forest
+052429,Irvine
+052430,Irvine
+052434,Irvine
+052435,Irvine
+052436,Irvine
+052437,Irvine
+052438,Irvine
+052439,Irvine
+052502,Tustin
+052505,Irvine
+052506,Irvine
+052511,Irvine
+052513,Irvine
+052514,Irvine
+052518,Irvine
+052519,Irvine
+052520,Irvine
+052521,Irvine
+052522,Irvine
+052523,Irvine
+052524,Tustin
+052526,Irvine
+052527,Irvine
+052528,Irvine
+062605,Laguna Beach
+062610,Newport Beach
+062611,Irvine
+062614,Irvine
+062619,Laguna Beach
+062620,Laguna Beach
+062622,Laguna Woods
+062625,Laguna Hills
+062626,Irvine
+062627,Irvine
+062628,Irvine
+062629,Irvine
+062630,Irvine
+062631,Irvine
+062632,Laguna Beach
+062633,Aliso Viejo
+062634,Aliso Viejo
+062635,Aliso Viejo
+062636,Aliso Viejo
+062637,Aliso Viejo
+062638,Aliso Viejo
+062639,Aliso Viejo
+062640,Aliso Viejo
+062641,Aliso Viejo
+062642,Newport Beach
+062643,Newport Beach
+062645,Newport Beach
+062646,Laguna Woods
+062647,Laguna Woods
+062648,Laguna Woods
+062649,Laguna Beach
+062701,Newport Beach
+062702,Newport Beach
+062800,Newport Beach
+062900,Newport Beach
+063004,Newport Beach
+063005,Newport Beach
+063006,Newport Beach
+063007,Newport Beach
+063008,Newport Beach
+063009,Newport Beach
+063010,Newport Beach
+063101,Newport Beach
+063102,Costa Mesa
+063103,Costa Mesa
+063201,Costa Mesa
+063202,Costa Mesa
+063301,Costa Mesa
+063302,Costa Mesa
+063400,Newport Beach
+063500,Newport Beach
+063601,Newport Beach
+063603,Newport Beach
+063604,Costa Mesa
+063605,Costa Mesa
+063701,Costa Mesa
+063702,Costa Mesa
+063802,Costa Mesa
+063803,Costa Mesa
+063805,Costa Mesa
+063806,Costa Mesa
+063807,Costa Mesa
+063808,Costa Mesa
+063902,Costa Mesa
+063903,Costa Mesa
+063904,Costa Mesa
+063905,Costa Mesa
+063906,Costa Mesa
+063908,Costa Mesa
+074003,Santa Ana
+074004,Santa Ana
+074005,Santa Ana
+074006,Santa Ana
+074102,Santa Ana
+074103,Santa Ana
+074106,Santa Ana
+074107,Santa Ana
+074108,Santa Ana
+074109,Santa Ana
+074110,Santa Ana
+074111,Santa Ana
+074200,Santa Ana
+074300,Santa Ana
+074403,Santa Ana
+074405,Santa Ana
+074406,Santa Ana
+074407,Santa Ana
+074408,Tustin
+074501,Santa Ana
+074502,Santa Ana
+074601,Santa Ana
+074602,Santa Ana
+074701,Santa Ana
+074702,Santa Ana
+074801,Santa Ana
+074802,Santa Ana
+074803,Santa Ana
+074805,Santa Ana
+074806,Santa Ana
+074901,Santa Ana
+074902,Santa Ana
+075002,Santa Ana
+075003,Santa Ana
+075004,Santa Ana
+075100,Santa Ana
+075201,Santa Ana
+075202,Santa Ana
+075301,Santa Ana
+075302,Santa Ana
+075303,Santa Ana
+075401,Santa Ana
+075403,Santa Ana
+075404,Santa Ana
+075405,Santa Ana
+075504,Tustin
+075505,Tustin
+075506,Tustin
+075507,Tustin
+075512,Tustin
+075513,Tustin
+075514,Tustin
+075603,Tustin
+075604,North Tustin
+075605,North Tustin
+075606,North Tustin
+075607,Tustin
+075701,North Tustin
+075702,North Tustin
+075703,North Tustin
+075805,Orange
+075806,Orange
+075807,Orange
+075808,Orange
+075809,Villa Park
+075810,Villa Park
+075811,Orange
+075812,Orange
+075813,Orange
+075814,Orange
+075815,Orange
+075816,Orange
+075901,Orange
+075902,Orange
+076001,Orange
+076102,Orange
+076103,Garden Grove
+076201,Orange
+076202,Orange
+076204,Orange
+076205,Orange
+076206,Orange
+076208,Orange
+086301,Anaheim
+086303,Anaheim
+086304,Anaheim
+086305,Anaheim
+086306,Anaheim
+086402,Anaheim
+086404,Anaheim
+086405,Anaheim
+086406,Anaheim
+086407,Anaheim
+086501,Anaheim
+086502,Anaheim
+086601,Anaheim
+086602,Anaheim
+086701,Anaheim
+086702,Anaheim
+086801,Anaheim
+086802,Anaheim
+086803,Anaheim
+086901,Anaheim
+086902,Anaheim
+086903,Anaheim
+087001,Anaheim
+087002,Anaheim
+087101,Anaheim
+087102,Anaheim
+087103,Anaheim
+087105,Anaheim
+087106,Anaheim
+087200,Anaheim
+087401,Anaheim
+087403,Anaheim
+087404,Anaheim
+087405,Anaheim
+087503,Anaheim
+087504,Anaheim
+087505,Anaheim
+087601,Anaheim
+087602,Anaheim
+087701,Anaheim
+087703,Anaheim
+087704,Anaheim
+087801,Stanton
+087802,Stanton
+087803,Stanton
+087805,Stanton
+087806,Anaheim
+087901,Stanton
+087902,Stanton
+088001,Garden Grove
+088002,Garden Grove
+088101,Garden Grove
+088104,Stanton
+088105,Garden Grove
+088106,Stanton
+088107,Garden Grove
+088201,Garden Grove
+088202,Garden Grove
+088203,Garden Grove
+088301,Garden Grove
+088302,Garden Grove
+088401,Garden Grove
+088402,Garden Grove
+088403,Garden Grove
+088501,Garden Grove
+088502,Garden Grove
+088601,Garden Grove
+088602,Garden Grove
+088701,Garden Grove
+088702,Garden Grove
+088801,Garden Grove
+088802,Garden Grove
+088901,Garden Grove
+088902,Garden Grove
+088903,Garden Grove
+088904,Westminster
+088905,Westminster
+089001,Santa Ana
+089003,Garden Grove
+089004,Santa Ana
+089102,Garden Grove
+089104,Garden Grove
+089105,Santa Ana
+089106,Garden Grove
+089107,Santa Ana
+099202,Santa Ana
+099203,Santa Ana
+099204,Westminster
+099212,Huntington Beach
+099214,Huntington Beach
+099215,Huntington Beach
+099216,Huntington Beach
+099217,Huntington Beach
+099220,Huntington Beach
+099222,Westminster
+099223,Westminster
+099224,Fountain Valley
+099225,Fountain Valley
+099226,Fountain Valley
+099227,Fountain Valley
+099229,Fountain Valley
+099230,Fountain Valley
+099231,Fountain Valley
+099232,Fountain Valley
+099233,Fountain Valley
+099234,Fountain Valley
+099235,Huntington Beach
+099237,Huntington Beach
+099238,Huntington Beach
+099239,Huntington Beach
+099240,Huntington Beach
+099241,Westminster
+099242,Huntington Beach
+099243,Huntington Beach
+099244,Huntington Beach
+099245,Huntington Beach
+099246,Huntington Beach
+099247,Santa Ana
+099248,Santa Ana
+099249,Santa Ana
+099250,Fountain Valley
+099251,Fountain Valley
+099305,Huntington Beach
+099306,Huntington Beach
+099307,Huntington Beach
+099308,Huntington Beach
+099309,Huntington Beach
+099310,Huntington Beach
+099311,Huntington Beach
+099402,Huntington Beach
+099404,Huntington Beach
+099405,Huntington Beach
+099406,Huntington Beach
+099407,Huntington Beach
+099408,Huntington Beach
+099410,Huntington Beach
+099411,Huntington Beach
+099412,Huntington Beach
+099415,Huntington Beach
+099416,Huntington Beach
+099417,Huntington Beach
+099502,Seal Beach
+099504,Seal Beach
+099506,Huntington Beach
+099508,Huntington Beach
+099509,Seal Beach
+099510,Seal Beach
+099511,Seal Beach
+099512,Seal Beach
+099513,Huntington Beach
+099514,Huntington Beach
+099601,Westminster
+099602,Huntington Beach
+099603,Huntington Beach
+099604,Huntington Beach
+099605,Huntington Beach
+099701,Midway City
+099702,Midway City
+099703,Westminster
+099801,Westminster
+099802,Westminster
+099803,Westminster
+099902,Westminster
+099903,Westminster
+099904,Westminster
+099905,Westminster
+099906,Westminster
+110001,Garden Grove
+110003,Garden Grove
+110004,Garden Grove
+110005,Garden Grove
+110006,Rossmoor
+110007,Rossmoor
+110008,Rossmoor
+110010,Garden Grove
+110011,Cypress
+110012,Seal Beach
+110014,Los Alamitos
+110015,Los Alamitos
+110102,La Palma
+110104,Cypress
+110106,Cypress
+110108,Los Alamitos
+110109,Cypress
+110110,Cypress
+110111,Cypress
+110113,Cypress
+110114,Cypress
+110115,La Palma
+110116,La Palma
+110117,Cypress
+110118,Cypress
+110201,Buena Park
+110202,Anaheim
+110203,Buena Park
+110301,Buena Park
+110302,Buena Park
+110303,Buena Park
+110304,Buena Park
+110401,Buena Park
+110402,Buena Park
+110500,Buena Park
+110603,Buena Park
+110604,Buena Park
+110605,Fullerton
+110606,Buena Park
+110607,Buena Park
+980000,Disneyland

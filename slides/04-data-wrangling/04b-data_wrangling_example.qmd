@@ -1,0 +1,303 @@
+---
+title: "Example: A Data Wrangling Pipeline"
+format: revealjs
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## How We Made the `loans` Dataset
+
+-   This is a real example of a real data wrangling pipeline that we used to create the `loans_OC.csv` file you have been working with
+
+-   The original data file from the Consumer Financial Protection Bureau contained information about all 3.36 million loan applications from Calfornia in 2021
+
+    -   1.3 GB csv file!
+
+    -   Over 88,000 parsing issues when first importing into R
+
+## Step 1: Look at the Data Dictionary
+
+-   There are 99 variables in the original dataset
+
+-   Many are redundant or irrelevant to our goals
+
+-   Some have weird names or values
+
+-   Reading and understanding the data dictionary helps us understand what those variables actually represent
+
+## Step 2: Recode Variables with `mutate`
+
+-   Many categorical variables had numerical or otherwise difficult values
+
+-   The data dictionary told us which values corresponded to which groups
+
+-   Sometimes we combined multiple values into the same group
+
+## Recoding Is Not Always Simple!
+
+-   The most annoying variable was `lei`
+
+    -   A unique 20-character code corresponding to a financial institution
+
+    -   We manually searched a database to see which `lei` code corresponded to which institution
+
+    -   Anything marked "Other" means that there weren't enough applications in the dataset from that institution to bother looking it up
+
+## Step 3a: `filter` for Orange County
+
+-   We looked up on the Census Bureau website:
+
+    -   The state code for CA is 06
+
+    -   The county code for Orange County, CA is 059
+
+    -   Thus, any census tract starting "06059" is in OC
+
+-   Filtering reduced from 3.36 million rows to about 275,000
+
+## Step 3b: `filter` for Only the Applications of Interest
+
+-   We kept only applications for conventional first mortgages on a home purchase
+
+-   We removed reverse mortgages and other weird types of loans
+
+-   We removed applications where the applicants' race, ethnicity, or sex was unclear
+
+-   Filtering reduced from about 275,000 rows to 24,472
+
+## A Note on Exploring Data
+
+-   It was not always obvious which applications should have been included vs. excluded
+
+    -   It was also not obvious *how* to do the including/excluding!
+
+-   As we were doing all of this filtering, we were *regularly* making tables and graphs of the data to figure out what the values were
+
+    -   Also referring back to the data dictionary to figure out what those values meant!
+
+## Step 4: `select` and Rename Relevant Columns
+
+-   17 columns were potentially relevant to our goals
+
+-   Selecting columns reduced from 99 columns to 17
+
+    -   `city` is not one of them!
+
+-   We also renamed some columns within `select`:
+
+    -   `new_variable_name = old_variable_name`
+
+    -   For example: `select(instituion = lei)`
+
+## Step 5: Match Census Tracts to Cities
+
+-   We found a map indicating the boundaries of both the census tracts and the cities
+
+-   There are 567 different census tracts in Orange County
+
+-   We created a new dataset with 567 rows and 2 columns
+
+    -   Census tract number and city covering most of the tract
+
+    -   Some census tracts in the dataset did not exist on the map!
+
+    -   Some census tracts on the map did not exist in the dataset!
+
+## Step 6: Merge the Two Datasets
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+library(janitor) # redo the merging example
+```
+
+```{r}
+#| label: import data with here
+
+loans <- readr::read_csv(here::here("Data", "loans_cleaned.csv"))
+tracts <- readr::read_csv(here::here("Data", "OC_tracts.csv"))
+```
+-   In SQL database terminology, we want to `join` these two datasets together
+
+-   There are 3 main types of joins
+
+    -   The main distinction is in which unmatched rows are kept
+
+## Inner Join
+
+```{r}
+#| label: Inner join loans and tracts
+
+ij_loans <- loans |> # source dataset
+  inner_join(
+    tracts, # dataset to merge with it
+    by = "census_tract" # common variable in the two datasets
+  )
+
+```
+
+-   An inner join keeps *only* the rows in the first dataset that match something in the second dataset
+
+```{r}
+#| label: number of rows in each dataset - inner join
+c(loans = nrow(loans),
+  tracts = nrow(tracts),
+  joined = nrow(ij_loans))
+```
+
+## What Gets Kept in an Inner Join?
+
+-   Only the 20518 rows in the `loans` dataset that correspond to a census tract on the map are included in the inner join
+
+```{r}
+#| label: check bottom of inner join
+ij_loans |>
+  select(census_tract, loan_amount, city) |>
+  tail(5)
+```
+
+## Full Join
+
+```{r}
+#| label: Full join loans and tracts
+
+fj_loans <- loans |> # source dataset
+  full_join(
+    tracts, # dataset to merge with it
+    by = "census_tract" # common variable in the two datasets
+  )
+
+```
+
+-   A full join (or full outer join) keeps *all* rows in each dataset, whether or not they match anything in the other dataset
+
+```{r}
+#| label: number of rows in each dataset - full join
+c(loans = nrow(loans),
+  tracts = nrow(tracts),
+  joined = nrow(fj_loans))
+```
+
+## What Gets Kept in a Full Join?
+
+-   All 24472 rows in the `loans` dataset are included
+
+-   Additionally, 12 census tracts not found in the `loans` dataset are included
+
+    -   Potential mismatch between tract number in the `loans` dataset and tract number on the map?
+
+    -   R adds 12 rows to the bottom of the dataset containing *just* the census tract and city
+
+## Left Join
+
+```{r}
+#| label: left join loans and tracts
+
+lj_loans <- loans |> # source dataset
+  left_join(
+  tracts, # dataset to merge with it
+  by = "census_tract" # common variable in the two datasets
+  )
+
+```
+
+-   A left join (or left outer join) keeps the rows in the *source* dataset, whether or not they match anything in the other dataset
+
+```{r}
+#| label: number of rows in each dataset - left join
+c(loans = nrow(loans),
+  tracts = nrow(tracts),
+  joined = nrow(lj_loans))
+```
+
+## What Gets Kept in a Left Join?
+
+-   All 24472 rows in the `loans` dataset are included
+
+-   The 12 census tracts not found in the `loans` dataset are *not* added
+
+```{r}
+#| label: check bottom of left join
+lj_loans |>
+  select(census_tract, loan_amount, city) |>
+  tail(5)
+```
+
+## Choosing a Join
+
+- `inner_join` is almost never recommended because too many observations are dropped
+
+- `full_join` is used when you want *everything* regardless of which dataset it comes from
+
+- We chose to use `left_join` because we still wanted each row to represent an application
+
+-   Think about what you want your merged dataset to look like before merging!
+
+    -   This will help you choose the type of join *and* the variables you are matching on!
+
+## Same Variable Name, Different Datasets
+
+-   Sometimes two datasets have variables with the same name but different information
+
+-   We saw this in the Summarizing Categorical Data Activity when we tried to create one table with the percentages and the group totals
+
+## Code We Wrote to Create the Tables
+
+```{r}
+#| label: example from janitor
+
+ethnicity_totals <- loans |>
+  tabyl(ethnicity, action) |>
+  adorn_totals(c("col"))
+
+ethnicity_pcts <- loans |>
+  tabyl(ethnicity, action) |>
+  adorn_percentages(denominator = "row") |>
+  adorn_pct_formatting(digits = 1)
+
+names(ethnicity_totals)
+names(ethnicity_pcts)
+```
+
+## Identifying Which Dataset Contained Which Variable
+
+```{r}
+#| label: using left join with the tables
+#| code-line-numbers: "5"
+ethnicity_pcts |>
+  left_join(
+    ethnicity_totals,
+    by = "ethnicity",
+    suffix = c("_pct", "_total")
+  )
+```
+
+## More Complicated Matching
+
+-   We may need to match based on multiple variables in the datasets
+
+-   The variables we want to match on may have different names in the two datasets
+
+-  We may want to match based on more complicated overlaps 
+
+-   Two or more of these situations occur!
+
+## Use `join_by` for More Complicated Matching
+
+-   Just like with `filter`, we create a list of one or more expressions that evaluate to `TRUE` or `FALSE`
+
+-   The left side of the expression refers to the source dataset and the right side to the dataset we are merging with it
+
+```{r}
+#| label: example join_by
+
+tracts2 <- tracts |>
+  rename(tract = census_tract) # rename census_tract to tract
+
+# Create join_by first
+by <- join_by(census_tract == tract)
+
+jb_loans <- loans |>
+  left_join(tracts2, by = by)
+```
