@@ -10,7 +10,15 @@ execute:
 
 -   This is a real example of a real data wrangling pipeline that we used to create the `loans_OC.csv` file you have been working with
 
--   The original data file from the Consumer Financial Protection Bureau contained information about all 3.36 million loan applications from Calfornia in 2021
+-   This is *much* more streamlined than how it actually happened
+
+    -   Do not expect your data massaging to work perfectly the first time!
+    
+    -   Thinking through the process can be as important as writing the code!
+
+## Original Data
+
+-   The original data file from the Consumer Financial Protection Bureau contained information about all 3.36 million loan applications from California in 2021
 
     -   1.3 GB csv file!
 
@@ -18,41 +26,47 @@ execute:
 
 ## Step 1: Look at the Data Dictionary
 
--   There are 99 variables in the original dataset
+-   There were 99 variables in the original dataset
 
--   Many are redundant or irrelevant to our goals
+-   Many were redundant or irrelevant to our goals
 
--   Some have weird names or values
+-   Some had weird names or values
 
--   Reading and understanding the data dictionary helps us understand what those variables actually represent
+-   Reading and understanding the data dictionary helped us understand what those variables actually represent
 
 ## Step 2: Recode Variables with `mutate`
 
--   Many categorical variables had numerical or otherwise difficult values
+-   Many categorical variables had numerical or otherwise difficult-to-work-with values
 
--   The data dictionary told us which values corresponded to which groups
+-   The data dictionary (usually) told us which values corresponded to which groups
 
--   Sometimes we combined multiple values into the same group
+-   We used `mutate` to change category names so they were shorter or more informative
+
+    -   Sometimes we combined multiple values into the same group
+
+    -   Lots of `if_else` and `case_when`!
 
 ## Recoding Is Not Always Simple!
 
 -   The most annoying variable was `lei`
 
-    -   A unique 20-character code corresponding to a financial institution
+    -   A unique 20-character code for a financial institution
 
     -   We manually searched a database to see which `lei` code corresponded to which institution
 
-    -   Anything marked "Other" means that there weren't enough applications in the dataset from that institution to bother looking it up
+    -   If the institution processed fewer than 1000 loan applications from the Southern California area, we marked it as "Other" 
+    
+    -   This ended up as a 65-line `case_when` statement
 
 ## Step 3a: `filter` for Orange County
 
--   We looked up on the Census Bureau website:
+-   There was a variable named `county_code` in our dataset, and we eventually figured out that the value "06059" the tract was in Orange County
 
-    -   The state code for CA is 06
+    -   We needed help from the Census Bureau website:
 
-    -   The county code for Orange County, CA is 059
+        -   The state code for CA is 06
 
-    -   Thus, any census tract starting "06059" is in OC
+        -   The county code for Orange County, CA is 059
 
 -   Filtering reduced from 3.36 million rows to about 275,000
 
@@ -66,15 +80,16 @@ execute:
 
 -   Filtering reduced from about 275,000 rows to 24,472
 
-## A Note on Exploring Data
+## When Did We Explore the Data?
 
--   It was not always obvious which applications should have been included vs. excluded
+-   As we were doing all of this data processing, we were *regularly* making tables and graphs of the data
 
-    -   It was also not obvious *how* to do the including/excluding!
+    -   Figuring out what values were present and how often they occurred
 
--   As we were doing all of this filtering, we were *regularly* making tables and graphs of the data to figure out what the values were
+    -   Making sure the newly created datasets looked like we expected
 
     -   Also referring back to the data dictionary to figure out what those values meant!
+    
 
 ## Step 4: `select` and Rename Relevant Columns
 
@@ -187,7 +202,9 @@ c(loans = nrow(loans),
 
     -   Potential mismatch between tract number in the `loans` dataset and tract number on the map?
 
-    -   R adds 12 rows to the bottom of the dataset containing *just* the census tract and city
+    -   R adds 12 rows to the bottom of the dataset containing values for *just* the census tract and city
+
+        -   All other variables are coded as missing (`NA`)
 
 ## Left Join
 
@@ -230,15 +247,15 @@ lj_loans |>
 
 - `full_join` is used when you want *everything* regardless of which dataset it comes from
 
-- We chose to use `left_join` because we still wanted each row to represent an application
+- We chose to use `left_join` because we we wanted to add additional information (if present) to each application in the `loans` dataset
 
--   Think about what you want your merged dataset to look like before merging!
+    -   Think about why you are merging and what you want your merged dataset to look like before doing it!
 
-    -   This will help you choose the type of join *and* the variables you are matching on!
+## Different Datasets, Different Information, Same Variable Name
 
-## Same Variable Name, Different Datasets
+-   Sometimes the same variable name is present in both datasets but the variable represents *different* information in each dataset
 
--   Sometimes two datasets have variables with the same name but different information
+    -   So we don't want to match based on these variables!
 
 -   We saw this in the Summarizing Categorical Data Activity when we tried to create one table with the percentages and the group totals
 
@@ -260,7 +277,7 @@ names(ethnicity_totals)
 names(ethnicity_pcts)
 ```
 
-## Identifying Which Dataset Contained Which Variable
+## Noting Which `Approved` Variable Came from Which Dataset
 
 ```{r}
 #| label: using left join with the tables
@@ -275,13 +292,13 @@ ethnicity_pcts |>
 
 ## More Complicated Matching
 
--   We may need to match based on multiple variables in the datasets
+-   We may need to match based on *multiple* variables
 
 -   The variables we want to match on may have different names in the two datasets
 
--  We may want to match based on more complicated overlaps 
+-   We may want to match based on more complicated overlaps 
 
--   Two or more of these situations occur!
+-   Two or more of these situations may occur!
 
 ## Use `join_by` for More Complicated Matching
 
