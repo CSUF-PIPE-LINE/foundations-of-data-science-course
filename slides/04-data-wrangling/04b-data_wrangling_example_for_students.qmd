@@ -1,5 +1,5 @@
 ---
-title: "Example: A Data Wrangling Pipeline"
+title: "A Data Wrangling Pipeline: Student Version"
 format: revealjs
 editor: visual
 execute:
