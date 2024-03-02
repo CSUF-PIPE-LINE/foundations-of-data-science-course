@@ -1,0 +1,68 @@
+---
+title: "Activity: Exploring Data On Our Own"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+The city of Chicago partnered with Allstate Insurance to develop a data-driven model for prioritizing its health inspections. The goal of this model was to predict whether an inspector would observe a critical violation during the upcoming inspection.
+
+In this activity, you are going to explore a subset of their data. You should approach this activity as a data scientist: as you go through each step, discuss with your group what variable you want to look at, how you are going to explore it, and what you have learned after making and interpreting appropriate tables, graphs, or subsets.
+
+This activity is very open-ended! Please call me over if your group is stuck (either what to do next or how to code what you want to do).
+
+## Step 1: Understanding the Data
+
+Download the `Chicago_inspections` data file and data dictionary from Canvas.
+
+Based on the data dictionary and an initial `glimpse` of the data, answer the following questions:
+
+1. For which year(s) do you have inspection data?
+
+2. How many inspections are in the dataset?
+
+3. Which variables are numerical? Categorical? Logical?
+
+4. The response variable of interest is not in the dataset! Write code to create it.
+
+## Step 2: Explore the Response Variable
+
+1. Are there any missing values of the response variable?
+
+2. Produce appropriate numerical and graphical summaries describing the distribution of the response variable.
+
+3. Write a brief (2-3 sentences) paragraph indicating what you have learned about the response variable, based on your exploration.
+
+## Step 3: Identify and Explore a Useful Explanatory Variable
+
+1. Pick one explanatory variable in the dataset. Explain why you think it might be related to the response variable: what kind of relationship are you expecting and why?
+
+2. Are there any missing values of the variable? Produce appropriate numerical and graphical summaries describing the distribution of the variable.
+
+3. Are there any weird values of the variable (*truly unusual* outlier values or categories with only a few inspections)? If so, which `Inspection_ID` do they correspond to?
+
+4. Write a brief (2-3 sentences) paragraph indicating what you have learned about the explanatory variable, based on your exploration.
+
+## Step 4: Describe the Relationship Between the Two Variables
+
+1. Produce a graph showing the relationship between the variables from Step 2 and Step 3.
+
+2. What do you notice about the relationship? Consider adding a linear or nonlinear trend (or both) to the graph to help you.
+
+## Step 5: Repeat Steps 3-4 for More Variables
+
+1. Pick another explanatory variable in the dataset. Explain why you think it might be related to the response variable: what kind of relationship are you expecting and why?
+
+2. Are there any missing values of the variable? Produce appropriate numerical and graphical summaries describing the distribution of the variable.
+
+3. Are there any weird values of the variable (*truly unusual* outlier values or categories with only a few inspections)? If so, which `Inspection_ID` do they correspond to?
+
+4. Produce a graph showing the relationship between the explanatory and response variables.
+
+5. What do you notice about the relationship? Consider adding a linear or nonlinear trend (or both) to the graph to help you.
+
+6. Produce a graph showing the relationship between the two explanatory variables. What do you notice about the relationship? Consider adding a linear or nonlinear trend (or both) to the graph to help you.
+
+7. Produce tables and/or graphs showing the relationship between all three varaibles.
+
+8. Write a brief (2-3 sentences) paragraph indicating what you have learned by exploring this variable.
