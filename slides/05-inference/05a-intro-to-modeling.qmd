@@ -1,0 +1,390 @@
+---
+title: "Introduction to Modeling"
+format: revealjs
+editor: visual
+---
+
+## Why Model?
+
+- Typically, we only have data from a sample
+
+    -   The relationships we discover in EDA apply *only* to this sample
+
+- A *mathematical model* allows us to generalize these relationships to observations we have *not* observed
+
+    -   It may yield insight into mechanisms behind the process we are modeling
+    
+    -   It allows us to do "what-if" analysis
+
+## The Fundamental Formula of Modeling
+
+$$
+\text{DATA} = \text{MODEL} + \text{ERROR}
+$$
+
+- **DATA**: the response (y) we are interested in
+- **MODEL**: a mathematical function of parameters ($\theta$) and predictor variables (x)
+- **ERROR**: additional variability *not* accounted for by $\theta$ and x
+
+- We can think of the "model" as describing *known* variability and the "error" as describing *uncertainty*
+
+## Model Types
+
+- A *regression* model is used when y is numerical
+
+- A *classification* model is used when y is categorical
+
+    -   Note that the model "name" may not match the model "type"; for example, "logistic regression" is a classification model
+
+## Inference vs. Prediction
+
+- Most data science problems can be categorized as either an *inference* problem or a *prediction* problem
+
+    -   Inferential models build a mechanism for describing the effect of predictors on the response
+
+    -   Predictive models use the collective information from the predictors to build reliable predictions of the response for observations not yet observed
+
+- The *type* of model is independent of the modeling *goal*
+
+    -   Both regression and classification models can be used for inference and prediction
+
+## Example: Inference vs. Prediction
+
+Consider a problem relating the bride's age and the groom's age at marriage. Using a sample of wedding announcements in the *New York Times*, we build a model:
+
+$$
+\text{bride age} = 6 + 0.75 \times \text{groom age}
+$$
+
+Inference question: In the entire population of U.S. heterosexual marriages, how does the average age of the bride change as the groom gets older?
+
+Prediction question: If Dr. Wynne gets married, how old will his wife be?
+
+## Types of Inference Questions
+
+- Is there a relationship between x and y in the population?
+
+    -   This type of question is answered using a *hypothesis test*
+    
+- How much does the population mean of y (regression) or the probability of y being a particular category (classification) change when x changes?
+
+    -   This type of question is answered using a *confidence interval*
+    
+## Cautions for Inference
+
+-   Inference is sometimes called "confirmatory" data analysis
+
+    -    We should generally have an idea of what we "expect" to see *before* we collect our sample data
+    
+-   In real projects, we typically need two samples:
+
+    -   A *pilot sample* for which we can do EDA and determine what relationships seem reasonable
+    
+    -   A "real" sample, generally much larger, which can be used to do the inferential modeling
+    
+## Cautions for Prediction
+
+-   Our model describes the relationship in the sample
+
+    -   As the model gets more complex, it may start describing the **ERROR** as if it were part of the **MODEL** 
+    
+    -   This is known as *overfitting*
+    
+-   In real projects, we typically need two samples:
+
+    -   A *training* sample for which we can do EDA and build models
+    
+    -   A *validation* sample on which we can evaluate the predictions of the model
+
+## What If We Only Have One Dataset?
+
+-   Split your data into a *training set* and one or more *holdout sets*
+    
+    -   Holdout sets can be referred to as *validation set* or *test set*
+    
+-   Do EDA and modeling using *only* the training set
+    
+-   Use the holdout set(s) for prediction and inference after you have selected a final model
+
+## What If We Only Have One Dataset? (Alternative for Inference)
+
+-   Use domain knowledge to form hypotheses about  relationships before data is collected
+    
+-   Only do EDA to "sanity check" your data and check any assumptions of your model
+
+    -   You should know *before* you do EDA what you expect your model to look like
+
+## Fundamental Rules of Modeling
+
+1. Models should be as simple as possible...but not too simple
+
+    -   Simpler models are more interpretable and protect against overfitting
+
+2. Models should reflect (as faithfully as possible) the way that the data was generated/collected
+
+    -   Understanding how data was/will be collected is *vital* in understanding what models are appropriate
+    
+## How Is Data Collected?
+
+Data is a byproduct of *human decisions* about who/what to observe, what to record about them, and how (if at all) to manipulate them
+
+## Who/What Do We Observe?
+
+-   Obtaining data from the entire population is time and labor-intensive
+
+    -   Typically we need answers much faster than we could collect this data
+    
+    -   The population may only exist "hypothetically"
+    
+-   Instead, we observe data from a sample
+
+    -   There are many different ways to choose our sample
+    
+## Convenience Sampling
+
+- Suppose we want to build a model to describe the relationship between gas price (y) and the distance the gas station is from the nearest freeway exit (x)
+
+- Our population will consist of all gas stations in Orange County
+
+- In *convenience sampling*, we simply get data from gas stations it is easy for us to observe
+
+    -   Likely gas stations near us!
+    
+    -   May not generalize well to the entire county!
+
+## Random Sampling
+
+-   In *random sampling*, we use random chance to select the observations that will be in our sample
+
+-   We know (mostly) what observations are in our population; the limiting factor is how long it would take to get the data
+
+-   Generally three main types of random sampling
+
+    -   Which one we use depends on other considerations
+
+## Simple Random Sampling
+
+-   Each observation in the population has the *same* chance to be in the sample
+
+-   Randomly "pick names off the list"
+
+-   Generally the easiest way to get a random sample
+
+## Stratified Random Sampling
+
+-   Non-randomly divide our population into groups based on another variable
+
+-   Do simple random sampling within each group
+
+-   Useful when there are minority groups that we might miss or underrepresent when using simple random sampling
+
+## Cluster Sampling
+
+-   Non-randomly divide our population into groups based on another variable
+
+-   Do simple random sampling *on the groups* and observe everyone in the selected groups
+
+-   Useful when it's easier to find the groups than the individual observations
+
+    -   Students within schools, patients within hospitals, etc.
+
+## Random Sampling with R
+
+-   We are going to use the `rsample` package
+
+    -   Typically we use this package to split our data into training and holdout sets
+
+    -   Here we will "hack" the machinery so that we can get samples of roughly 5% of the gas stations in Orange County
+
+-   Before we take our sample, we need to set a `seed`
+
+    -   Ensures we will get the *same* "random" sample every time
+
+```{r}
+#| label: import gas data
+#| eval: TRUE
+#| echo: TRUE
+library(rsample)
+gas <- readr::read_csv(here::here("Data/gas.csv"))
+```
+    
+## Simple Random Sampling with R
+
+```{r}
+#| label: simple random sampling-1
+#| eval: FALSE
+#| echo: TRUE
+set.seed(4) 
+gas_simple <- gas |>
+  initial_split(prop = 0.05) |>
+  training()
+```
+
+```{r}
+#| label: simple random sampling-2
+#| eval: TRUE
+#| echo: FALSE
+set.seed(4) # set the seed for reproducibility
+gas_simple <- gas |> 
+  initial_split(prop = 0.05) |>
+  training() # technically gets a "training" set out
+print(gas_simple)
+```
+
+## Stratified Random Sampling with R
+
+- We ensure that each `Brand` is present in the random sample in roughly the same proportion as the population
+
+```{r}
+#| label: strat random sampling-1
+#| eval: FALSE
+#| echo: TRUE
+#| code-line-numbers: "3"
+set.seed(256) 
+gas_strat <- gas |>
+  initial_split(prop = 0.05, strata = Brand) |>
+  training()
+```
+
+```{r}
+#| label: strat random sampling-2
+#| eval: TRUE
+#| echo: FALSE
+set.seed(256) # set the seed for reproducibility
+gas_strat <- gas |> 
+  initial_split(prop = 0.05, strata = Brand) |>
+  training() # technically gets a "training" set out
+print(gas_strat)
+```
+
+## Cluster Sampling with R
+
+- We randomly sample *cities* and include all gas stations in the selected cities in our sample
+
+```{r}
+#| label: cluster random sampling-1
+#| eval: FALSE
+#| echo: TRUE
+#| code-line-numbers: "3"
+set.seed(125) 
+gas_cluster <- gas |>
+  group_initial_split(prop = 0.05, group = City) |>
+  training()
+```
+
+```{r}
+#| label: cluster random sampling-2
+#| eval: TRUE
+#| echo: FALSE
+set.seed(125) # set the seed for reproducibility
+gas_cluster <- gas |> 
+  group_initial_split(prop = 0.05, group = City) |>
+  training() # technically gets a "training" set out
+print(gas_cluster)
+```
+
+## How (If At All) to Manipulate
+
+- It is *never* okay to manipulate the values of *response* variables when collecting data
+
+- Two acceptable ways to manipulate the values of *predictor* variables
+
+    -   Control: standardize all observations to have the same value
+    
+    -   Assignment: assign each observation to one of a few  values
+    
+## Why Control?
+
+- Ensure that a variable that is *neither a predictor of interest nor the response* has no effect on the response
+
+- Set the value of this variable to be the same for *every* observation in the sample
+
+    -   No variability!
+    
+    -   Make sure it's set to something reasonable!
+    
+-   Examples:
+
+    -   Give everyone the same difficulty task
+    
+    -   Keep everyone on a drug for the same amount of time
+    
+## Why Assign?
+
+-   By assigning, we have control over the values of a predictor variable
+
+-   **Random** assignment: we leave which observations have which values up to chance
+
+    -   The effects of other variables should "cancel out"
+    
+-   Examples:
+
+    -   Assign people at random to one of two difficulties
+    
+    -   Assign people at random to one of three drugs
+
+## Observational Study vs Experiment
+
+- Observational Study
+
+    - We *passively* observe the predictor variable values
+    
+    - We *passively* observe the response variable values
+    
+    - We *actively* control whatever other variables we can
+  
+- Experimental Study
+
+    - We *actively* assign the predictor variable values
+    
+    - We *passively* observe the response variable values
+    
+    - We *actively* control whatever other variables we can
+    
+## Association vs. Cause-and-Effect
+
+-   Two variables are *associated* if we observe a change in the *distribution* of the response variable when the value of the predictor variable changes
+
+-   Cause-and-effect is stronger: the change in the predictor variable actually *causes* the observed change in the *distribution* of the response
+
+## Example: Lung Cancer and Smoking
+
+-   Smoking is *associated* with lung cancer because smokers are *more likely* to get lung cancer than non-smokers
+
+-   To establish cause-and-effect, we would have to demonstrate that changing from non-smoker to smoker is what actually increases that risk of lung cancer
+
+-   We would have to eliminate other reasonable explanations for the observed association
+    
+    -   Suppose there is a "smoking gene" that also affects your risk of lung cancer!
+
+## Establishing Cause-and-Effect
+
+-   Gold standard: Experiment with random assignment and appropriate controls
+
+    -   If we randomly *assign* some people to smoke and others to not smoke, we would expect the effect of the "smoking gene" to be similar in both groups
+    
+    -   Clearly not ethical!
+    
+## Informed Consent
+
+- The principle of *informed consent* requires that, prior to someone collecting data from you, you:
+
+    -   Know what data will be collected and (within reason) how and why it will be collected
+    
+    -   Know the potential risks and benefits of participating
+    
+    -   Agree to participate in the data collection process
+
+- Well-established ethical principle in traditional biomedical and social science research, but *not* in data science
+
+    -   How often do you read the whole Terms of Service?
+    
+## Establishing Cause-and-Effect with Observational Studies
+
+-   Causal modeling: domain knowledge informs *mechanisms* through which predictors influence the response
+
+-   Creating a causal model *before* data collection helps inform:
+
+    -   What variables should be controlled
+    
+    -   What cause-and-effect statements can potentially be made

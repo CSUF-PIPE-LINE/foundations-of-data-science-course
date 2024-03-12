@@ -47,7 +47,7 @@ Based on the data dictionary and an initial `glimpse` of the data, answer the fo
 
 1. Produce a graph showing the relationship between the variables from Step 2 and Step 3.
 
-2. What do you notice about the relationship? Consider adding a linear or nonlinear trend (or both) to the graph to help you.
+2. What do you notice about the relationship? If appropriate, consider adding a linear or nonlinear trend (or both) to the graph to help you.
 
 ## Step 5: Repeat Steps 3-4 for More Variables
 
@@ -59,10 +59,10 @@ Based on the data dictionary and an initial `glimpse` of the data, answer the fo
 
 4. Produce a graph showing the relationship between the explanatory and response variables.
 
-5. What do you notice about the relationship? Consider adding a linear or nonlinear trend (or both) to the graph to help you.
+5. What do you notice about the relationship? If appropriate, consider adding a linear or nonlinear trend (or both) to the graph to help you.
 
-6. Produce a graph showing the relationship between the two explanatory variables. What do you notice about the relationship? Consider adding a linear or nonlinear trend (or both) to the graph to help you.
+6. Produce a graph showing the relationship between the two explanatory variables. What do you notice about the relationship? If appropriate, consider adding a linear or nonlinear trend (or both) to the graph to help you.
 
-7. Produce tables and/or graphs showing the relationship between all three varaibles.
+7. Produce tables and/or graphs showing the relationship between all three variables. If appropriate, consider adding a linear or nonlinear trend within each group to the graph to help you.
 
 8. Write a brief (2-3 sentences) paragraph indicating what you have learned by exploring this variable.
