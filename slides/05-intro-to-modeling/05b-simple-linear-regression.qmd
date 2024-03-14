@@ -18,7 +18,6 @@ library(tidyverse)
 alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
 ```
 
-
 ## Visualizing a Linear Trend
 
 ::: columns
@@ -69,11 +68,9 @@ ggplot(data = alz,
 
 ::: columns
 ::: {.column width="55%"}
-
 -   What is the equation of the line?
 
 -   How do we know this line is the "best" line to model the relationship?
-
 :::
 
 ::: {.column width="45%"}
@@ -106,7 +103,6 @@ $$
 
 ::: columns
 ::: {.column width="50%"}
-
 **Deterministic Relationship**
 
 $$
@@ -114,11 +110,9 @@ y = mx + b
 $$
 
 No error!
-
 :::
 
 ::: {.column width="50%"}
-
 **Statistical Relationship**
 
 $$
@@ -132,11 +126,11 @@ $$
 -   $\beta_0$ and $\beta_1$ are *parameters* of the model
 
     -   Here *parameter* refers to (unknown) constants
-    
+
     -   If we had data from the entire population, we could find their values
-    
+
     -   But we don't have data from the entire population!
-    
+
 -   We use $\hat{\beta}_0$ and $\hat{\beta}_1$ (or $b_0$ and $b_1$) to represent our *estimates* of the parameters
 
 ## Equation of a Regression Line
@@ -147,7 +141,6 @@ $$
 
 ::: columns
 ::: {.column width="50%"}
-
 **Deterministic Relationship**
 
 $$
@@ -155,11 +148,9 @@ y = mx + b
 $$
 
 We can find the value of $y$ exactly for any value of $x$
-
 :::
 
 ::: {.column width="50%"}
-
 **Statistical Relationship**
 
 $$
@@ -169,16 +160,13 @@ $$
 We *predict* the value of $y$ given a value of $x$
 
 The actual value of $y$ is *not* on the line!
-
 :::
 :::
-
 
 ## Finding the Line of Best Fit
 
 ::: columns
 ::: {.column width="65%"}
-
 ```{r}
 #| label: lm-5a
 #| echo: FALSE
@@ -217,13 +205,10 @@ ggplot(data = alz,
     axis.text = element_text(size = 16)
   )
 ```
-
 :::
 
 ::: {.column width="35%"}
-
-- A **residual** represents the vertical distance from a point on a scatterplot to a line modeling the relationship
-
+-   A **residual** represents the vertical distance from a point on a scatterplot to a line modeling the relationship
 :::
 :::
 
@@ -231,7 +216,6 @@ ggplot(data = alz,
 
 ::: columns
 ::: {.column width="65%"}
-
 ```{r}
 #| label: lm-5b
 #| echo: FALSE
@@ -270,13 +254,10 @@ ggplot(data = alz,
     axis.text = element_text(size = 16)
   )
 ```
-
 :::
 
 ::: {.column width="35%"}
-
-- The line of best fit (**least-squares line** or **regression line**) is the line that *minimizes* the sum of squared residuals
-
+-   The line of best fit (**least-squares line** or **regression line**) is the line that *minimizes* the sum of squared residuals
 :::
 :::
 
@@ -318,7 +299,7 @@ tidy(lm_gmv_age)
 -   Each row of the output corresponds to a different parameter in our model
 
     -   The `term` column indicates the variable
-    
+
     -   The `estimate` column indicates the coefficient
 
 ## Finding the Line of Best Fit with R
@@ -338,17 +319,21 @@ $$
 
 -   It is important to use the actual variable names (or abbreviated descriptions), rather than just *x* or *y*
 
--   It is good practice, but not strictly necessary, to put a ^ over the response variable
+-   It is good practice, but not strictly necessary, to put a \^ over the response variable
 
 ## Interpreting Slope and Intercept
 
 -   The `estimate` of our intercept parameter $\beta_0$ is $\hat{\beta}_0 = 697$
 
-    -   When age = 0, the **predicted** gmv is 697 cc
+    -   Intercept: value of y when x = 0
+    
+    -   When age = 0, the **predicted gmv** is 697 cc
 
 -   The `estimate` of the slope $\beta_1$ is $\hat{\beta}_1 = -1.65$
 
-    -   When age increases by 1 year, the **predicted** gmv decreases by 1.65 cc
+    -   Slope: change in y associated with a one-unit increase in x
+
+    -   When age increases by 1 year, the **predicted gmv** decreases by 1.65 cc
 
 ## Does the Slope Make Sense?
 
@@ -376,11 +361,9 @@ ggplot(data = alz,
 :::
 
 ::: {.column width="45%"}
+-   What does a "one-unit increase in x" look like on our scatterplot?
 
--   What does a "1-unit difference in x" look like on our scatterplot?
-    
     -   We usually rescale our predictor variable if this difference is too small/large to be meaningful
-
 :::
 :::
 
@@ -414,28 +397,26 @@ ggplot(data = alz,
 :::
 
 ::: {.column width="45%"}
-
 -   Does it make real-world sense that someone in our population of interest would be 0 years old?
 
     -   Is it even possible that someone can be 0 years old?
-    
-    -   Do we have anyone in our dataset anywhere close to that?
 
+    -   Do we have anyone in our dataset anywhere close to that?
 :::
 :::
 
 ## Making Predictions with Our Model
 
-- To make predictions, we plug in a value for our predicted variable and solve for the predicted response
+-   To make predictions, we plug in a value for our predicted variable and solve for the predicted response
 
-- **Interpolation**: the value we plug in is *within the range* of our sample data (between min and max x-values)
+-   **Interpolation**: the value we plug in is *within the range* of our sample data (between min and max x-values)
 
     -   Interpolation will give reasonable predictions as long as the trend does appear linear
-    
+
 -   **Extrapolation**: the value we plug in is *outside the range* of our sample data
 
     -   No guarantee that the model is appropriate or sensible
-    
+
 ## Making Predictions with R
 
 ```{r}
@@ -462,3 +443,60 @@ We use `augment` from the `broom` package to add the predictions to the data fra
 lm_gmv_age |>
   augment(newdata = fake_people)
 ```
+
+## What If Our Predictor Is Categorical?
+
+We convert our categorical predictor to a **factor** variable and define a **reference level**
+
+```{r}
+#| label: convert to categorical
+
+alz2 <- alz |>
+  mutate(
+    diagnosis = diagnosis |>
+      as.factor() |> # convert to factor
+      relevel(ref = "HC") # define reference level
+  )
+```
+
+The reference level typically is the category of *least* interest
+
+Different R functions have different conventions for automatically setting a reference level, so it's best for you to do it yourself!
+
+
+## What If Our Predictor Is Categorical?
+
+```{r}
+#| label: lm with categorical
+lm_gmv_alz <- lm(gmv ~ diagnosis,
+                 data = alz2)
+tidy(lm_gmv_alz)
+```
+
+-   `diagnosisAD` is a **logical** variable
+
+    -   TRUE (1) if the diagnosis is "AD"
+    
+    -   FALSE (0) if the diagnosis is not "AD"
+
+-   We refer to `diagnosisAD` as an **indicator** variable or a **dummy** variable
+
+## Interpreting Intercept with Categorical Predictors
+
+-   The `estimate` of our intercept parameter $\beta_0$ is $\hat{\beta}_0 = 594$
+
+    -   Intercept: value of (predicted) y when x = 0
+    
+    -   Here, `diagnosisAD = 0` means that the diagnosis is not AD, so it must be HC (the reference level)
+
+    -   When the diagnosis is "HC", the **predicted gmv** is 594 cc
+
+## Interpreting Slope with Categorical Predictors
+
+-   The `estimate` of the slope $\beta_1$ is $\hat{\beta}_1 = -45.2$
+
+    -   Slope: change in (predicted) y associated with a one-unit increase in x
+
+    -   A one-unit increase in `diagnosisAD` means that we change from 0 (diagnosis is "HC") to 1 (diagnosis is "AD")
+
+    -   When the diagnosis changes from "HC" to "AD", the **predicted gmv** decreases by 45.2 cc
