@@ -1,0 +1,464 @@
+---
+title: "Least-Squares Regression"
+format: revealjs
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## Steps 1 and 2: Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+```
+
+
+## Visualizing a Linear Trend
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: lm-1
+#| echo: TRUE
+#| eval: FALSE
+#| code-line-numbers: "5-6"
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_smooth(method = "lm", color = "black", 
+              se = FALSE) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: lm-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_smooth(method = "lm", color = "black", 
+              se = FALSE) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+## Goal of Linear Regression
+
+::: columns
+::: {.column width="55%"}
+
+-   What is the equation of the line?
+
+-   How do we know this line is the "best" line to model the relationship?
+
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: lm-4
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_smooth(method = "lm", color = "black", 
+              se = FALSE) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+## Fundamental Formula of Modeling
+
+$$
+\text{DATA} = \text{MODEL} + \text{ERROR}
+$$
+
+::: columns
+::: {.column width="50%"}
+
+**Deterministic Relationship**
+
+$$
+y = mx + b
+$$
+
+No error!
+
+:::
+
+::: {.column width="50%"}
+
+**Statistical Relationship**
+
+$$
+y = \beta_0 + \beta_1 x + \text{ERROR}
+$$
+:::
+:::
+
+## Linear Regression: Notation
+
+-   $\beta_0$ and $\beta_1$ are *parameters* of the model
+
+    -   Here *parameter* refers to (unknown) constants
+    
+    -   If we had data from the entire population, we could find their values
+    
+    -   But we don't have data from the entire population!
+    
+-   We use $\hat{\beta}_0$ and $\hat{\beta}_1$ (or $b_0$ and $b_1$) to represent our *estimates* of the parameters
+
+## Equation of a Regression Line
+
+$$
+\text{DATA} = \text{MODEL} + \text{ERROR}
+$$
+
+::: columns
+::: {.column width="50%"}
+
+**Deterministic Relationship**
+
+$$
+y = mx + b
+$$
+
+We can find the value of $y$ exactly for any value of $x$
+
+:::
+
+::: {.column width="50%"}
+
+**Statistical Relationship**
+
+$$
+\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x
+$$
+
+We *predict* the value of $y$ given a value of $x$
+
+The actual value of $y$ is *not* on the line!
+
+:::
+:::
+
+
+## Finding the Line of Best Fit
+
+::: columns
+::: {.column width="65%"}
+
+```{r}
+#| label: lm-5a
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+lm1 <- lm(gmv ~ age, data = alz)
+pred_values <- predict(lm1, newdata = alz |> slice(25, 27))
+res_data <- data.frame(
+  x1 = alz$age[c(25, 27)],
+  y1 = alz$gmv[c(25, 27)],
+  x2 = alz$age[c(25, 27)],
+  y2 = pred_values
+)
+
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_smooth(method = "lm", color = "black", 
+              se = FALSE) +
+  geom_point(data = alz |> slice(25, 27),
+             color = c("red", "brown4"), size = 2) +
+  geom_segment(data = res_data,
+               mapping = aes(x = x1, xend = x2,
+                             y = y1, yend = y2),
+               color = c("red", "brown4"), 
+               linewidth = 1.5,
+               arrow = arrow(length = unit(0.1, "in"))) +
+  annotate("text", x = c(63,64.5), y = c(580, 610),
+           color = c("red", "brown4"),
+           label = "residual", hjust = 1) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+:::
+
+::: {.column width="35%"}
+
+- A **residual** represents the vertical distance from a point on a scatterplot to a line modeling the relationship
+
+:::
+:::
+
+## Finding the Line of Best Fit
+
+::: columns
+::: {.column width="65%"}
+
+```{r}
+#| label: lm-5b
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+lm1 <- lm(gmv ~ age, data = alz)
+pred_values <- predict(lm1, newdata = alz |> slice(25, 27))
+res_data <- data.frame(
+  x1 = alz$age[c(25, 27)],
+  y1 = alz$gmv[c(25, 27)],
+  x2 = alz$age[c(25, 27)],
+  y2 = pred_values
+)
+
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_smooth(method = "lm", color = "black", 
+              se = FALSE) +
+  geom_point(data = alz |> slice(25, 27),
+             color = c("red", "brown4"), size = 2) +
+  geom_segment(data = res_data,
+               mapping = aes(x = x1, xend = x2,
+                             y = y1, yend = y2),
+               color = c("red", "brown4"), 
+               linewidth = 1.5,
+               arrow = arrow(length = unit(0.1, "in"))) +
+  annotate("text", x = c(63,64.5), y = c(580, 610),
+           color = c("red", "brown4"),
+           label = "residual", hjust = 1) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+:::
+
+::: {.column width="35%"}
+
+- The line of best fit (**least-squares line** or **regression line**) is the line that *minimizes* the sum of squared residuals
+
+:::
+:::
+
+## Finding the Line of Best Fit with R
+
+```{r}
+#| label: simple linear regression lm
+lm_gmv_age <- lm(gmv ~ age,
+                 data = alz)
+```
+
+-   The function to create the linear model is `lm`
+
+-   Our first argument is a *formula* of the form `y ~ x`
+
+-   Our second argument is the *data frame* in which the x- and y-variables are found
+
+## Finding the Line of Best Fit with R
+
+We can create a `summary` of the model, but that gives us a lot more output than we want to interpret right now
+
+```{r}
+#| label: summarize lm
+library(broom)
+tidy(lm_gmv_age)
+```
+
+For now we focus on the `estimate` column of the output
+
+## Finding the Line of Best Fit with R
+
+```{r}
+#| label: summarize lm-2
+#| echo: FALSE
+#| eval: TRUE
+tidy(lm_gmv_age)
+```
+
+-   Each row of the output corresponds to a different parameter in our model
+
+    -   The `term` column indicates the variable
+    
+    -   The `estimate` column indicates the coefficient
+
+## Finding the Line of Best Fit with R
+
+```{r}
+#| label: summarize lm-3
+#| echo: FALSE
+#| eval: TRUE
+tidy(lm_gmv_age)
+```
+
+Our equation then becomes
+
+$$
+\hat{\text{gmv}} = 697 + (-1.65)(\text{age})
+$$
+
+-   It is important to use the actual variable names (or abbreviated descriptions), rather than just *x* or *y*
+
+-   It is good practice, but not strictly necessary, to put a ^ over the response variable
+
+## Interpreting Slope and Intercept
+
+-   The `estimate` of our intercept parameter $\beta_0$ is $\hat{\beta}_0 = 697$
+
+    -   When age = 0, the **predicted** gmv is 697 cc
+
+-   The `estimate` of the slope $\beta_1$ is $\hat{\beta}_1 = -1.65$
+
+    -   When age increases by 1 year, the **predicted** gmv decreases by 1.65 cc
+
+## Does the Slope Make Sense?
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: lm-6a
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_abline(intercept = coef(lm_gmv_age[1]),
+              slope = coef(lm_gmv_age)[2],
+              color = "black") +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+
+-   What does a "1-unit difference in x" look like on our scatterplot?
+    
+    -   We usually rescale our predictor variable if this difference is too small/large to be meaningful
+
+:::
+:::
+
+## Does the Intercept Make Sense?
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: lm-6b
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_abline(intercept = coef(lm_gmv_age[1]),
+              slope = coef(lm_gmv_age)[2],
+              color = "black") +
+  geom_point(data = data.frame(x = 0, y = coef(lm_gmv_age)[1]),
+             aes(x = x, y = y),
+             color = "black", size = 2) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  scale_x_continuous(limits = c(0,90)) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+
+-   Does it make real-world sense that someone in our population of interest would be 0 years old?
+
+    -   Is it even possible that someone can be 0 years old?
+    
+    -   Do we have anyone in our dataset anywhere close to that?
+
+:::
+:::
+
+## Making Predictions with Our Model
+
+- To make predictions, we plug in a value for our predicted variable and solve for the predicted response
+
+- **Interpolation**: the value we plug in is *within the range* of our sample data (between min and max x-values)
+
+    -   Interpolation will give reasonable predictions as long as the trend does appear linear
+    
+-   **Extrapolation**: the value we plug in is *outside the range* of our sample data
+
+    -   No guarantee that the model is appropriate or sensible
+    
+## Making Predictions with R
+
+```{r}
+#| label: predictions-1
+
+# New data frame with the same predictor variable
+fake_people <- data.frame(
+  age = c(68, 63, 72, 84)
+)
+
+lm_gmv_age |>
+  predict(newdata = fake_people)
+```
+
+Hard to tell which prediction corresponds to which person!
+
+## Making Useful Predictions with R
+
+We use `augment` from the `broom` package to add the predictions to the data frame containing the predictor values:
+
+```{r}
+#| label: predictions-2
+#| code-line-numbers: "2"
+lm_gmv_age |>
+  augment(newdata = fake_people)
+```
