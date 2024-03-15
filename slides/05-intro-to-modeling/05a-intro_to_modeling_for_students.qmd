@@ -1,6 +1,6 @@
 ---
-title: "Introduction to Modeling"
-format: revealjs
+title: "Introduction to Modeling: Student Version"
+format: html
 editor: visual
 ---
 
@@ -204,8 +204,6 @@ Data is a byproduct of *human decisions* about who/what to observe, what to reco
 
 ```{r}
 #| label: import gas data
-#| eval: TRUE
-#| echo: TRUE
 library(rsample)
 gas <- readr::read_csv(here::here("Data/gas.csv"))
 ```
@@ -213,19 +211,7 @@ gas <- readr::read_csv(here::here("Data/gas.csv"))
 ## Simple Random Sampling with R
 
 ```{r}
-#| label: simple random sampling-1
-#| eval: FALSE
-#| echo: TRUE
-set.seed(4) 
-gas_simple <- gas |>
-  initial_split(prop = 0.05) |>
-  training()
-```
-
-```{r}
-#| label: simple random sampling-2
-#| eval: TRUE
-#| echo: FALSE
+#| label: simple random sampling
 set.seed(4) # set the seed for reproducibility
 gas_simple <- gas |> 
   initial_split(prop = 0.05) |>
@@ -238,20 +224,7 @@ print(gas_simple)
 -   We ensure that each `Brand` is present in the random sample in roughly the same proportion as the population
 
 ```{r}
-#| label: strat random sampling-1
-#| eval: FALSE
-#| echo: TRUE
-#| code-line-numbers: "3"
-set.seed(256) 
-gas_strat <- gas |>
-  initial_split(prop = 0.05, strata = Brand) |>
-  training()
-```
-
-```{r}
-#| label: strat random sampling-2
-#| eval: TRUE
-#| echo: FALSE
+#| label: strat random sampling
 set.seed(256) # set the seed for reproducibility
 gas_strat <- gas |> 
   initial_split(prop = 0.05, strata = Brand) |>
@@ -264,20 +237,7 @@ print(gas_strat)
 -   We randomly sample *cities* and include all gas stations in the selected cities in our sample
 
 ```{r}
-#| label: cluster random sampling-1
-#| eval: FALSE
-#| echo: TRUE
-#| code-line-numbers: "3"
-set.seed(125) 
-gas_cluster <- gas |>
-  group_initial_split(prop = 0.05, group = City) |>
-  training()
-```
-
-```{r}
-#| label: cluster random sampling-2
-#| eval: TRUE
-#| echo: FALSE
+#| label: cluster random sampling
 set.seed(125) # set the seed for reproducibility
 gas_cluster <- gas |> 
   group_initial_split(prop = 0.05, group = City) |>
