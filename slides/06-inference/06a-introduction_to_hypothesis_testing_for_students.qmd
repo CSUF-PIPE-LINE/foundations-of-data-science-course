@@ -1,0 +1,524 @@
+---
+title: "Introduction to Hypothesis Testing: Student Version"
+format: html
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## Steps 1 and 2: Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+
+# run the linear regression model
+alz_lm <- lm(gmv ~ age, data = alz)
+obs_slope <- coef(alz_lm)[2]
+```
+
+## BIG GIANT DISCLAIMER
+
+-   There are several different philosophies of hypothesis testing
+
+-   These notes largely follow R.A. Fisher's **significance testing**
+
+    -   This is *not* the philosophy taught in intro stats
+    
+    -   However, many of the ideas are similar
+
+## Inferential Modeling
+
+-   Inferential models build a mechanism for describing the effect of predictors on the response
+
+$$
+\text{DATA} = \text{MODEL} + \text{ERROR}
+$$
+
+-   Significance testing evaluates whether a simple **MODEL** can adequately explain the observed variation in the **DATA**
+
+    -   Models should be as simple as possible...but not too simple
+
+## Null Model
+
+-   The simplest possible model assumes that a predictor variable $x$ has *no relationship* with the response $y$
+
+    -   We refer to the model as the *null model* and the assumption as a *null hypothesis* $H_0$
+
+-   Our goal is to determine whether this null model is *too simple* to explain the observed variation in the response
+
+## Null Model for Simple Linear Regression
+
+-   The form of the model for simple linear regression is
+
+$$
+y = \beta_0 + \beta_1 x + \text{ERROR}
+$$
+
+
+-   The null model assumes that $x$ and $y$ are unrelated
+
+$$
+y = \beta_0 + \text{ERROR}
+$$
+
+## Example with `alz` Data
+
+-   We propose a simple linear regression model relating `age` and `gmv` in the population
+
+$$
+\text{gmv} = \beta_0 + \beta_1 (\text{age}) + \text{ERROR}
+$$
+
+-   The null hypothesis states that `gmv` is unrelated to `age`
+
+-   The null model is $\text{gmv} = \beta_0 + \text{ERROR}$
+
+    -   Can this model adequately explain our observed variation in `gmv`, or is it too simple?
+
+## Hypothesis Testing with `infer`
+
+```{r}
+#| label: HT with infer
+
+library(infer)
+alz_ht_setup <- alz |>
+  specify(gmv ~ age) |>
+  hypothesize(null = "independence")
+```
+
+-   `specify` takes the formula that we would put in `lm`
+
+-   `hypothesize(null = "independence")` tells R that our *null hypothesis* is that `gmv` is independent of `age`
+
+## Observed vs. Expected Results
+
+-   If the null model is the true model, we *expect* the regression line to have a slope of 0
+
+-   The slope of our observed regression line will never be *exactly* 0
+
+-   We compare the observed regression line to the expected regression line
+
+    -   How different are the observed results from what we expected to get?
+
+## Comparing Regression Lines
+
+Observed regression line:
+
+```{r}
+#| label: lm-linearity-full
+
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_abline(intercept = coef(alz_lm)[1],
+              slope = coef(alz_lm)[2],
+              color = "black",
+              linewidth = 1.25) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+Expected regression line:
+
+```{r}
+#| label: lm-null
+
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_abline(intercept = mean(alz$gmv),
+              slope = 0,
+              color = "black",
+              linewidth = 1.25) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+
+## Procedure for Significance Testing
+
+1.    Generate a "fake sample" from a population in which the null hypothesis is true
+
+2.    Determine whether the "fake sample" or the observed sample is "more different" from what the null model tells us to expect
+
+3.    Repeat Steps 1 and 2 until all possible fake samples have been compared to the observed one
+
+4.    Based on the comparisons, determine whether we have observed a "statistically significant" effect
+
+## A Historical Note
+
+-   This procedure was proposed by Fisher in the 1930's
+
+-   At the time, the procedure could only be done with *very* small datasets
+
+    -   Mathematical techniques were developed to describe what would happen as $\text{repetitions} \rightarrow \infty$
+    
+-   With modern computers, we can quickly approximate "all possible fake samples" by randomly generating many "fake samples"
+
+## Generating Fake Samples
+
+-   The null model tells us that the variation in `gmv` has absolutely nothing to do with `age`
+
+-   We can randomly *permute* (rearrange) the `gmv` values in the sample and match the permuted `gmv` values with the original `age`s
+
+    -   If the null hypothesis is true, this fake sample is "just as likely" to have occurred as the one we observed
+
+## Generating Fake Samples with `infer`
+
+```{r}
+#| label: HT with infer permutations
+set.seed(1)
+alz_permuted <- alz_ht_setup |>
+    generate(type = "permute", reps = 1000)
+```
+
+Original data:
+
+```{r}
+#| label: permute-real
+
+alz |>
+  select(gmv, age) |>
+  head(10)
+```
+
+Permutation data:
+```{r}
+#| label: permute-fake
+
+alz_permuted |>
+    head(10)
+```
+:::
+:::
+
+## Generating Fake Samples with `infer`
+
+-   We don't realistically expect to create *every* possible permutation of `gmv` values
+
+    -   $> 10^{128}$ possible permutations!
+    
+-   We randomly choose `reps = 1000` of these possible permutations
+
+## Test Statistic
+
+-   A **test statistic** quantifies the "difference" between what we observe in a sample and what we expect under the null model
+
+    -   Under the null model, we expect a slope of 0
+    
+    -   We observe the slope $\hat{\beta}_1$
+    
+    -   We can compute the test statistic $\hat{\beta}_1 - 0 = \hat{\beta}_1$
+
+
+## Test Statistic with `infer`
+
+```{r}
+#| label: test statistic with infer
+alz_slopes <- alz_permuted |> 
+  calculate(stat = "slope")
+```
+
+```{r}
+#| label: null distribution
+
+ggplot(
+  data = alz_slopes,
+  mapping = aes(x = stat)
+) +
+  geom_histogram(
+    center = 1,
+    binwidth = 0.1
+  ) +
+  geom_vline(
+    xintercept = obs_slope,
+    color = "red",
+    linewidth = 1.25
+  ) +
+  labs(
+    x = "Slope of Regression Line",
+    y = "Number of Fake Samples"
+  )
+```
+
+## Compare Real and Fake Samples
+
+-   Determine whether the slope of each "fake" regression line is further from 0 or closer to 0 compared to the observed regression line
+
+    -   Tie counts as "further"
+
+```{r}
+#| label: compare real to fake
+alz_comparison <- alz_slopes |>
+  mutate(
+    difference = if_else(
+      abs(stat) >= abs(obs_slope),
+      "further",
+      "closer"
+    )
+  )
+
+```
+
+## The p-value
+
+-   Assuming that the true model is the null model, how likely is it that we could get a regression line *at least this different* from what the null model tells us to expect?
+
+```{r}
+#| label: compute p-value
+library(janitor)
+alz_comparison |>
+  tabyl(difference)
+```
+
+-   Based on our fake samples, approximately a 12.5% chance
+
+-   This proportion is called the **p-value**
+
+## Statistical Significance
+
+-   We define a **significance level** to represent a threshold for defining a "statistically significant" effect
+
+    -   Traditionally: significance level = 5%
+
+    -   If the p-value is *below* the significance level, we claim that the observed effect of the predictor on the response is statistically significant
+    
+    -   If the p-value is *above* the significance level, we claim that the observed effect is *not* statistically significant
+
+## What Does a Significant Effect Mean?
+
+-   A "statistically significant" effect literally means that the observed data "signifies" something about the true model
+
+    -   Fisher was concerned about the long-run properties of scientific experiments
+    
+    -   If the experiment "rarely fails" to show a significant effect, then we can be convinced that the true model is *not* the null model
+    
+    -   In data science we rarely have the luxury of repeated experiments
+    
+## What Does a Significant Effect Mean?
+
+-   A "statistically significant" effect literally means that the observed data "signifies" something about the true model
+
+    -   If the effect *is* significant, then we say that there is *convincing evidence* that the true model includes the predictor variable
+    
+    -   If the effect is *not* significant, then we say there is *not convincing evidence* that the true model includes the predictor variable
+
+## Selecting a Final Model
+
+-   Models should be as simple as possible...but not too simple
+
+-   If we observed a statistically significant effect, then our proposed model does a *significantly better* job than the null model at explaining variation in the response
+
+    -   We should select our proposed model over the null model
+
+-   Otherwise, we should select the simpler null model over our proposed model
+
+## Example
+
+-   Our p-value is 12.5% > 5% significance level
+
+-   The effect of `age` on `gmv` is *not statistically significant*
+
+    -   We *do not* have convincing evidence that the true model includes `age`
+    
+-   The model including `age` is *not significantly better* at explaining variation in `gmv` than the null model
+
+    -   We select the null model over our proposed model including `age`
+
+    -   This does *not* mean that the null model is the true model
+    
+## Unstated Model Assumptions
+
+-   The proposed model and the null model include several shared "unstated" assumptions
+
+    -   The null model *is* the proposed model with one additional assumption $H_0: \beta_1 = 0$
+
+-   Real data *never* matches these assumptions perfectly
+
+    -   We estimate the true **MODEL** with our regression line
+    
+    -   We estimate the true **ERROR** with our residuals
+
+    -   If the assumptions look "close to met" in the observed data, we can still use this procedure
+
+## Model Assumptions
+
+-   **Linearity**: the true relationship between $x$ and $y$ is linear plus the ERROR term
+
+We expect something like:
+
+```{r}
+#| label: lm-linearity-fake
+set.seed(196)
+alz_norm_resid <- rnorm(nrow(alz), 0, sd(alz_lm$residuals))
+
+alz_fake <- data.frame(
+  age = alz$age,
+  resid = alz_norm_resid,
+  pred_gmv = predict(alz_lm),
+  gmv = predict(alz_lm) + alz_norm_resid
+)
+
+ggplot(data = alz_fake, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_smooth(method = "lm", color = "black", 
+              se = FALSE) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+
+We actually see:
+
+```{r}
+#| label: lm-linearity-real
+
+alz_real <- data.frame(
+  age = alz$age,
+  gmv = alz$gmv,
+  resid = alz_lm$residuals,
+  pred_gmv = predict(alz_lm)
+)
+
+ggplot(data = alz_real, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_smooth(method = "lm", color = "black", 
+              se = FALSE) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Model Assumptions
+
+-   **Zero Mean Error**: the ERROR term is centered at 0 independently of the model predictions
+
+We expect something like:
+
+```{r}
+#| label: lm-zeromean-fake
+
+ggplot(data = alz_fake, 
+       mapping = aes(x = pred_gmv, 
+                     y = resid)) +
+  geom_point(color = "red", size = 2) +
+  geom_smooth(method = "loess", color = "black", 
+              se = FALSE) +
+  labs(x = "Predicted gmv (cc)",
+       y = "Residual") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+We actually see:
+
+```{r}
+#| label: lm-zeromean-real
+
+ggplot(data = alz_real, 
+       mapping = aes(x = pred_gmv, 
+                     y = resid)) +
+  geom_point(color = "red", size = 2) +
+  geom_smooth(method = "loess", color = "black", 
+              se = FALSE) +
+  labs(x = "Predicted gmv (cc)",
+       y = "Residual") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Model Assumptions
+
+-   **Constant Variation Error**: the ERROR term has consistent variability across the entire range of model predictions
+
+We expect something like:
+
+```{r}
+#| label: lm-homoskedasticity-fake
+
+ggplot(data = alz_fake, 
+       mapping = aes(x = pred_gmv, 
+                     y = sqrt(abs(resid)))) +
+  geom_point(color = "red", size = 2) +
+  geom_smooth(method = "loess", color = "black", 
+              se = FALSE) +
+  labs(x = "Predicted gmv (cc)",
+       y = "Square Root of |Residual|") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+We actually see:
+
+```{r}
+#| label: lm-heteroskedasticity-real
+
+ggplot(data = alz_real, 
+       mapping = aes(x = pred_gmv, 
+                     y = sqrt(abs(resid)))) +
+  geom_point(color = "red", size = 2) +
+  geom_smooth(method = "loess", color = "black", 
+              se = FALSE) +
+  labs(x = "Predicted gmv (cc)",
+       y = "Square Root of |Residual|") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Model Assumptions
+
+-   **Independence**: the ERROR terms for each observation are independent
+
+    -   This one we have to check based on our understanding of the data
+
+    -   Violated if multiple points on the scatterplot come from extremely similar observations
+
+    -   Generally violated if observations are closely linked in space or time
+
+    -   Sometimes we can get around this assumption by intelligently generating the fake samples
+
+## What Do We Do If Assumptions Are Violated?
+
+-   Use EDA to investigate reasonable *nonlinear* relationships
+
+-   Transform $x$ or $y$ or both
+
+    -   Logarithmic or square root transforms are popular when the variable is highly skewed right
+    
+    -   Many flexible options for piecewise functions of $x$
+    
