@@ -1,0 +1,479 @@
+---
+title: "Introduction to Bayesian Inference"
+format: revealjs
+editor: visual
+execute:
+  echo: true
+---
+
+## Steps 1 and 2: Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse)
+library(rstanarm) # fit the model
+library(broom.mixed) # tidy the model
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+
+```
+
+## Why Bayesian Statistics?
+
+-   Our hypothesis testing framework asks, essentially, "What is the chance of observing our data if the null model is the correct model?"
+
+-   We typically *do not care* about this answer when modeling!
+
+-   Bayesian statistics asks instead, "Given the data we observed, what do we believe the true relationship looks like?"
+
+## BIG GIANT DISCLAIMER
+
+-   We are not going to go through the mathematical derivation of the formulas
+
+-   We are not going to go through the computational details
+
+-   We are just going to *fit* and *interpret* a linear regression model in the Bayesian framework
+
+    -   We are still going to determine if there is a relationship between `age` and `gmv` in the `alz` dataset
+
+## A Quick Note on Probability
+
+-   A probability is a number between 0 and 1 (0% and 100%) such that larger probabilities indicate that a particular event is "more likely"
+
+    -   In Bayesian statistics, probability represents *our subjective belief* that a statement of interest is true
+
+    -   In a sense, how much we are willing to gamble for every $1 paid out if the statement ends up being true
+
+## Bayesian Logic
+
+-   Based on our science and context, we believe some things about the model before we even collect data
+
+    -   The more we know, the stronger our beliefs are
+
+-   We update our beliefs based on the data we have collected
+
+    -   The more data we collect, the more it influences our beliefs
+
+-   There is almost always some *uncertainty* attached
+
+    -   Probability quantifies our degree of belief
+
+## Fundamental Formula of Bayesian Statistics
+
+$$
+\text{POSTERIOR} \propto \text{PRIOR} \times \text{LIKELIHOOD}
+$$
+
+-   **POSTERIOR**: our estimated distribution of a model parameter, given the data we observed
+
+-   **PRIOR**: incorporates our prior knowledge about what we "expect" the parameter value to be
+
+-   **LIKELIHOOD**: represents how likely our observed data ($x$, $y$) would be given a particular value of the parameter
+
+
+## PRIOR
+
+-   Describes our belief about what the relationship should look like, *without* looking at our collected data
+
+-   In simple linear regression we need to specify priors for three parameters
+
+    -   Slope, intercept, variation in **ERROR** term
+
+-   Typically we use *weakly informative* priors
+
+    -   The idea is to "eliminate" values that make absolutely no sense but say we otherwise have no idea
+
+## PRIOR for the Slope Parameter
+
+-   A common weakly informative prior for the slope is a normal distribution centered at 0
+
+    -   We believe that there is some relationship between `gmv` and `age` but that it's likely small
+
+    -   This will "bias" our updated belief toward 0 but also guard against believing in ridiculously large slopes
+
+-   In these notes we will just let R choose "defaults" for the other two parameters
+
+## LIKELIHOOD
+
+-   A formal probability statement incorporating the assumptions of our model
+
+    -   Linear relationship
+    
+    -   Zero mean and constant variation error
+    
+    -   Independence of error terms
+    
+-   We *must* specify a probability distribution for the error term
+
+    -   Typically choose normal distribution
+    
+## Fitting the Model
+
+```{r}
+#| label: fit Bayesian SLR
+
+bayeslm_gmv_age <- stan_glm(
+  gmv ~ age,
+  data = alz,
+  prior = normal(location = 0),
+  refresh = 0, # removed in your copy
+  seed = 1 # seed for reproducibility
+)
+
+# Note: this tidy is from broom.mixed
+bayeslm_gmv_age |>
+  tidy()
+```
+
+## Compare "Regular" and Bayes Estimates
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: scatterplot with lm and bayes lm
+#| echo: FALSE
+#| eval: TRUE
+#| fig.height: 8
+ols_coefs <- lm(gmv ~ age, data = alz) |>
+  coef()
+bayes_coefs <- tidy(bayeslm_gmv_age)$estimate
+
+ggplot(data = alz, 
+       mapping = aes(x = age, 
+                     y = gmv)) +
+  geom_point(color = "navy", size = 2) +
+  geom_abline(
+    intercept = ols_coefs[1], 
+    slope = ols_coefs[2], 
+    color = "black",
+    linewidth = 1.25) +
+  geom_abline(
+    intercept = bayes_coefs[1], 
+    slope = bayes_coefs[2], 
+    color = "red",
+    linewidth = 1.25) +
+  labs(x = "Age (years)",
+       y = "Gray Matter Volume (cc)") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+
+```
+:::
+
+::: {.column width="45%"}
+"Regular" regression line:
+$$
+\color{black}{\hat{gmv} = 697 - 1.65 (age)}
+$$
+Bayesian regression line:
+$$
+\color{red}{\hat{gmv} = 677 - 1.39 (age)}
+$$
+:::
+:::
+
+## Posterior Distribution
+
+-   The posterior distribution reflects our updated beliefs *after* seeing the data
+
+-   The posterior distribution may be difficult to compute exactly
+
+-   We can *simulate* many "draws" from the posterior distribution
+
+    -   These draws then form an approximation of the posterior distribution, which we can use for inference
+
+## Simulations from Posterior Distribution
+
+```{r}
+#| label: draws from posterior
+
+posterior_dist <- bayeslm_gmv_age |>
+  as_tibble()
+
+posterior_dist |>
+  head(3)
+```
+
+Draw 1: $gmv = 762 - 2.51 (age) + ERROR$
+
+Draw 2: $gmv = 681 - 1.53 (age) + ERROR$
+
+Both draws represent a "believable" true model
+
+## Approximate Posterior Distribution
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: posterior distribution
+#| echo: TRUE
+#| eval: FALSE
+plot(
+  bayeslm_gmv_age,
+  pars = "age",
+  plotfun = "hist",
+  binwidth = 0.2
+) +
+  labs(
+    title = "Posterior distribution",
+    x = "Slope corresponding to age",
+    y = "Number of simulations"
+  ) +
+  theme(
+    plot.title = element_text(size = 28),
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: posterior distribution plot
+#| echo: FALSE
+#| eval: TRUE
+#| fig.height: 8
+plot(
+  bayeslm_gmv_age,
+  pars = "age",
+  plotfun = "hist",
+  binwidth = 0.2
+) +
+  labs(
+    title = "Posterior distribution",
+    x = "Slope corresponding to age",
+    y = "Number of simulations from posterior"
+  ) +
+  theme(
+    plot.title = element_text(size = 28),
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+This distribution **directly** reflects our updated belief about the slope of the true model relating `age` and `gmv`
+
+## Getting Estimates Out of the Posterior Distribution
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: posterior distribution plot-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig.height: 8
+plot(
+  bayeslm_gmv_age,
+  pars = "age",
+  plotfun = "hist",
+  binwidth = 0.2
+) +
+  geom_vline(
+    xintercept = bayeslm_gmv_age$coefficients[2],
+    linewidth = 2,
+    linetype = "dashed") +
+  labs(
+    title = "Posterior distribution",
+    x = "Slope corresponding to age",
+    y = "Number of simulations from posterior"
+  ) +
+  theme(
+    plot.title = element_text(size = 28),
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="50%"}
+
+-   Our reported estimate is the *median* of the posterior distribution
+
+    -   If the distribution is anywhere close to normal, it will be close to the mean and mode of the distribution
+
+:::
+:::
+
+## Bayesian Interpretations Are Easier
+
+-   The posterior distribution reflects our subjective belief about the true model *after* looking at the data
+
+-   We can make statements about the model and estimate the probability (our subjective belief) that the statement accurately describes the true model
+
+## Bayesian Inference
+
+-   For example, we can estimate the probability that the true model's slope is negative:
+
+```{r}
+#| label: chance negative
+posterior_dist |>
+  mutate(
+    slope_negative = age < 0
+  ) |>
+  summarize(
+    chance_negative = mean(slope_negative)
+  )
+```
+
+- We believe that there is a 92% chance that  `age` and `gmv` have a negative relationship
+
+## Bayesian Inference
+
+-   We can also estimate the probability that the true model's slope is within some trivial distance of 0
+
+```{r}
+#| label: chance within trivial of 0
+posterior_dist |>
+  mutate(
+    slope_less_0.1 = abs(age) < 0.1
+  ) |>
+  summarize(
+    chance_less_0.1 = mean(slope_less_0.1)
+  )
+```
+
+- We believe that there is a 2.7% chance that the true slope of the model relating `age` and `gmv` is in the interval (-0.1, 0.1)
+
+## Bayesian Uncertainty Intervals
+
+-   We can also define a probability and obtain an interval of values corresponding to that probability
+
+```{r}
+#| label: uncertainty interval
+
+bayeslm_gmv_age |> 
+  posterior_interval(
+    pars = "age",
+    prob = 0.8
+    )
+```
+
+-   We believe there is an 80% chance that the true model relating `age` and `gmv` has a slope between -2.7 and -0.12
+
+## Making Predictions the Bayesian Way
+
+-   For a new observation, we know `age` but are uncertain about the true value of `gmv`
+
+    -   The posterior distribution of `gmv` given the `age` represents our updated beliefs about this new person's `gmv`
+
+```{r}
+#| label: predictions-1
+
+# New data frame with the same predictor variable
+fake_people <- data.frame(
+  age = c(68, 63, 72, 84)
+)
+
+set.seed(299)
+predicted_gmv <- bayeslm_gmv_age |>
+  posterior_predict(
+    newdata = fake_people
+  )
+```
+
+## Making Predictions the Bayesian Way
+
+```{r}
+#| label: show prediction matrix
+predicted_gmv |>
+  head(5)
+```
+
+-   Each *column* in this matrix represents an observation we are making predictions for
+
+-   Each *row* represents one "draw" from our posterior distribution of `gmv` given the value of `age`
+
+    -   A value of `gmv` we believe we "could possibly see"
+
+## Posterior Distribution of `y`
+
+::: columns
+::: {.column width="55%"}
+```{r}
+#| label: posterior predictions for age 68
+#| echo: TRUE
+#| eval: FALSE
+predicted_gmv_68 <- tibble(
+  gmv = predicted_gmv[,1] # column 1
+)
+
+ggplot(
+  data = predicted_gmv_68,
+  mapping = aes(x = gmv)
+) + 
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 500,
+                 binwidth = 20) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Number of Simulated Age-68 Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: posterior predictions for age 68 plot
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+predicted_gmv_68 <- tibble(
+  gmv = predicted_gmv[,1] # column 1
+)
+
+ggplot(
+  data = predicted_gmv_68,
+  mapping = aes(x = gmv)
+) + 
+  geom_histogram(fill = "darkviolet", 
+                 color = "black",
+                 center = 500,
+                 binwidth = 20) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Number of Simulated Age-68 Patients") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+## Posterior Predictive Intervals
+
+- We can use the posterior distribution of `gmv` to find the central interval within which we believe there is a 90% chance the actual `gmv` value will be:
+
+```{r}
+#| label: predictive-interval
+# No native augment here
+set.seed(2843)
+fake_predictions <- bayeslm_gmv_age |>
+  predictive_interval(
+    newdata = fake_people,
+    prob = 0.9
+  )
+```
+
+## Posterior Predictive Intervals
+
+```{r}
+#| label: predictive-interval-2
+fake_people |>
+  bind_cols(fake_predictions)
+```
+
+- We believe that there is a 90% chance that this 68-year-old person will have a `gmv` between 478 and 681 cc
+
+    -   We believe that there is a 5% chance that this 68-year-old will have a `gmv` below 478 cc
+    
+    -   We believe that there is a 5% chance that this 68-year-old will have a `gmv` above 681 cc
+
