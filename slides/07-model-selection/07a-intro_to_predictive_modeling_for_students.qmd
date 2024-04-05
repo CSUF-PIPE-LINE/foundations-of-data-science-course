@@ -1,0 +1,256 @@
+---
+title: "Introduction to Predictive Modeling: Student Version"
+format: html
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## Steps 1 and 2: Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+library(broom)
+library(rsample)
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+```
+
+
+## The Fundamental Formula of Modeling
+
+$$
+\text{DATA} = \text{MODEL} + \text{ERROR}
+$$
+
+-   **DATA**: the response (y) we are interested in
+
+-   **MODEL**: a mathematical function of parameters ($\theta$) and predictor variables (x)
+
+-   **ERROR**: additional variability *not* accounted for by $\theta$ and x
+
+-   We can think of the "model" as describing *known* variability and the "error" as describing *uncertainty*
+
+## Cautions for Prediction
+
+-   Our model describes the relationship in the sample
+
+    -   As the model gets more complex, it may start describing the **ERROR** as if it were part of the **MODEL**
+
+    -   This is known as *overfitting*
+
+-   In real projects, we typically need two samples:
+
+    -   A *training* sample for which we can do EDA and build models
+
+    -   A *validation* sample on which we can evaluate the predictions of the model
+
+## What If We Only Have One Dataset?
+
+-   Split your data into a *training set* and one or more *holdout sets*
+
+    -   Holdout sets can be referred to as *validation set* or *test set*
+
+-   Do EDA and modeling using *only* the training set
+
+-   Use the holdout set(s) for prediction and inference after you have selected a final model
+
+## Training and Holdout Sets with R
+
+- Typically, somewhere between 50% and 90% of the data goes in the training set
+
+    -   Typical ratios are 80%/20% and 50%/25%/25% (if you need two holdout sets)
+
+```{r}
+#| label: split training and holdout
+
+set.seed(236967)
+alz_split <- initial_split(
+  alz,
+  prop = 0.8 # 80% in training
+)
+```
+
+## Actually Getting the Training and Holdout Sets
+
+```{r}
+#| label: what's in alz_split
+print(alz_split)
+```
+
+-   At this point, `alz_split` only contains *instructions* for how to do the splitting
+
+```{r}
+#| label: get the training and holdout
+
+alz_training <- training(alz_split)
+alz_holdout <- testing(alz_split)
+```
+
+## Fitting a Model on the Training Set
+
+-   Here we'll just fit the simple linear regression model we've already seen
+
+-   The big key is to only fit on the *training* set!
+
+```{r}
+#| label: simple linear regression lm
+lm_gmv_age <- lm(gmv ~ age,
+                 data = alz_training)
+
+lm_gmv_age |>
+  tidy()
+```
+
+## Our Estimates Are Different!
+
+-   When we used the entire dataset, our regression line was
+
+$$
+\hat{\text{gmv}} = 697 + (-1.65)(\text{age})
+$$
+
+-   But using this training set, our regression line is
+
+$$
+\hat{\text{gmv}} = 737 + (-2.24)(\text{age})
+$$
+
+## Estimates Depend on the Training Set!
+
+```{r}
+#| label: new split
+set.seed(12)
+alz_split2 <- initial_split(
+  alz,
+  prop = 0.8 # 80% in training
+)
+
+lm(gmv ~ age,
+   data = training(alz_split2)) |>
+  tidy()
+```
+
+-   If we pick a different training set, our line is different!
+
+    -   Not such a big deal now, but potentially a major problem when models get more complicated
+
+## Predicting on the Holdout Set
+
+```{r}
+#| label: predictions-1
+alz_predictions <- lm_gmv_age |>
+  augment(newdata = alz_holdout)
+
+alz_predictions |>
+  select(.fitted, .resid, everything()) |>
+  head(3)
+```
+
+-   Notice that we get 2 new columns: `.fitted` and `.resid`
+
+    -   `.fitted` contains the predicted values
+    
+    -   `.resid` contains the residuals
+
+## Evaluating Model Performance
+
+-   Remember that we want to use our model to predict `gmv` for people *not* in our sample
+
+-   We told R the `gmv` for every person in the training set, so that it could find the line of best fit
+
+-   We didn't use the holdout set to fit our model!
+
+    -   We can pretend like we don't know `gmv` for these people
+    
+    -   We investigate how well the model predicts `gmv` values in the *holdout* set
+
+    -   This provides our best estimate of how well the model will predict `gmv` values in a *new* dataset
+    
+## Sum of Squared (Prediction) Errors
+
+-   Our regression line minimized the sum of squared residuals on the training set
+
+-   Recall that a residual is essentially the prediction error for an observation
+
+-   We can look at the holdout set's sum of squared residuals
+
+```{r}
+#| label: Sum of squared error
+
+alz_predictions |>
+  summarize(
+    SSE = sum(.resid^2)
+  )
+```
+
+## Mean Squared (Prediction) Error
+
+-   As the number of observations increases, so does SSE
+
+    -   Our holdout set is unlikely to be *exactly* the same size as a new dataset
+    
+-   We instead calculate the average prediction error (mean squared error or MSE)
+
+```{r}
+#| label: mean squared error
+
+alz_predictions |>
+  summarize(
+    MSE = mean(.resid^2)
+  )
+```
+
+## Root Mean Squared Error
+
+-   MSE is in squared units of $y$
+    
+-   We take square root of MSE (root mean squared error, or RMSE) to transform back into the original units
+
+```{r}
+#| label: root mean squared error
+
+alz_predictions |>
+  summarize(
+    RMSE = mean(.resid^2) |> sqrt()
+  )
+```
+
+## Interpreting RMSE
+
+-   RMSE represents "on average, how far off our predictions are"
+
+-   On average, the predicted `gmv` values in the holdout set are about 51.5 cc away from the actual values
+    
+-   Lower RMSE indicates a better model (less error)
+
+## Mean Absolute Error
+
+-   Mean Absolute Error (MAE) also represents "on average, how far off our predictions are"
+
+```{r}
+#| label: mean absolute error
+
+alz_predictions |>
+  summarize(
+    MAE = mean(abs(.resid))
+  )
+```
+
+  -   According to MAE, on average, the predicted `gmv` values in the holdout set are about 39.5 cc away from the actual values
+
+## Why Do RMSE and MAE Differ?
+
+$$
+RMSE = \sqrt{\frac{1}{n}\sum_{i=1}^n(y_i - \hat{y}_i)^2}
+$$
+
+$$
+MAE = \frac{1}{n}\sum_{i=1}^n|y_i - \hat{y}_i|
+$$
+
+-   RMSE punishes bad predictions more severely than MAE

@@ -1,0 +1,218 @@
+---
+title: "Statistical Inference with Linear Models: Housing Loan Applications in Fullerton"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: load packages
+library(tidyverse)
+library(infer)
+library(rstanarm)
+library(broom.mixed)
+```
+
+Import the loans_OC dataset as `loans`:
+
+```{r}
+#| label: import data 
+
+```
+
+We will work with the same relationships we looked at in the Summarizing Linear Models activity:
+
+```{r}
+#| label: summarize each tract
+
+loans_fullerton2 <- loans |>
+  filter(city == "Fullerton") |>
+  mutate(
+    loan_amount_1000 = loan_amount/1000,
+    property_value_1000 = property_value/1000,
+    loan_to_value_ratio = loan_amount_1000/property_value_1000)
+
+fullerton_tracts <- loans_fullerton2 |>
+  group_by(census_tract) |>
+  summarize(
+    applications = n(),
+    population = mean(tract_population),
+    minority = mean(tract_minority_population_percent),
+    income = mean(tract_to_msa_income_percentage),
+    median_value = median(property_value_1000, na.rm = TRUE)
+  )
+```
+
+## Permutation Testing for Property Values vs. Minority
+
+```{r}
+#| label: scatterplot of median property values vs minority
+
+ggplot(data = fullerton_tracts,
+       mapping = aes(
+         x = minority,
+         y = median_value
+       )) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "darkblue", 
+              linetype = "dashed", se = FALSE) +
+  labs(
+    title = "Housing Values in Fullerton Census Tracts",
+    x = "Percentage of Minorities in Tract",
+    y = "Median Property Value (1000s of $)"
+  )
+
+```
+
+First let's do a permutation test for the significance of percent minority as a predictor of median value.
+
+Our null model is
+
+$$
+median\_value = \beta_0 + ERROR
+$$
+
+implying that our null hypothesis is that percentage of minorities in the tract is unrelated to median property value. Our proposed model is
+
+$$
+median\_value = \beta_0 + \beta_1 \times minority + ERROR
+$$
+
+We'll perform all of the steps of the hypothesis testing procedure chained together using the pipe `|>`:
+
+```{r}
+#| label: permutation test medvalue minority
+
+set.seed(284)
+lm_medvalue_minority_ht <- fullerton_tracts |>
+  specify(median_value ~ minority) |>
+  hypothesize(null = "independence") |>
+  generate(type = "permute", reps = 1000) |> 
+  calculate(stat = "slope")
+
+```
+
+Here we're going to use slightly different syntax to find the observed value of the slope.
+
+```{r}
+#| label: calculate observed slope with infer
+
+obs_slope <- fullerton_tracts |>
+  specify(median_value ~ minority) |>
+  calculate(stat = "slope")
+
+obs_slope
+```
+
+Now we can plot our null distribution. Notice the slight difference in how we created the red vertical line.
+
+```{r}
+#| label: null distribution medvalue minority
+
+ggplot(
+  data = lm_medvalue_minority_ht,
+  mapping = aes(x = stat)
+) +
+  geom_histogram(
+  ) +
+  geom_vline(
+    xintercept = obs_slope$stat,
+    color = "red",
+    linewidth = 1.25
+  ) +
+  labs(
+    x = "Slope of Regression Line",
+    y = "Number of Fake Samples"
+  )
+```
+
+To get the p-value, we can just use the function `get_p_value` from the `infer` package. This is the whole reason why we got the observed slope out a bit differently.
+
+```{r}
+#| label: get p-value medvalue minority
+
+get_p_value(
+  lm_medvalue_minority_ht,
+  obs_stat = obs_slope,
+  direction = "two.sided" # I prefer the ., but _ or a space works just as well
+)
+```
+
+### Your Turn
+
+1.  Using a 5% significance level, does percent minority appear to have a (statistically) significant effect on median property value? Why or why not?
+
+## Permutation Testing for Property Values vs. Income
+
+### Your Turn
+
+1.  Perform a permutation test to determine whether a model predicting median property value from `income` is a significantly better fit than the null model. Include all steps:
+
+    a.    Write out the proposed model and the null model
+    
+    b.    Perform the resampling procedure to generate a null distribution of the slope of the regression line
+  
+    c.    Plot your null distribution and indicate the observed value of the slope on the graph
+    
+    d.    Obtain the p-value
+    
+    e.    Determine whether `income` has a significant effect on median property value
+
+## Bayesian Inference for Property Values vs. Minority
+
+In the Bayesian framework, the slope $\beta_1$ of the population model is treated as a variable with some uncertainty. We will use our regular weakly informative prior that the true slope is "somewhere around 0".
+
+```{r}
+#| label: fit Bayesian SLR
+
+bayeslm_medvalue_minority <- stan_glm(
+  median_value ~ minority,
+  data = fullerton_tracts,
+  prior = normal(location = 0),
+  seed = 1 # seed for reproducibility
+)
+
+plot(
+  bayeslm_medvalue_minority,
+  pars = "minority",
+  plotfun = "hist",
+  binwidth = 1
+) +
+  labs(
+    title = "Posterior distribution",
+    x = "Slope corresponding to percent minority",
+    y = "Number of simulations"
+  ) +
+  theme(
+    plot.title = element_text(size = 28),
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+
+```
+
+Let's use this posterior distribution to do some Bayesian inference:
+
+```{r}
+#| label: Bayesian Inference medvalue minority
+
+bayeslm_medvalue_minority |> 
+  posterior_interval(
+    pars = "minority",
+    prob = 0.8
+    )
+```
+
+### Your Turn
+
+1. Write a sentence to interpret this 80% Bayesian uncertainty interval.
+
+2. Explain why the posterior distribution looks different from the null distribution. What specifically does the x-axis represent on the posterior distribution, and how is that different from what the x-axis represents on the null distribution?
+
+## Bayesian Inference for Property Values vs. Income
+
+### Your Turn
+
+1. Obtain an 80% Bayesian uncertainty interval for the slope of the population model relating `median_value` and `income`.

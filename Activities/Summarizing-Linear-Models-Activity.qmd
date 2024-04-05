@@ -1,0 +1,99 @@
+---
+title: "Fitting and Summarizing Linear Models: Housing Loan Applications in Fullerton"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: load packages
+library(tidyverse)
+library(broom)
+```
+
+Import the loans_OC dataset as `loans`:
+
+```{r}
+#| label: import data 
+
+```
+
+We will work with the scatterplots we created at the end of the Summarizing Numerical Data activity:
+
+```{r}
+#| label: summarize each tract
+
+loans_fullerton2 <- loans |>
+  filter(city == "Fullerton") |>
+  mutate(
+    loan_amount_1000 = loan_amount/1000,
+    property_value_1000 = property_value/1000,
+    loan_to_value_ratio = loan_amount_1000/property_value_1000)
+
+fullerton_tracts <- loans_fullerton2 |>
+  group_by(census_tract) |>
+  summarize(
+    applications = n(),
+    population = mean(tract_population),
+    minority = mean(tract_minority_population_percent),
+    income = mean(tract_to_msa_income_percentage),
+    median_value = median(property_value_1000, na.rm = TRUE)
+  )
+```
+
+## Modeling Property Values vs. Minority
+
+```{r}
+#| label: scatterplot of median property values vs minority
+
+ggplot(data = fullerton_tracts,
+       mapping = aes(
+         x = minority,
+         y = median_value
+       )) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "darkblue", 
+              linetype = "dashed", se = FALSE) +
+  labs(
+    title = "Housing Values in Fullerton Census Tracts",
+    x = "Percentage of Minorities in Tract",
+    y = "Median Property Value (1000s of $)"
+  )
+```
+
+```{r}
+#| label: build model value vs minority
+
+lm_medvalue_minority <- lm(
+  median_value ~ minority,
+  data = fullerton_tracts
+)
+
+lm_medvalue_minority |>
+  tidy()
+```
+
+### Your Turn
+
+1.  Use the output to write out the equation of the least-squares regression line.
+
+2. Write a sentence to interpret the slope of the regression line. It may help to remember that the observations are census tracts, the units of `minority` are percentage points (% minority) and the units of `median_value` are thousands of dollars.
+
+3. Does this interpretation make sense in the context of the collected data? Why or why not?
+
+4. Write a sentence to interpret the intercept of the regression line.
+
+5. Does this interpretation make sense in the context of the collected data? Why or why not?
+
+## Modeling Property Values vs. Income
+
+### Your Turn
+
+1. Reproduce the scatterplot from the Summarizing Numerical Data Activity with the median property value on the y-axis and the median income (as a percentage of median income in the LA area). Add the least-squares regression line to the scatterplot.
+
+2. Using the `lm` function, fit a linear regression model describing the relationship between the two variables.
+
+3. Using the `tidy` function, obtain the coefficient table. Use the output to write out the equation of the least-squares regression line.
+
