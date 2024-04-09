@@ -1,0 +1,238 @@
+---
+title: "Multiple Linear Regression: Student Version"
+format: html
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## Steps 1 and 2: Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+library(broom)
+library(rstanarm) # fit the model
+library(broom.mixed) # tidy the model
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+```
+
+## The Fundamental Formula of Modeling
+
+$$
+\text{DATA} = \text{MODEL} + \text{ERROR}
+$$
+
+-   **DATA**: the response (y) we are interested in
+
+-   **MODEL**: a mathematical function of parameters ($\theta$) and predictor variables (x)
+
+-   **ERROR**: additional variability *not* accounted for by $\theta$ and x
+
+-   We can think of the "model" as describing *known* variability and the "error" as describing *uncertainty*
+
+
+## Multiple Linear Regression
+
+-   In simple linear regression, we assumed that there was only one predictor variable related to the response
+
+-   In multiple linear regression, we now have $p > 1$ predictor variables that each may be related to the response
+
+-   The code for fitting the models is almost identical
+
+-   The interpretation of the models is slightly different
+
+## Multiple Linear Regression Model
+
+$$
+y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \ldots + \beta_p x_p + ERROR
+$$
+
+-   This makes the regression line
+
+$$
+\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x_1 + \hat{\beta}_2 x_2 + \ldots + \hat{\beta}_p x_p 
+$$
+
+
+## Finding the Line of Best Fit with R
+
+```{r}
+#| label: simple linear regression lm
+
+alz2 <- alz |>
+  mutate(
+    diagnosis = diagnosis |>
+      as.factor() |> # convert to factor
+      relevel(ref = "HC") # define reference level
+  )
+lm_age_diag <- lm(gmv ~ age + diagnosis,
+                 data = alz2)
+```
+
+-   Notice that we *add* additional predictor variables to the right side of the formula
+
+-   We can include both numerical and categorical predictors
+
+## Reading the Equation of the Line
+
+```{r}
+#| label: summarize lm
+broom::tidy(lm_age_diag)
+```
+
+-   Each row represents one term in the equation
+
+    -   The `term` column indicates the variable
+
+    -   The `estimate` indicates the slope that multiplies the variable
+    
+-   The terms are connected with + signs
+
+$$
+\hat{\text{gmv}} = 653 + (-1.38)(\text{age}) + (-43.9) (\text{diagnosis = AD})
+$$
+
+## Interpreting the Intercept
+
+-   The `estimate` of our intercept parameter $\beta_0$ is $\hat{\beta}_0 = 653$
+
+-   In order to interpret this estimate, we need to plug in 0 for *all* predictor variables
+
+    -   Plug in 0 for age and HC (reference level) for diagnosis
+
+    -   The predicted gmv for a healthy 0-year-old is 653 cc
+    
+## Interpreting the Slopes
+
+-   In order for the interpretation of slopes to make sense, only one predictor value can change
+
+    -   The others have to be held constant
+    
+-   The estimate of the slope corresponding to `age` is -1.38
+
+    -   The predicted gmv decreases by 1.38 cc when age increases by 1 year and diagnosis is held constant
+    
+-   The estimate of the slope corresponding to `diagnosis = AD` is -43.9
+
+    -   The predicted gmv decreases by 43.9 cc when diagnosis changes from AD to HC and age is held constant
+
+## Hypothesis Testing for Multiple Linear Regression
+
+```{r}
+#| label: summarize lm-3
+broom::tidy(lm_age_diag)
+```
+
+-   The last column indicates the p-value for a hypothesis test
+
+    -   We no longer are testing against a null model
+    
+    -   We are testing against a model removing *only* that predictor
+    
+## Hypothesis Testing for `age`
+
+-   Our proposed model is
+
+$$
+\text{gmv} = \beta_0 + \beta_1 (\text{age}) + \beta_2 (\text{diagnosis = AD}) + ERROR
+$$
+
+-   The simpler model we are comparing to is
+
+$$
+\text{gmv} = \beta_0 + \beta_2 (\text{diagnosis = AD}) + ERROR
+$$
+
+-   Since the p-value is approximately 0.18, at the 5% significance level, we cannot claim that the proposed model is a *significantly better fit* than the simpler model model
+
+    -   We *do not* have statistically significant evidence that we need an `age` term in the model
+
+## Interpreting a Non-Significant Result
+
+-   There are three possible reasons why we could get a non-significant result:
+
+    -   There truly is no relationship between `age` and `gmv`
+    
+    -   There is a relationship between `age` and `gmv`; we just failed to detect it
+    
+    -   There is a relationship between `age` and `gmv`, but most of the information provided by `age` is *already accounted for* by other variables in the model
+    
+## Bayesian Inference
+
+```{r}
+#| label: fit Bayesian MLR
+
+bayeslm_age_diag <- stan_glm(
+  gmv ~ age + diagnosis,
+  data = alz2,
+  prior = normal(location = 0, autoscale = TRUE),
+  refresh = 0, # removed in your copy
+  seed = 1 # seed for reproducibility
+)
+
+# Note: this tidy is from broom.mixed
+broom.mixed::tidy(bayeslm_age_diag)
+```
+
+## Simulations from Posterior Distribution
+```{r}
+#| label: draws from posterior-1
+plot(
+  bayeslm_age_diag,
+  pars = "age",
+  plotfun = "hist",
+  binwidth = 0.2
+) +
+  labs(
+    title = "Posterior distribution",
+    x = "Slope corresponding to age",
+    y = "Number of simulations"
+  ) +
+  theme(
+    plot.title = element_text(size = 28),
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Simulations from Posterior Distribution
+```{r}
+#| label: draws from posterior-3
+plot(
+  bayeslm_age_diag,
+  pars = "diagnosisAD",
+  plotfun = "hist",
+  binwidth = 2
+) +
+  labs(
+    title = "Posterior distribution",
+    x = "Slope corresponding to diagnosis = AD",
+    y = "Number of simulations"
+  ) +
+  theme(
+    plot.title = element_text(size = 28),
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+## Bayesian Uncertainty Intervals
+
+-   We can obtain uncertainty intervals corresponding to *each* slope in the model by adding the relevant slopes to the `pars` argument:
+
+```{r}
+#| label: uncertainty interval
+#| code-line-numbers: "3"
+bayeslm_age_diag |> 
+  posterior_interval(
+    pars = c("age", "diagnosisAD"),
+    prob = 0.8
+    )
+```
+
+-   Holding diagnosis constant, there is an 80% chance that the average gmv decreases by between 0.04 and 2.71 cc per year
