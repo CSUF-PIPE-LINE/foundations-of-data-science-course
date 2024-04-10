@@ -101,18 +101,18 @@ broom::tidy(lm_age_diag)
 ```
 
 $$
-\hat{\text{gmv}} = 653 + (-1.38)(\text{age}) + (-43.9) (\text{diagnosis = AD})
+\hat{\text{gmv}} = 697 + (-1.38)(\text{age}) + (-43.9) (\text{diagnosis = AD})
 $$
 
 ## Interpreting the Intercept
 
--   The `estimate` of our intercept parameter $\beta_0$ is $\hat{\beta}_0 = 653$
+-   The `estimate` of our intercept parameter $\beta_0$ is $\hat{\beta}_0 = 697$
 
 -   In order to interpret this estimate, we need to plug in 0 for *all* predictor variables
 
     -   Plug in 0 for age and HC (reference level) for diagnosis
 
-    -   The predicted gmv for a healthy 0-year-old is 653 cc
+    -   The predicted gmv for a healthy 0-year-old is 697 cc
     
 ## Interpreting the Slopes
 
@@ -132,7 +132,7 @@ $$
     
 -   The estimate of the slope corresponding to `diagnosis = AD` is -43.9
 
-    -   The predicted gmv decreases by 43.9 cc when diagnosis changes from AD to HC and age is held constant
+    -   The predicted gmv decreases by 43.9 cc when diagnosis changes from HC to AD and age is held constant
 
 ## Hypothesis Testing for Multiple Linear Regression
 
@@ -168,7 +168,7 @@ $$
 broom::tidy(lm_age_diag)
 ```
 
--   Since the p-value is approximately 0.18, at the 5% significance level, we cannot claim that the proposed model is a *significantly better fit* than the simpler model model
+-   Since the p-value is approximately 0.18, at the 5% significance level, we cannot claim that the proposed model is a *significantly better fit* than the simpler model
 
     -   We *do not* have statistically significant evidence that we need an `age` term in the model
 

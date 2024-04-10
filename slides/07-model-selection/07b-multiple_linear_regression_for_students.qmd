@@ -35,7 +35,6 @@ $$
 
 -   We can think of the "model" as describing *known* variability and the "error" as describing *uncertainty*
 
-
 ## Multiple Linear Regression
 
 -   In simple linear regression, we assumed that there was only one predictor variable related to the response
@@ -57,7 +56,6 @@ $$
 $$
 \hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x_1 + \hat{\beta}_2 x_2 + \ldots + \hat{\beta}_p x_p 
 $$
-
 
 ## Finding the Line of Best Fit with R
 
@@ -90,36 +88,36 @@ broom::tidy(lm_age_diag)
     -   The `term` column indicates the variable
 
     -   The `estimate` indicates the slope that multiplies the variable
-    
+
 -   The terms are connected with + signs
 
 $$
-\hat{\text{gmv}} = 653 + (-1.38)(\text{age}) + (-43.9) (\text{diagnosis = AD})
+\hat{\text{gmv}} = 697 + (-1.38)(\text{age}) + (-43.9) (\text{diagnosis = AD})
 $$
 
 ## Interpreting the Intercept
 
--   The `estimate` of our intercept parameter $\beta_0$ is $\hat{\beta}_0 = 653$
+-   The `estimate` of our intercept parameter $\beta_0$ is $\hat{\beta}_0 = 697$
 
 -   In order to interpret this estimate, we need to plug in 0 for *all* predictor variables
 
     -   Plug in 0 for age and HC (reference level) for diagnosis
 
-    -   The predicted gmv for a healthy 0-year-old is 653 cc
-    
+    -   The predicted gmv for a healthy 0-year-old is 697 cc
+
 ## Interpreting the Slopes
 
 -   In order for the interpretation of slopes to make sense, only one predictor value can change
 
     -   The others have to be held constant
-    
+
 -   The estimate of the slope corresponding to `age` is -1.38
 
     -   The predicted gmv decreases by 1.38 cc when age increases by 1 year and diagnosis is held constant
-    
+
 -   The estimate of the slope corresponding to `diagnosis = AD` is -43.9
 
-    -   The predicted gmv decreases by 43.9 cc when diagnosis changes from AD to HC and age is held constant
+    -   The predicted gmv decreases by 43.9 cc when diagnosis changes from HC to AD and age is held constant
 
 ## Hypothesis Testing for Multiple Linear Regression
 
@@ -131,9 +129,9 @@ broom::tidy(lm_age_diag)
 -   The last column indicates the p-value for a hypothesis test
 
     -   We no longer are testing against a null model
-    
+
     -   We are testing against a model removing *only* that predictor
-    
+
 ## Hypothesis Testing for `age`
 
 -   Our proposed model is
@@ -148,7 +146,7 @@ $$
 \text{gmv} = \beta_0 + \beta_2 (\text{diagnosis = AD}) + ERROR
 $$
 
--   Since the p-value is approximately 0.18, at the 5% significance level, we cannot claim that the proposed model is a *significantly better fit* than the simpler model model
+-   Since the p-value is approximately 0.18, at the 5% significance level, we cannot claim that the proposed model is a *significantly better fit* than the simpler model
 
     -   We *do not* have statistically significant evidence that we need an `age` term in the model
 
@@ -157,11 +155,11 @@ $$
 -   There are three possible reasons why we could get a non-significant result:
 
     -   There truly is no relationship between `age` and `gmv`
-    
+
     -   There is a relationship between `age` and `gmv`; we just failed to detect it
-    
+
     -   There is a relationship between `age` and `gmv`, but most of the information provided by `age` is *already accounted for* by other variables in the model
-    
+
 ## Bayesian Inference
 
 ```{r}
@@ -180,6 +178,7 @@ broom.mixed::tidy(bayeslm_age_diag)
 ```
 
 ## Simulations from Posterior Distribution
+
 ```{r}
 #| label: draws from posterior-1
 plot(
@@ -201,6 +200,7 @@ plot(
 ```
 
 ## Simulations from Posterior Distribution
+
 ```{r}
 #| label: draws from posterior-3
 plot(
