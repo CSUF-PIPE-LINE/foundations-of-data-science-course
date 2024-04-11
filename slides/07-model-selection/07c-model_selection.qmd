@@ -1,0 +1,613 @@
+---
+title: "Model Selection via Cross-Validation"
+format: revealjs
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+library(rsample)
+library(purrr)
+library(yardstick)
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+
+alz2 <- alz |>
+  mutate(
+    sex = factor(sex, labels = c("female", "male")),
+    diagnosis = diagnosis |>
+      as.factor() |> # convert to factor
+      relevel(ref = "HC") # define reference level
+  )
+
+set.seed(236967)
+alz_split <- initial_split(
+  alz2,
+  prop = 0.8 # 80% in training
+)
+
+alz_training <- training(alz_split)
+alz_holdout <- testing(alz_split)
+```
+
+## Model Selection
+
+-   The goal of *model selection* is to choose the "best" of two or more proposed models
+
+-   We determine the "best" model using **out-of-sample prediction error**
+
+    -   For regression: RMSE or MAE for observations *not* used to fit the model
+
+## Using Multiple Holdout Sets
+
+-   Our current holdout set should be used to *evaluate* how good our chosen model is, not to select a model
+
+-   Therefore we need *another* holdout set to evaluate the predictions of our models before we select the final one
+
+    -   This is the reason for the 50%/25%/25% split
+    
+    -   This is a fairly inefficient use of our data, though
+    
+## K-fold Cross-Validation
+
+-   We create $K$ multiple non-overlapping subsets of our training set, called *folds*
+
+-   We fit all of the models on $K-1$ folds and use the remaining fold as the "test set"
+
+    -   Repeat until we have made a prediction for every observation in the training set
+    
+## Setting Up K-Fold Cross-Validation
+
+-   Use the `vfold_cv` function in `rsample`
+
+```{r}
+#| label: kfold split
+alz_cv_split <- vfold_cv(
+  alz_training, # always use the training set
+  v = 10, # number of folds
+  repeats = 1 # only one set of 10 folds
+)
+```
+    
+-   Typically we split into either 5 or 10 folds
+
+-   We have the option to *repeat* the splitting process
+
+    -   Generally reduces the variation in the RMSE estimates
+    
+## Getting the Folds Out
+
+```{r}
+#| label: one alz_cv_split
+
+alz_cv_split$splits[[1]]
+
+training1 <- training(alz_cv_split$splits[[1]])
+validation1 <- testing(alz_cv_split$splits[[1]])
+
+dim(training1)
+dim(validation1)
+```
+
+## Pseudocode for Cross-Validation
+
+-   For each fold:
+
+    -   Fit all the linear models being considered on the other $K-1$ folds
+    
+    -   Make predictions on the remaining fold
+    
+-   Collect all the predictions and evaluate RMSE or MAE
+
+## Step 1: Propose the Models
+
+Model 1:
+
+$$
+\text{gmv} = \beta_0 + \beta_1 (\text{age}) + \beta_2 (\text{diagnosis = AD}) + ERROR
+$$
+
+Model 2:
+
+$$
+\text{gmv} = \beta_0 + \beta_1 (\text{age}) + \beta_2(\text{sex = male}) + ERROR
+$$
+
+Model 3:
+
+$$
+\text{gmv} = \beta_0 + \beta_1 (\text{age}) + \beta_2 (\text{diagnosis = AD}) + \\ \beta_3(\text{sex = male}) + ERROR
+$$
+
+## Step 2: Create the Prediction Function
+
+-   We create a custom prediction function that:
+
+    -   Creates the training and validation sets from a `split`
+
+    -   Fits each model on the training set
+    
+    -   Makes predictions for each model on the validation set
+    
+    -   Returns a data frame with each set of model predictions in its own column
+
+-   We then can apply this function to every `split` in the `splits` column of `alz_cv_split`
+
+## Step 2: The Prediction Function
+
+```{r}
+#| label: function for prediction
+
+alz_prediction <- function(split){
+  # our input is the cross-validated split
+  
+  train <- training(split)
+  valid <- testing(split)
+  
+  lm1 <- lm(gmv ~ age + diagnosis, data = train)
+  lm2 <- lm(gmv ~ age + sex, data = train)
+  lm3 <- lm(gmv ~ age + diagnosis + sex, data = train)
+  
+  valid_predictions <- valid |>
+    mutate(
+      pred1 = predict(lm1, newdata = valid),
+      pred2 = predict(lm2, newdata = valid),
+      pred3 = predict(lm3, newdata = valid)
+    )
+  
+  return(valid_predictions)
+}
+```
+
+## Step 3: Apply the Function to Each Split
+
+-   The `map` function in the `purrr` package works like a `for` loop
+
+    -   Applies a function to every object in a list
+
+-   Here we are going to loop over the `splits` column of `alz_cv_split`
+
+    -   For each split in the list, we apply the prediction function we wrote
+
+## Step 3: Apply the Function to Each Split Using `map`
+
+```{r}
+#| label: map the predictions
+mapped_predictions <- map(
+  alz_cv_split$splits, # list to apply a function to
+  alz_prediction # function to apply
+)
+
+mapped_predictions[[1]]
+```
+
+## Step 4: Create a Data Frame of the Results
+
+```{r}
+#| label: create df of predictions
+
+mapped_predictions_df <- mapped_predictions |>
+  bind_rows(
+    .id = "fold" # give an id column to know which fold
+  )
+
+mapped_predictions_df |>
+  dplyr::select(fold, subject_ID, gmv, pred1, pred2, pred3, everything()) |>
+  head(3)
+```
+
+## Evaluate the Predictions
+
+-   We could compute the RMSE or MAE directly using `mutate`, but there are functions in `yardstick` that will do this directly
+
+```{r}
+#| label: evaluate by rmse-1
+lm1_rmse <- mapped_predictions_df |>
+  rmse(
+    truth = gmv,
+    estimate = pred1
+  )
+
+lm1_rmse
+```
+
+## Evaluating Using RMSE
+
+```{r}
+#| label: evaluate by rmse-2
+lm2_rmse <- mapped_predictions_df |>
+  rmse(
+    truth = gmv,
+    estimate = pred2
+  )
+
+lm3_rmse <- mapped_predictions_df |>
+  rmse(
+    truth = gmv,
+    estimate = pred3
+  )
+
+bind_rows(lm1_rmse, lm2_rmse, lm3_rmse)
+```
+
+## Evaluate the Predictions Using MAE
+
+-   We can use the `mae` function in `yardstick` to get MAE
+
+```{r}
+#| label: evaluate by mae-1
+lm1_mae <- mapped_predictions_df |>
+  mae(
+    truth = gmv,
+    estimate = pred1
+  )
+
+lm1_mae
+```
+
+## Evaluating Using MAE
+
+```{r}
+#| label: evaluate by mae-2
+lm2_mae <- mapped_predictions_df |>
+  mae(
+    truth = gmv,
+    estimate = pred2
+  )
+
+lm3_mae <- mapped_predictions_df |>
+  mae(
+    truth = gmv,
+    estimate = pred3
+  )
+
+bind_rows(lm1_mae, lm2_mae, lm3_mae)
+```
+
+## Investigate the Prediction Errors
+
+-   A *calibration plot* shows the observed response values ($y$) on one axis and the predicted response values ($\hat{y}$) on the other
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: observed vs predicted plot
+#| echo: TRUE
+#| eval: FALSE
+ggplot(data = mapped_predictions_df,
+       aes(x = gmv, y = pred1)) +
+  geom_point() +
+  geom_abline(intercept = 0, 
+              slope = 1) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Predicted gmv for Model 1") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+
+
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: observed vs predicted plot-2
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = mapped_predictions_df,
+       aes(x = gmv, y = pred1)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Predicted gmv for Model 1") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+## Evaluate Using Model Calibration
+
+-   A well-calibrated model will have the points scattered around the $y = \hat{y}$ (or $\hat{y} = y$) line
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: observed vs predicted plot-3
+#| echo: TRUE
+#| eval: FALSE
+ggplot(data = mapped_predictions_df,
+       aes(x = gmv, y = pred2)) +
+  geom_point() +
+  geom_abline(intercept = 0, 
+              slope = 1) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Predicted gmv for Model 2") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+
+
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: observed vs predicted plot-4
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = mapped_predictions_df,
+       aes(x = gmv, y = pred2)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Predicted gmv for Model 2") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+
+```
+:::
+:::
+
+## Evaluate Using Model Calibration
+
+-   See if the range of predictions is similar to the range of observed values
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: observed vs predicted plot-5
+#| echo: TRUE
+#| eval: FALSE
+ggplot(data = mapped_predictions_df,
+       aes(x = gmv, y = pred3)) +
+  geom_point() +
+  geom_abline(intercept = 0, 
+              slope = 1) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Predicted gmv for Model 3") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+
+
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: observed vs predicted plot-6
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+ggplot(data = mapped_predictions_df,
+       aes(x = gmv, y = pred3)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(x = "Gray Matter Volume (cc)",
+       y = "Predicted gmv for Model 3") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+
+```
+:::
+:::
+
+## Choosing a Model
+
+-   Model 3 has the lowest cross-validated RMSE and lowest cross-validated MAE
+
+-   We should choose this model as our best model
+
+-   If RMSE and MAE choose different models:
+
+    -   Option 1: choose the simpler model
+    
+    -   Option 2: investigate the distribution of the prediction errors
+
+## Distribution of Prediction Errors
+
+::: columns
+::: {.column width="50%"}
+
+```{r}
+#| label: plot residuals
+#| echo: FALSE
+#| eval: TRUE
+#| fig-height: 8
+
+lm3_residuals <- mapped_predictions_df |>
+  mutate(
+    residual = (gmv - pred3)
+  )
+
+ggplot(data = lm3_residuals,
+       aes(x = residual)) +
+  geom_histogram(binwidth = 20) +
+  labs(x = "Cross-Validated Prediction Error for Model 3",
+       y = "Number of Obs. in Training Set") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+
+::: {.column width="50%"}
+
+-   RMSE assumes prediction errors are normally distributed
+
+-   MAE assumes a sharper peak near 0
+
+-   If unsure, consider how much you want to "punish" a model for bad predictions
+
+:::
+:::
+
+## Remember the Randomness Issue!
+
+-   If we pick a different training set, our regression line is different!
+
+    -   This also applies in cross-validation!
+    
+    -   Our cross-validation actually produces 10 different estimates of RMSE and MAE
+
+-   Let's look at the variability in RMSE and MAE across folds
+
+## RMSE by Fold
+
+```{r}
+#| label: evaluate by rmse-by fold
+lm3_rmse_by_fold <- mapped_predictions_df |>
+  group_by(fold) |>
+  rmse(
+    truth = gmv,
+    estimate = pred3
+  )
+lm3_rmse_by_fold
+```
+
+## MAE by Fold
+
+```{r}
+#| label: evaluate by mae-by fold
+lm3_mae_by_fold <- mapped_predictions_df |>
+  group_by(fold) |>
+  mae(
+    truth = gmv,
+    estimate = pred3
+  )
+lm3_mae_by_fold
+```
+
+## Estimating Distribution of RMSE/MAE
+
+-   We assume RMSE and MAE will be normally distributed around the "true" value
+
+    -   We estimate the "true" value as the average of the RMSE or MSE estimates
+    
+```{r}
+#| label: estimate RMSE/MAE across folds
+mean(lm3_rmse_by_fold$.estimate)
+mean(lm3_mae_by_fold$.estimate)
+```
+
+-   Note that these numbers are slightly different from the estimate pooled across folds
+
+## Estimating Distribution of RMSE/MAE
+
+-   We assume RMSE and MAE will be normally distributed around the "true" value
+
+    -   For variability, we estimate the **standard error** of the average RMSE/MAE:
+
+$$
+\text{standard error} = \frac{\text{standard deviation of estimates}}{\sqrt{\text{number of folds}}}
+$$
+
+```{r}
+#| label: estimate SE of average RMSE/MAE
+sd(lm3_rmse_by_fold$.estimate)/sqrt(nrow(lm3_rmse_by_fold))
+sd(lm3_mae_by_fold$.estimate)/sqrt(nrow(lm3_mae_by_fold))
+```
+
+## Should We Choose a Simpler Model Anyway?
+
+-   Our chosen model was Model 3
+
+$$
+\text{gmv} = \beta_0 + \beta_1 (\text{age}) + \beta_2 (\text{diagnosis = AD}) + \\ \beta_3(\text{sex = male}) + ERROR
+$$
+
+-   This model is more complicated than Model 1 and Model 2
+
+    -   Remember the randomness issue: the more complex model might look better just because of the data we have
+
+## Should We Choose a Simpler Model Anyway?
+
+-   Our chosen model was Model 3
+
+$$
+\text{gmv} = \beta_0 + \beta_1 (\text{age}) + \beta_2 (\text{diagnosis = AD}) + \\ \beta_3(\text{sex = male}) + ERROR
+$$
+
+-   This model is more complicated than Model 1 and Model 2
+
+    -   If Model 1 or Model 2 has a "competitive" RMSE/MAE with Model 3, we might choose it because it's a simpler model
+
+## One-Standard-Error Rule of Thumb
+
+-   To determine whether a model has "competitive" RMSE/MAE:
+
+    -   Choose the best model by average RMSE/MAE
+    
+    -   Find the standard error of average RMSE/MAE according to that model
+    
+    -   Create an "upper bound" by adding the standard error to the average RMSE/MAE
+    
+    -   Any model whose estimated RMSE/MAE falls below this upper bound is considered to be "competitive"
+    
+## 1SE Rule of Thumb: Example
+
+```{r}
+#| label: Determine if Model 2 is competitive
+
+se <-  sd(lm3_rmse_by_fold$.estimate)/sqrt(nrow(lm3_rmse_by_fold))
+upper_bound <- mean(lm3_rmse_by_fold$.estimate) + se
+  
+lm2_average_rmse <- mapped_predictions_df |>
+  group_by(fold) |>
+  rmse(
+    truth = gmv,
+    estimate = pred2
+  ) |>
+  pull(.estimate) |>
+  mean()
+
+c(upper_bound = upper_bound, 
+  estimated_rmse = lm2_average_rmse)
+```
+
+-   Since Model 2's estimated average RMSE is below the upper bound, we would consider it competitive with Model 3
+
+## 1SE Rule of Thumb: Example
+
+```{r}
+#| label: Determine if Model 2 is competitive-2
+
+se <-  sd(lm3_rmse_by_fold$.estimate)/sqrt(nrow(lm3_rmse_by_fold))
+upper_bound <- mean(lm3_rmse_by_fold$.estimate) + se
+  
+lm2_average_rmse <- mapped_predictions_df |>
+  group_by(fold) |>
+  rmse(
+    truth = gmv,
+    estimate = pred2
+  ) |>
+  pull(.estimate) |>
+  mean()
+
+c(upper_bound = upper_bound, 
+  estimated_rmse = lm2_average_rmse)
+```
+
+
+-   Since Model 2 is a competitive simpler model, we might choose it instead of Model 3
