@@ -1,0 +1,167 @@
+---
+title: "Model Selection for Regression: Housing Loan Applications in Fullerton"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: load packages
+library(tidyverse)
+library(rsample)
+```
+
+Import the loans_OC dataset as `loans`:
+
+```{r}
+#| label: import data 
+
+```
+
+We will work with the same predictors we looked at in the Summarizing Linear Models activity, but we'll now open this up to tracts outside Fullerton.
+
+```{r}
+#| label: summarize each tract
+
+loans2 <- loans |>
+  mutate(
+    loan_amount_1000 = loan_amount/1000,
+    property_value_1000 = property_value/1000,
+    loan_to_value_ratio = loan_amount_1000/property_value_1000)
+
+tracts <- loans2 |>
+  filter(!is.na(city)) |>
+  group_by(census_tract) |>
+  summarize(
+    applications = n(),
+    city = first(city), # same city for each tract
+    population = mean(tract_population),
+    minority = mean(tract_minority_population_percent),
+    income = mean(tract_to_msa_income_percentage),
+    median_value = median(property_value_1000, na.rm = TRUE)
+  )
+```
+
+## Setting Up our Cross-Validation
+
+We first immediately split our 555 tracts into a training and validation split. We're going to just use the regular `initial_split` function, but if we were worried about tracts from the same city being split across training vs. validation set, we could use `group_initial_split` instead.
+
+```{r}
+#| label: initial split
+set.seed(9898)
+tracts_split <- tracts |>
+  initial_split(
+    prop = 0.80
+  )
+
+tracts_training <- training(tracts_split)
+tracts_holdout <- testing(tracts_split)
+```
+
+Next we create our folds on the training set only:
+
+```{r}
+#| label: k-fold cv setup
+set.seed(4676)
+tracts_cv <- vfold_cv(
+  tracts_training,
+  v = 10,
+  repeats = 1
+)
+```
+
+## Fitting the Models
+
+```{r}
+#| label: function for prediction
+
+tracts_prediction <- function(split){
+  # our input is the cross-validated split
+  
+  train <- training(split)
+  valid <- testing(split)
+  
+  lm1 <- lm(median_value ~ population + minority, data = train)
+
+  valid_predictions <- valid |>
+    mutate(
+      pred1 = predict(lm1, newdata = valid),
+    )
+  
+  return(valid_predictions)
+}
+```
+
+Now we map the predictions over all the folds:
+
+```{r}
+#| label: map the predictions
+mapped_predictions_df <- map(
+  tracts_cv$splits,
+  tracts_prediction
+) |>
+  bind_rows(
+    .id = "fold"
+  )
+```
+
+Then we look at how well-calibrated the model is:
+
+```{r}
+#| label: observed vs predicted plot
+ggplot(data = mapped_predictions_df,
+       aes(x = median_value, y = pred1)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(x = "Median Value ($1000)",
+       y = "Predicted Median Value for Model 1") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+```{r}
+#| label: pooled rmse
+lm1_rmse <- mapped_predictions_df |>
+  rmse(
+    truth = median_value,
+    estimate = pred1
+  )
+
+lm1_rmse_bygroup <- mapped_predictions_df |>
+  group_by(fold) |>
+    rmse(
+    truth = median_value,
+    estimate = pred1
+  )
+
+```
+
+### Your Turn
+
+1. How well-calibrated is our model? Are there some median values that our model is having difficulty predicting at all accurately?
+
+2. Inside the `tracts_prediction` function, fit three more multiple linear regression models: one using `population` and `income` as predictors, one using `minority` and `income`, and one using all three predictors. Also, modify the function so that `valid_predictions` contains the predictions from all four models.
+
+3. Re-run the chunk with the `tracts_prediction` function, then re-run the chunk creating `mapped_predictions_df`. Produce a calibration plot for the other 3 models.
+
+4. Do any of your models appear to be noticeably better calibrated than the other(s)? Why or why not?
+
+5. Compute the cross-validated RMSE for each of the four models. Use the pooled RMSE (i.e., the equivalent of `lm1_rmse` for the other models).
+
+6. Based on this estimate of RMSE, which model would you select? Why?
+
+7. Estimate the mean and standard error of the distribution of RMSE for each of the four models.
+
+8. Using the "one-standard-error" rule of thumb, which model would you select? Why?
+
+## Making Final Predictions
+
+### Your Turn
+
+1. For the model you selected in the previous section (choose one of them if you selected different models in Questions 6 and 8), re-fit it on the *full* training set, and make predictions on the holdout set.
+
+2. Obtain the RMSE on the holdout set. Compare this value to the RMSE you obtained in the previous section.
