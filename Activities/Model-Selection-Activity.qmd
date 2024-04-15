@@ -144,9 +144,9 @@ lm1_rmse_bygroup <- mapped_predictions_df |>
 
 1. How well-calibrated is our model? Are there some median values that our model is having difficulty predicting at all accurately?
 
-2. Inside the `tracts_prediction` function, fit three more multiple linear regression models: one using `population` and `income` as predictors, one using `minority` and `income`, and one using all three predictors. Also, modify the function so that `valid_predictions` contains the predictions from all four models.
+2. Inside the `tracts_prediction` function, fit four more multiple linear regression models: one using `population` and `income` as predictors, one using `minority` and `income`, one using all three predictors, and the null model. Also, modify the function so that `valid_predictions` contains the predictions from all five models.
 
-3. Re-run the chunk with the `tracts_prediction` function, then re-run the chunk creating `mapped_predictions_df`. Produce a calibration plot for the other 3 models.
+3. Re-run the chunk with the `tracts_prediction` function, then re-run the chunk creating `mapped_predictions_df`. Produce a calibration plot for the other 4 models.
 
 4. Do any of your models appear to be noticeably better calibrated than the other(s)? Why or why not?
 

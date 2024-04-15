@@ -156,12 +156,14 @@ alz_prediction <- function(split){
   lm1 <- lm(gmv ~ age + diagnosis, data = train)
   lm2 <- lm(gmv ~ age + sex, data = train)
   lm3 <- lm(gmv ~ age + diagnosis + sex, data = train)
+  lm_null <- lm(gmv ~ 1, data = train) # always include the null model
   
   valid_predictions <- valid |>
     mutate(
       pred1 = predict(lm1, newdata = valid),
       pred2 = predict(lm2, newdata = valid),
-      pred3 = predict(lm3, newdata = valid)
+      pred3 = predict(lm3, newdata = valid),
+      pred_null = predict(lm_null, newdata = valid)
     )
   
   return(valid_predictions)
@@ -201,7 +203,7 @@ mapped_predictions_df <- mapped_predictions |>
   )
 
 mapped_predictions_df |>
-  dplyr::select(fold, subject_ID, gmv, pred1, pred2, pred3, everything()) |>
+  dplyr::select(fold, subject_ID, gmv, pred1, pred2, pred3, pred_null, everything()) |>
   head(3)
 ```
 
@@ -235,9 +237,22 @@ lm3_rmse <- mapped_predictions_df |>
     truth = gmv,
     estimate = pred3
   )
-
-bind_rows(lm1_rmse, lm2_rmse, lm3_rmse)
 ```
+
+## Evaluating Using RMSE
+
+```{r}
+#| label: evaluate by rmse-3
+lm_null_rmse <- mapped_predictions_df |>
+  rmse(
+    truth = gmv,
+    estimate = pred_null
+  )
+
+bind_rows(lm1_rmse, lm2_rmse, lm3_rmse, lm_null_rmse)
+```
+
+-   Since lm3 has the lowest cross-validated RMSE, it appears to be the best model
 
 ## Evaluate the Predictions Using MAE
 
@@ -269,9 +284,23 @@ lm3_mae <- mapped_predictions_df |>
     truth = gmv,
     estimate = pred3
   )
-
-bind_rows(lm1_mae, lm2_mae, lm3_mae)
 ```
+
+## Evaluating Using MAE
+
+```{r}
+#| label: MAE-3
+lm_null_mae <- mapped_predictions_df |>
+  mae(
+    truth = gmv,
+    estimate = pred_null
+  )
+
+bind_rows(lm1_mae, lm2_mae, lm3_mae, lm_null_mae)
+```
+
+-   Since lm3 has the lowest cross-validated MAE, it appears to be the best model
+
 
 ## Investigate the Prediction Errors
 

@@ -53,9 +53,9 @@ alz_holdout <- testing(alz_split)
 -   Therefore we need *another* holdout set to evaluate the predictions of our models before we select the final one
 
     -   This is the reason for the 50%/25%/25% split
-    
+
     -   This is a fairly inefficient use of our data, though
-    
+
 ## K-fold Cross-Validation
 
 -   We create $K$ multiple non-overlapping subsets of our training set, called *folds*
@@ -63,7 +63,7 @@ alz_holdout <- testing(alz_split)
 -   We fit all of the models on $K-1$ folds and use the remaining fold as the "test set"
 
     -   Repeat until we have made a prediction for every observation in the training set
-    
+
 ## Setting Up K-Fold Cross-Validation
 
 -   Use the `vfold_cv` function in `rsample`
@@ -77,13 +77,13 @@ alz_cv_split <- vfold_cv(
   repeats = 1 # only one set of 10 folds
 )
 ```
-    
+
 -   Typically we split into either 5 or 10 folds
 
 -   We have the option to *repeat* the splitting process
 
     -   Generally reduces the variation in the RMSE estimates
-    
+
 ## Getting the Folds Out
 
 ```{r}
@@ -103,9 +103,9 @@ dim(validation1)
 -   For each fold:
 
     -   Fit all the linear models being considered on the other $K-1$ folds
-    
+
     -   Make predictions on the remaining fold
-    
+
 -   Collect all the predictions and evaluate RMSE or MAE
 
 ## Step 1: Propose the Models
@@ -135,9 +135,9 @@ $$
     -   Creates the training and validation sets from a `split`
 
     -   Fits each model on the training set
-    
+
     -   Makes predictions for each model on the validation set
-    
+
     -   Returns a data frame with each set of model predictions in its own column
 
 -   We then can apply this function to every `split` in the `splits` column of `alz_cv_split`
@@ -156,12 +156,14 @@ alz_prediction <- function(split){
   lm1 <- lm(gmv ~ age + diagnosis, data = train)
   lm2 <- lm(gmv ~ age + sex, data = train)
   lm3 <- lm(gmv ~ age + diagnosis + sex, data = train)
+  lm_null <- lm(gmv ~ 1, data = train)
   
   valid_predictions <- valid |>
     mutate(
       pred1 = predict(lm1, newdata = valid),
       pred2 = predict(lm2, newdata = valid),
-      pred3 = predict(lm3, newdata = valid)
+      pred3 = predict(lm3, newdata = valid),
+      pred_null = predict(lm_null, newdata = valid)
     )
   
   return(valid_predictions)
@@ -201,7 +203,7 @@ mapped_predictions_df <- mapped_predictions |>
   )
 
 mapped_predictions_df |>
-  dplyr::select(fold, subject_ID, gmv, pred1, pred2, pred3, everything())
+  dplyr::select(fold, subject_ID, gmv, pred1, pred2, pred3, pred_null, everything())
 ```
 
 ## Evaluate the Predictions
@@ -228,8 +230,16 @@ lm3_rmse <- mapped_predictions_df |>
     estimate = pred3
   )
 
-bind_rows(lm1_rmse, lm2_rmse, lm3_rmse)
+lm_null_rmse <- mapped_predictions_df |>
+  rmse(
+    truth = gmv,
+    estimate = pred_null
+  )
+
+bind_rows(lm1_rmse, lm2_rmse, lm3_rmse, lm_null_rmse)
 ```
+
+-   Since lm3 has the lowest cross-validated RMSE, it appears to be the best model
 
 ## Evaluate the Predictions Using MAE
 
@@ -255,8 +265,16 @@ lm3_mae <- mapped_predictions_df |>
     estimate = pred3
   )
 
-bind_rows(lm1_mae, lm2_mae, lm3_mae)
+lm_null_mae <- mapped_predictions_df |>
+  mae(
+    truth = gmv,
+    estimate = pred_null
+  )
+
+bind_rows(lm1_mae, lm2_mae, lm3_mae, lm_null_mae)
 ```
+
+-   Since lm3 has the lowest cross-validated MAE, it appears to be the best model
 
 ## Investigate the Prediction Errors
 
@@ -324,7 +342,7 @@ ggplot(data = mapped_predictions_df,
 -   If RMSE and MAE choose different models:
 
     -   Option 1: choose the simpler model
-    
+
     -   Option 2: investigate the distribution of the prediction errors
 
 ## Distribution of Prediction Errors
@@ -354,13 +372,12 @@ ggplot(data = lm3_residuals,
 
 -   If unsure, consider how much you want to "punish" a model for bad predictions
 
-
 ## Remember the Randomness Issue!
 
 -   If we pick a different training set, our regression line is different!
 
     -   This also applies in cross-validation!
-    
+
     -   Our cross-validation actually produces 10 different estimates of RMSE and MAE
 
 -   Let's look at the variability in RMSE and MAE across folds
@@ -396,7 +413,7 @@ lm3_mae_by_fold
 -   We assume RMSE and MAE will be normally distributed around the "true" value
 
     -   We estimate the "true" value as the average of the RMSE or MSE estimates
-    
+
 ```{r}
 #| label: estimate RMSE/MAE across folds
 mean(lm3_rmse_by_fold$.estimate)
@@ -440,13 +457,13 @@ $$
 -   To determine whether a model has "competitive" RMSE/MAE:
 
     -   Choose the best model by average RMSE/MAE
-    
+
     -   Find the standard error of average RMSE/MAE according to that model
-    
+
     -   Create an "upper bound" by adding the standard error to the average RMSE/MAE
-    
+
     -   Any model whose estimated RMSE/MAE falls below this upper bound is considered to be "competitive"
-    
+
 ## 1SE Rule of Thumb: Example
 
 ```{r}
