@@ -70,6 +70,7 @@ alz_holdout <- testing(alz_split)
 
 ```{r}
 #| label: kfold split
+set.seed(2848)
 alz_cv_split <- vfold_cv(
   alz_training, # always use the training set
   v = 10, # number of folds
