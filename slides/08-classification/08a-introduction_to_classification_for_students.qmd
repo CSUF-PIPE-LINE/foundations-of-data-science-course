@@ -1,0 +1,539 @@
+---
+title: "Introduction to Classification via Logistic Regression: Student Version"
+format: html
+editor: visual
+execute:
+  echo: TRUE
+---
+
+## Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+library(rsample)
+library(broom)
+library(yardstick)
+library(janitor)
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+
+alz2 <- alz |>
+  mutate(
+    sex = factor(sex, labels = c("female", "male")),
+    diagnosis = diagnosis |>
+      as.factor() |> # convert to factor
+      relevel(ref = "HC") # define reference level
+  )
+```
+
+## Split Training and Holdout Sets
+
+```{r}
+#| label: split training and holdout
+set.seed(236967)
+alz_split <- initial_split(
+  alz2,
+  prop = 0.8 # 80% in training
+)
+
+alz_training <- training(alz_split)
+alz_holdout <- testing(alz_split)
+```
+
+## Classification Problems
+
+-   In a classification problem, our response variable is *categorical*
+
+-   In a binary classification problem, one class is designated *positive* and the other class is designated *negative*
+
+    -   Typically the positive class is whatever category our model is designed to detect and the negative class is the reference level
+
+-   In a multiclass problem, there are more than two classes
+
+    -   Typically the reference level is the "least interesting" class
+    
+## Visualizing the Class Distribution
+
+```{r}
+#| label: glm-1
+set.seed(8) # for jittering
+ggplot(data = alz_training, 
+       mapping = aes(x = age, 
+                     y = diagnosis)) +
+  geom_jitter(color = "navy", size = 2, 
+              width = 0, height = 0.1) +
+  labs(x = "Age (years)",
+       y = "Diagnosis") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+We slightly jitter the location of the points along the `diagnosis` axis so that people with the same age and diagnosis can be shown as separate points
+
+## Visualizing the Class Distribution
+
+-   We can try our old trick of converting `diagnosis` to an indicator (0/1) variable
+
+-   This would allow us to fit a linear regression model
+
+    -   This model is not very useful!
+
+```{r}
+#| label: glm-2
+set.seed(8)
+lm_line <- lm((diagnosis == "AD") ~ age, data = alz_training)
+
+ggplot(data = alz_training, 
+       mapping = aes(x = age, 
+                     y = diagnosis)) +
+  geom_jitter(color = "navy", size = 2, 
+              width = 0, height = 0.1) +
+  geom_abline(intercept = coef(lm_line)[1]+1,
+              slope = coef(lm_line)[2],
+              linewidth = 1.5) +
+  labs(x = "Age (years)",
+       y = "Diagnosis") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+-   It's not clear what a predicted value of 0.5 would mean - does the person have "half-Alzheimer's?"
+
+## Classification Models
+
+-   We cannot model our response variable directly as a function of parameters and predictor variables
+
+-   Typically get around this problem in one of two ways
+
+    -   Model the *probability* of being in each class as a function of parameters and predictor variables, and assign each observation to the class with the highest probability
+
+    -   Divide the predictor space into regions and assign all observations in a region into the most common class in that region
+
+## Null Model for Classification
+
+-   The null model predicts that every observation will be in the most common class in the training set
+
+    -   We estimate the probability of being in a class as the proportion of that class in the dataset
+    
+```{r}
+#| label: alz null model
+alz_training |>
+  tabyl(diagnosis)
+```
+
+-   51.5% of our training set is healthy and 48.5% has Alzheimer's, so the null model classifies everyone as healthy
+
+## Evaluating Model Performance
+
+-   Remember that we want to use our model to predict `diagnosis` for people *not* in our sample
+
+-   We told R the `diagnosis` for every person in the training set, so that it could model the probability of having an Alzheimer's diagnosis
+
+-   We didn't use the holdout set to fit our model!
+
+    -   We investigate how well the model predicts `diagnosis` classes in the *holdout* set
+
+## Predicting with the Null Model
+
+-   We create a factor variable with the same levels *in the same order* as the response variable
+
+```{r}
+#| label: terrible null model predictions
+
+alz_null_predictions <- alz_holdout |>
+  mutate(
+    predicted_class = factor("HC", levels = c("HC", "AD"))
+    # HC is the first level because it's the reference
+  )
+```
+
+-   Our null model predicted everyone to be "HC"
+
+-   We don't really have residuals - either the prediction is right or it's wrong!
+
+## Evaluation Option 1: Accuracy
+
+-   Find the proportion of observations in the holdout set that are correctly classified
+
+```{r}
+#| label: accuracy manually
+alz_null_predictions |>
+  mutate(
+    accurate = (diagnosis == predicted_class) # logical
+  ) |>
+  summarize(accuracy = mean(accurate))
+```
+
+## Finding Accuracy with `yardstick`
+
+```{r}
+#| label: accuracy with yardstick
+alz_null_predictions |>
+  accuracy(
+    truth = diagnosis,
+    estimate = predicted_class
+  )
+```
+
+-   Our null model classified 59% of the observations in the holdout set correctly!
+
+## Logistic Regression
+
+-   Logistic regression models the probability of being in the positive class as a function of parameters and predictor values:
+
+$$
+P(\text{positive}) = \frac{e^{\beta_0 + \beta_1 x}}{1 + e^{\beta_0 + \beta_1 x}}
+$$
+
+-   The **ERROR** term here comes from the fact that once we observe the response class, $P(\text{positive})$ can only be 0 or 1
+
+## Odds
+
+-   Odds are typically expressed as a ratio:
+
+$$
+\text{odds} = \frac{\text{chance of winning}}{\text{chance of losing}}
+$$
+
+-   For a binary classification model, this becomes
+
+$$
+\text{odds} = \frac{\text{chance of positive}}{\text{chance of negative}}
+$$
+
+## Odds in Logistic Regression
+
+$$
+\text{chance of positive} = \frac{e^{\beta_0 + \beta_1 x}}{1 + e^{\beta_0 + \beta_1 x}}
+$$
+
+$$
+\text{chance of negative} = 1 - \frac{e^{\beta_0 + \beta_1 x}}{1 + e^{\beta_0 + \beta_1 x}} = \frac{1}{1 + e^{\beta_0 + \beta_1 x}}
+$$
+
+$$
+\text{odds} = \frac{\frac{e^{\beta_0 + \beta_1 x}}{1 + e^{\beta_0 + \beta_1 x}}}{\frac{1}{1 + e^{\beta_0 + \beta_1 x}}} = e^{\beta_0 + \beta_1 x}
+$$
+
+## Fitting a Logistic Regression Model
+
+-   Let $\pi = P(\text{positive})$
+
+-   We transform $\pi$ such that $f(\pi)$ is a linear function of the predictor $x$
+
+-   This function $f(\pi)$ is called **log-odds** or **logit**
+
+$$
+logit(\pi) = log\left(\frac{\pi}{1 - \pi}\right) = log\left(e^{\beta_0 + \beta_1 x}\right) = \beta_0 + \beta_1 x
+$$
+
+## Fitting a Logistic Regression Model with R
+
+```{r}
+#| label: logistic regression with glm
+
+alz_logr <- glm(
+  diagnosis ~ age,
+  data = alz_training,
+  family = "binomial" # makes this logistic regression
+)
+
+alz_logr |>
+  tidy()
+```
+
+## Which Class Are We Predicting?
+
+-   Our output gives two possible equations:
+
+$$
+logit(P(\text{Alzheimer's})) = -2.56 + 0.0333 (\text{age}) 
+$$
+
+$$
+logit(P(\text{Healthy})) = -2.56 + 0.0333 (\text{age}) 
+$$
+
+
+-   Always `relevel` your response variable before splitting so you know the reference level
+
+    -   The reference level is "negative" and the other class is the one we are estimating the probability of being in
+
+## Equation of the Regression Line
+
+```{r}
+#| label: logr coefficients
+alz_logr |>
+  tidy()
+```
+
+$$
+logit(P(\text{Alzheimer's})) = -2.56 + 0.0333 (\text{age}) 
+$$
+
+-   This is a regression line, not a population model
+
+    - Technically, we are computing $logit(\hat{\pi})$
+    
+    -   $\hat{\beta}_0 = -2.56$ and $\hat{\beta}_1 = 0.0333$
+
+
+## Interpreting the Coefficients
+
+```{r}
+#| label: logistic regression coefficients - 2
+alz_logr |>
+  tidy()
+```
+
+$$
+logit(P(\text{Alzheimer's})) = -2.56 + 0.0333 (\text{age}) 
+$$
+
+-   We typically convert to odds for interpretation purposes
+
+$$
+\text{predicted odds of Alzheimer's} = e^{-2.56 + 0.0333 (\text{age})}
+$$
+
+## Interpreting the Intercept
+
+$$
+\text{predicted odds of Alzheimer's} = e^{-2.56 + 0.0333 (0)}
+$$
+
+-   The predicted odds of a 0-year-old having Alzheimer's is $e^{-2.56}$ = `r {exp(coef(alz_logr)[1])}`
+
+-   This means that the predicted probability of a 0-year-old having Alzheimer's is $\frac{e^{-2.56}}{1 + e^{-2.56}}$ = `r {exp(coef(alz_logr)[1])/(1 + exp(coef(alz_logr)[1]))}`
+
+## Odds Ratio
+
+-   The *odds ratio* indicates (multiplicatively) how much higher the odds are in one situation compared to another
+
+$$
+\text{odds ratio} = \frac{\text{odds in situation 1}}{\text{odds in situation 2}}
+$$
+
+-   For interpreting our slope:
+
+    -   Let "situation 2" be someone who is $\text{age}$ years old
+    
+    -   Let "situation 1" be someone who is $\text{age} + 1$ years old
+    
+## Interpreting the Slope in Logistic Regression
+
+$$
+\text{predicted odds of Alzheimer's in situation 2} = e^{-2.56 + 0.0333 (age)}
+$$
+
+$$
+\text{predicted odds of Alzheimer's in situation 1} = e^{-2.56 + 0.0333 (age + 1)}
+$$
+
+$$
+\text{odds ratio} = \frac{e^{-2.56 + 0.0333 (age + 1)}}{e^{-2.56 + 0.0333 (age)}} = e^{0.0333}
+$$
+
+-   For every additional year of age, the predicted odds of having Alzheimer's is `r exp(coef(alz_logr)[2])` times higher
+
+## Predicting with Logistic Regression
+
+```{r}
+#| label: predict logr
+alz_logr_pred1 <- alz_logr |>
+  augment(newdata = alz_holdout)
+
+alz_logr_pred1 |>
+  select(subject_ID, .fitted, everything()) |>
+  head(4)
+```
+
+-   Here `.fitted` is the predicted logit - not particularly interpretable!
+
+## Predicting with Logistic Regression
+
+```{r}
+#| label: predict logr probability
+#| code-line-numbers: "3"
+alz_logr_pred2 <- alz_logr |>
+  augment(newdata = alz_holdout,
+          type.predict = "response")
+
+alz_logr_pred2 |>
+  select(subject_ID, .fitted, everything()) |>
+  head(4)
+```
+
+-   Now `.fitted` represents the predicted probability of Alzheimer's
+
+## Class Predictions with Logistic Regression
+
+```{r}
+#| label: class predictions logr
+alz_logr_predictions <- alz_logr_pred2 |>
+  mutate(
+    predicted_class = if_else(
+      .fitted > 0.5, # more likely to have AD than not
+      "AD", # value if TRUE
+      "HC" # value if FALSE
+    ) |>
+      as.factor() |> # convert to factor
+      relevel(ref = "HC") # define reference level
+  )
+```
+
+## Class Predictions with Logistic Regression
+
+```{r}
+#| label: look at class predictions
+alz_logr_predictions |>
+  select(subject_ID, .fitted, predicted_class, everything()) |>
+  head()
+```
+
+## Accuracy of Logistic Regression Model
+
+```{r}
+#| label: accuracy manually for logr
+alz_logr_predictions |>
+  mutate(
+    accurate = (diagnosis == predicted_class) # logical
+  ) |>
+  summarize(accuracy = mean(accurate))
+```
+
+-   Our logistic regression model only predicted 47% of the patients in the holdout set correctly!
+
+-   This is worse than a coin flip!
+
+-   This is worse than the null model!
+
+## The Problem with Accuracy
+
+-   We built a model to predict whether a person has Alzheimer's disease
+
+-   The null model did not predict anyone to have Alzheimer's disease
+
+-   The null model is completely useless
+
+    -   In many situations, a model with over 99% accuracy can be completely useless!
+
+-   The logistic regression model may be more useful even if the accuracy is lower
+
+## Evaluation Option 2: Confusion Matrix
+
+-   A confusion matrix is a table with the actual classes on the columns and the predicted classes on the rows
+
+-   We can use the confusion matrix to investigate the *pattern* of wrong predictions
+
+```{r}
+#| label: confusion matrix with tabyl
+alz_logr_predictions |>
+  tabyl(
+    predicted_class, # column variable
+    diagnosis, # row variable
+  )
+```
+
+## Confusion Matrix with `yardstick`
+
+-   Don't use `tabyl` to make a confusion matrix!
+
+-   `conf_mat` creates a sensibly labeled table
+
+```{r}
+#| label: confusion matrix with yardstick
+alz_logr_predictions |>
+  conf_mat(
+    truth = diagnosis, # row variable
+    estimate = predicted_class # column variable
+  )
+```
+
+## Confusion Matrix Vocabulary
+
+-   A **true positive** is an observation that was correctly predicted to be in the positive class
+
+    -   3 people predicted to have Alzheimer's actually did have Alzheimer's, so 3 true positives
+
+-   A **true negative** is an observation that was correctly predicted to be in the negative class
+
+    -   5 people predicted to not have Alzheimer's actually were Healthy Controls, so 5 true negatives
+    
+-   A **false positive** is an observation that was correctly predicted to be in the positive class
+
+    -   5 people predicted to have Alzheimer's actually were Healthy Controls, so 5 false positives
+
+-   A **false negative** is an observation that was incorrectly predicted to be in the negative class
+
+    -   4 people predicted to not have Alzheimer's actually did have Alzheimer's, so 4 true negatives
+
+
+## Compare Confusion Matrices
+
+Logistic Regression Model
+
+```{r}
+#| label: confusion matrix comparison - logr
+alz_logr_predictions |>
+  conf_mat(
+    truth = diagnosis,
+    estimate = predicted_class
+  )
+```
+
+Null Model
+
+```{r}
+#| label: confusion matrix comparison - null
+alz_null_predictions |>
+  conf_mat(
+    truth = diagnosis,
+    estimate = predicted_class
+  )
+```
+
+-   The logistic regression model is at least giving us *some* true positives
+
+## Why Does Our Model Suck?
+
+-   Our sample suggests that both younger and older people are more likely to have Alzheimer's
+
+    -   The logistic regression model cannot account for this tendency using a linear function of age
+
+-   Models should reflect the way that the data was collected
+
+    -   Our model reflects the exclusion of younger healthy controls from the sample
+
+    -   Most 60-year-olds do not have Alzheimer's!
+
+```{r}
+#| label: glm-revisited-with-annotation
+set.seed(8)
+ggplot(data = alz_training, 
+       mapping = aes(x = age, 
+                     y = diagnosis)) +
+  geom_jitter(color = "navy", size = 2, 
+              width = 0, height = 0.1) +
+    annotate("text",
+           x = 60, y = 1,
+           label = "No one\n in this region!",
+           hjust = 0.5,
+           size = 5) +
+  labs(x = "Age (years)",
+       y = "Diagnosis") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+-   No classification model fit on this data would make good predictions on a real-world test set, no matter how accurate the predictions on our holdout set appear to be!
