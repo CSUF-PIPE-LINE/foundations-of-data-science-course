@@ -1,0 +1,227 @@
+---
+title: "Logistic Regression: Housing Loan Applications in Fullerton"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, we are going to build a predictive model to predict who will be approved for a mortgage to buy a house in Fullerton in 2021.
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: load packages
+library(tidyverse)
+library(rsample)
+library(janitor)
+library(broom)
+library(yardstick)
+```
+
+Import the loans_OC dataset as `loans`:
+
+```{r}
+#| label: import data 
+
+```
+
+Now we'll use the transformations and filtering we've been using, but we'll convert `loan_to_value_ratio` into percent so we don't make a one-unit increase larger than the range of the variable. We also explicitly convert `action` to a factor variable and define the reference level. Since we want to predict who will *not* be approved for a loan, we will make that the positive class. Yes, that's a bit counter-intuitive.
+
+```{r}
+#| label: get fullerton loans
+
+loans_fullerton <- loans |>
+  filter(city == "Fullerton",
+         !is.na(property_value)) |>
+  mutate(
+    loan_amount_1000 = loan_amount/1000,
+    property_value_1000 = property_value/1000,
+    loan_to_value_ratio = loan_amount_1000/property_value_1000*100,
+    action = action |>
+      as.factor() |> # convert to factor
+      relevel(ref = "Approved"), # define reference level
+    ethnicity = ethnicity |>
+      as.factor() |>
+      relevel(ref = "Not Hispanic or Latino")
+)
+```
+
+## Create the Training and Test Sets
+
+Next we create the training and test sets.
+
+```{r}
+#| label: initial split
+set.seed(15858)
+loans_split <- loans_fullerton |>
+  initial_split(
+    prop = 0.80
+  )
+
+loans_training <- training(loans_split)
+loans_holdout <- testing(loans_split)
+```
+
+## Exploring the Training Set
+
+We typically do all of our exploration on the training set.
+
+```{r}
+#| label: jittered plot of loan amount by group
+
+ggplot(data = loans_training,
+       mapping = aes(
+         x = loan_amount_1000,
+         y = action
+       )) +
+  geom_jitter(height = 0.1) +
+  labs(
+    x = "Loan Amount (1000s of $)",
+    y = "Action Taken"
+  )
+```
+
+It's a bit hard to tell, but it looks like the very-low-amount loans are less likely to be approved. At higher loan values there doesn't seem to be a huge effect.
+
+We can use the `cut` function to "bin" the numerical variable (kind of like a histogram, except we don't need equal-width intervals) and get a sense of the proportions of `action` within each bin:
+
+```{r}
+#| label: table of loan amount by group
+
+loans_training |>
+  mutate(
+    amount_factor = cut(loan_amount_1000,
+                        breaks = c(0, 250, 500, 750, 1000, 2000, 3000))
+  ) |>
+  tabyl(action, amount_factor) |>
+  adorn_percentages(denominator = "col")
+```
+
+It does look like the loans for higher amounts are more likely to be approved, until you get out beyond $1 million and then we don't have a lot of data.
+
+### Your Turn
+
+1.  Create a similar plot comparing `loan_to_value_ratio` between Approved and Not approved loans, and a similar table. I would recommend cutting using intermediate values of 70, 80, 90, and 95, but you can choose other values if they make sense based on your plot.
+
+2. Based on your exploration of the training set, do lower or higher `loan_to_value_ratio` loans tend to be more likely to be approved? Or does there not appear to be much of a relationship?
+
+## Checking the Null Model
+
+```{r}
+#| label: null model
+loans_training |>
+  tabyl(action)
+```
+
+So this is a bit of a problem. Only about 8% of the loans in our training set were actually not approved. This means that we expect to get over 90% accuracy by just predicting everyone to be approved, which makes the model useless.
+
+Furthermore, our exploratory analysis suggested that there are not huge, obvious effects, which means it's going to be difficult to predict anything with a greater than 50% chance of being Not approved. We haven't learned techniques for dealing with this kind of *class imbalance*.
+
+This tells me that logistic regression is *probably* not going to work well for making class predictions, since we're probably not going to deviate *enough* from the null model to get predictions up over 50%. We could sacrifice overall accuracy and choose a lower threshold. Generally, when we're fitting logistic regression models we care more about the predicted odds/probabilities than the actual classification threshold used.
+
+## Fitting a Simple Logistic Regression Model
+
+```{r}
+#| label: fit the glm
+loan_amount_logistic <- glm(
+  action ~ loan_amount_1000,
+  data = loans_training,
+  family = "binomial"
+)
+
+loan_amount_logistic |>
+  tidy()
+```
+
+The predicted odds that a loan of 0 dollars will not be approved is approximately $e^{-2.36} = 0.094$. This is pretty good odds, but it should probably be much lower given that they are literally asking for no loan. Just like with linear regression, sometimes our intercept interpretation makes no sense.
+
+Notice that our slope is negative, which means that as the loan amount increases, the odds of approval decreases. We can say that for every additional 1000 dollars in the loan application, the predicted odds of approval decreases multiplicatively by $e^{-0.00017}$ or about 0.99983. (Generally speaking, when the slope is very small, the corresponding odds ratio is approximately $1 + slope$.)
+
+### Your Turn
+
+1. Fit a logistic regression model predicting `action` from `loan_to_value_ratio`.
+
+2. Write a sentence to interpret the intercept and slope of your fitted model.
+
+## Predicting Probabilites
+
+```{r}
+#| label: predict loan-amount probability
+loan_amount_pred <- loan_amount_logistic |>
+  augment(newdata = loans_holdout,
+          type.predict = "response")
+
+loan_amount_pred |>
+  arrange(desc(.fitted)) |>
+  select(.fitted, action, everything())
+```
+
+As you can see here: everything appears to have between a 6% and 9% predicted chance to be Not approved.
+
+Remember that we said that we could choose an arbitrary threshold for classifying positive vs. negative. Although 50% is the "best" threshold for pure accuracy, our confusion matrix will not be that interesting. In the interest of getting an interesting confusion matrix, I'm going to "cheat" and choose a threshold of 7.5%.
+
+```{r}
+#| label: predict loan-amount class
+loan_amount_pred <- loan_amount_pred |>
+  mutate(
+    predicted_class = if_else(
+      .fitted >= 0.075, "Not approved", "Approved"
+    ) |>
+      as.factor() |>
+      relevel(ref = "Approved")
+  )
+
+conf_mat(loan_amount_pred,
+         truth = action,
+         estimate = predicted_class)
+```
+
+### Your Turn
+
+1. Identify the number of true positives, true negatives, false positives, and false negatives in the confusion matrix above.
+
+2. Predict the probability of each loan application in the holdout set being Not approved, based on the model using `loan_to_value_ratio` as the predictor.
+
+3. You should find that your predicted probabilities span a bit wider range, but still get nowhere close to 50%. Using a threshold of 7.5% again, classify each loan application as Approved or Not approved, and produce the resulting confusion matrix.
+
+## Multiple Logistic Regression
+
+We can add extra predictors to our `glm` just like we would add to an `lm`. Here I'll add the `ethnicity` variable to my model.
+
+```{r}
+#| label: glm with loan amount and ethnicity
+
+loan_ethnicity_logistic <- glm(
+  action ~ loan_amount_1000 + ethnicity,
+  data = loans_training,
+  family = "binomial"
+)
+
+loan_ethnicity_logistic |>
+  tidy()
+```
+
+Notice that because `ethnicity` has 3 categories (Hispanic or Latino, Not Hispanic or Latino, Joint), we need 2 indicator variables - one for each non-reference level.
+
+To interpret the slope corresponding to `ethnicityHispanic or Latino`, we can note that a 1-unit change in this variable represents changing from Not Hispanic or Latino to Hispanic or Latino. Therefore we can say:
+
+Holding loan amount constant, the predicted odds of being Not approved is about $e^{0.216} = 1.24$ times higher for Hispanic/Latino applicants compared to non-Hispanic applicants.
+
+```{r}
+#| label: predict amount-ethnicity probability
+loan_ethnicity_pred <- loan_ethnicity_logistic |>
+  augment(newdata = loans_holdout,
+          type.predict = "response")
+
+loan_ethnicity_pred |>
+  arrange(desc(.fitted)) |>
+  select(.fitted, action, everything())
+```
+
+### Your Turn
+
+1. The simplest model I was able to find that produces any probabilities of Not approved above about 0.20 includes `loan_to_value_ratio` and `applicant_over_62`. Fit this model on the training set.
+
+2. Write a sentence to interpret the slope corresponding to `applicant_over_62TRUE` in context.
+
+3. Using a threshold of 7.5% again, classify each loan application as Approved or Not approved, and produce the resulting confusion matrix.
