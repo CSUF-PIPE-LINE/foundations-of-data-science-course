@@ -477,8 +477,8 @@ alz_logr_predictions |>
 #| label: confusion matrix with tabyl
 alz_logr_predictions |>
   tabyl(
-    predicted_class, # column variable
-    diagnosis, # row variable
+    predicted_class, # row variable
+    diagnosis # column variable
   )
 ```
 
@@ -492,8 +492,8 @@ alz_logr_predictions |>
 #| label: confusion matrix with yardstick
 alz_logr_predictions |>
   conf_mat(
-    truth = diagnosis, # row variable
-    estimate = predicted_class # column variable
+    truth = diagnosis, # column variable
+    estimate = predicted_class # row variable
   )
 ```
 
@@ -503,8 +503,8 @@ alz_logr_predictions |>
 #| label: confusion matrix with yardstick - TP
 alz_logr_predictions |>
   conf_mat(
-    truth = diagnosis, # row variable
-    estimate = predicted_class # column variable
+    truth = diagnosis, # column variable
+    estimate = predicted_class # row variable
   )
 ```
 
@@ -518,8 +518,8 @@ alz_logr_predictions |>
 #| label: confusion matrix with yardstick - TN
 alz_logr_predictions |>
   conf_mat(
-    truth = diagnosis, # row variable
-    estimate = predicted_class # column variable
+    truth = diagnosis, # column variable
+    estimate = predicted_class # row variable
   )
 ```
 
@@ -533,12 +533,12 @@ alz_logr_predictions |>
 #| label: confusion matrix with yardstick - FP
 alz_logr_predictions |>
   conf_mat(
-    truth = diagnosis, # row variable
-    estimate = predicted_class # column variable
+    truth = diagnosis, # column variable
+    estimate = predicted_class # row variable
   )
 ```
 
--   A **false positive** is an observation that was correctly predicted to be in the positive class
+-   A **false positive** is an observation that was incorrectly predicted to be in the positive class
 
     -   5 people predicted to have Alzheimer's actually were Healthy Controls, so 5 false positives
 
@@ -548,14 +548,14 @@ alz_logr_predictions |>
 #| label: confusion matrix with yardstick - FN
 alz_logr_predictions |>
   conf_mat(
-    truth = diagnosis, # row variable
-    estimate = predicted_class # column variable
+    truth = diagnosis, # column variable
+    estimate = predicted_class # row variable
   )
 ```
 
 -   A **false negative** is an observation that was incorrectly predicted to be in the negative class
 
-    -   4 people predicted to not have Alzheimer's actually did have Alzheimer's, so 4 true negatives
+    -   4 people predicted to not have Alzheimer's actually did have Alzheimer's, so 4 false negatives
 
 
 ## Compare Confusion Matrices
