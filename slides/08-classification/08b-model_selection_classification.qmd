@@ -1,0 +1,872 @@
+---
+title: "Model Selection for Classification Models"
+format: revealjs
+editor: visual
+execute: 
+  echo: TRUE
+---
+
+## Load Packages and Import Data
+
+```{r}
+#| label: load packages 
+library(tidyverse) 
+library(rsample)
+library(broom)
+library(yardstick)
+```
+
+```{r}
+#| label: import data with here
+alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
+
+alz2 <- alz |>
+  mutate(
+    sex = factor(sex, labels = c("female", "male")),
+    diagnosis = diagnosis |>
+      as.factor() |> # convert to factor
+      relevel(ref = "HC") # define reference level
+  )
+```
+
+## Split Training and Holdout Sets
+
+```{r}
+#| label: split training and holdout
+set.seed(236967)
+alz_split <- initial_split(
+  alz2,
+  prop = 0.8 # 80% in training
+)
+
+alz_training <- training(alz_split)
+alz_holdout <- testing(alz_split)
+```
+
+## Model Selection Using Cross-Validation
+
+1.   Propose the models and create the cross-validation splits
+
+2.   Create the prediction function
+
+3.   Apply the prediction function to each split
+
+4.   Create a data frame of the results
+
+5.   Evaluate the predictions and select the best model
+
+## Model Selection for Classification
+
+-   The sequence is the exact same for both regression and classification
+
+    -   We need to be more careful when defining the results we want to output
+
+    -   We need a different way to evaluate the accuracy of the predictions
+
+## Evaluating Prediction Accuracy for Classification
+
+-   We want to select a model that minimizes the estimated *test error*
+
+-   We can use *misclassification rate* (1 - accuracy) to measure "test error" for a classification problem
+
+    -   In many situations, a model with less than 1% misclassification rate (\>99% accuracy) can be completely useless!
+
+## Another Problem with Accuracy
+
+-   Accuracy of a model depends on the **decision threshold**
+
+    -   The point at which observations switch from being predicted negative to predicted positive
+    
+    -   For logistic regression models, this is a predicted probability
+    
+-   As data scientists, *we often do not choose the decision threshold ourselves*
+
+## Getting Around the Decision Threshold Problem
+
+-   We need to determine how good our model is without actually knowing the decision threshold that will be used!
+
+-   Generally two options:
+
+    -   Summarize the model performance across the full range of possible decision thresholds
+    
+    -   Summarize the model performance using the predicted probabilities directly, independent of the decision threshold
+
+## Getting Around the Decision Threshold Problem
+
+-   We will investigate one alternative accuracy/inaccuracy metric for each option
+
+    -   **ROC Area Under Curve (AUC)** measures the performance of the model across the full range of possible decision thresholds
+
+    -   **Brier Score** uses class probabilities directly and does not depend on the decision threshold
+
+## Building Toward AUC: Confusion Matrix
+
+```{r}
+#| label: stuff we did last time
+#| echo: FALSE
+#| eval: TRUE
+
+alz_logr <- glm(
+  diagnosis ~ age,
+  data = alz_training,
+  family = "binomial"
+)
+
+alz_logr_pred <- alz_logr |>
+  augment(newdata = alz_holdout,
+          type.predict = "response")
+
+alz_logr_predictions <- alz_logr_pred |>
+  mutate(
+    predicted_class = if_else(
+      .fitted > 0.5, # more likely to have AD than not
+      "AD", # value if TRUE
+      "HC" # value if FALSE
+    ) |>
+      as.factor() |> # convert to factor
+      relevel(ref = "HC") # define reference level
+  )
+```
+
+```{r}
+#| label: confusion matrix
+
+alz_logr_predictions |>
+  conf_mat(
+    truth = diagnosis, # row variable
+    estimate = predicted_class # column variable
+  )
+```
+
+-   A confusion matrix gives us the number of true positives, true negatives, false positives, and false negatives
+
+## Summarizing the Confusion Matrix
+
+```{r}
+#| label: confusion matrix-sens
+#| eval: TRUE
+#| echo: FALSE
+
+alz_logr_predictions |>
+  conf_mat(
+    truth = diagnosis, # row variable
+    estimate = predicted_class # column variable
+  )
+```
+
+-   The **sensitivity** represents the proportion of the positive class in the dataset that is classified correctly
+
+$$
+sensitivity = \frac{\text{number of True Positives in the holdout set}}{\text{number of AD in the holdout set}} = \frac{3}{7}
+$$
+
+-   Sensitivity is also called **recall** or **true positive rate**
+
+## Summarizing the Confusion Matrix
+
+```{r}
+#| label: confusion matrix-spec
+#| eval: TRUE
+#| echo: FALSE
+
+alz_logr_predictions |>
+  conf_mat(
+    truth = diagnosis, # row variable
+    estimate = predicted_class # column variable
+  )
+```
+
+-   The **specificity** represents the proportion of the negative class in the dataset that is classified correctly
+
+$$
+specificity = \frac{\text{number of True Negatives in the holdout set}}{\text{number of HC in the holdout set}} = \frac{5}{10}
+$$
+
+-   The **false positive rate** is $1 - specificity$
+
+## Receiver Operating Characteristic
+
+-   The receiver operating characteristic (ROC) curve summarizes sensitivity and specificity across all possible decision thresholds
+
+```{r}
+#| label: get ROC curve
+alz_roc_curve <- alz_logr_predictions |>
+  roc_curve(truth = diagnosis,
+            .fitted,
+            event_level = "second")
+```
+
+-   We need `event_level = "second"` because `.fitted` represents the predicted probability of being in the *second* column of our confusion matrix
+
+## Reading the ROC Curve Data Frame
+
+```{r}
+#| label: reading ROC curve
+alz_roc_curve |> head(4)
+```
+
+-   We start by classifying everyone as AD
+
+    -   This means we can only have True Positives and False Positives
+
+    -   We will have 100% sensitivity but 0% specificity
+    
+## Reading the ROC Curve Data Frame
+
+```{r}
+#| label: reading ROC curve-2
+alz_roc_curve |> head(4)
+```
+
+-   The smallest predicted probability of AD is 0.389
+
+    -   If our decision threshold is 0.389 or below, we will predict that person to still be AD
+
+    -   If our decision threshold is above 0.389, we will predict that person to be HC
+
+
+## Reading the ROC Curve Data Frame
+
+```{r}
+#| label: reading ROC curve-3
+alz_roc_curve |> head(4)
+```
+
+-   That patient is actually in group AD 
+
+    -   Once the decision threshold crosses 0.389, that patient switches from a True Positive to a False Negative
+
+    -   The sensitivity decreases but the specificity stays at 0  
+
+## Reading the ROC Curve Data Frame
+
+```{r}
+#| label: reading ROC curve-4
+alz_roc_curve |> head(4)
+```
+
+-   The next-smallest predicted probability of AD is 0.416
+
+    -   For decision thresholds between 0.389 and 0.416, the sensitivity and specificity are the same
+
+    -   If our decision threshold is above 0.416, we will predict that person to be HC
+
+## Reading the ROC Curve Data Frame
+
+```{r}
+#| label: reading ROC curve-5
+alz_roc_curve |> head(4)
+```
+
+-   That patient is actually in group HC 
+
+    -   Once the decision threshold crosses 0.416, that patient switches from a False Positive to a True Negative
+
+    -   The specificity increases but the sensitivity stays at 0.857      
+
+## Reading the ROC Curve Data Frame
+
+```{r}
+#| label: reading ROC curve-6
+alz_roc_curve |> tail(4)
+```
+
+-   We continue increasing the decision threshold and slowly switching predictions
+
+    -   If the true class is AD, they will switch from True Positive to False Negative, and sensitivity will decrease
+
+    -   If the true class is HC, they will switch from False Positive to True Negative, and specificity will increase      
+
+## Reading the ROC Curve Data Frame
+
+```{r}
+#| label: reading ROC curve-7
+alz_roc_curve |> tail(4)
+```
+
+-   At the very end, our decision threshold is so high that we predict everyone to be HC
+
+    -   Now we only have True Negatives and False Negatives
+    
+    -   Specificity is 100% but sensitivity is 0%
+
+## Visualizing the ROC Curve
+::: columns
+::: {.column width="50%"}
+
+```{r}
+#| label: plot ROC curve
+#| fig-height: 12
+#| eval: FALSE
+#| echo: TRUE
+autoplot(alz_roc_curve) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+-   The x-axis is the False Positive Rate (1 - specificity)
+
+-   We start in the upper right and move toward the bottom left as decision threshold increases
+:::
+
+::: {.column width="50%"}
+
+```{r}
+#| label: plot ROC curve-2
+#| fig-height: 12
+#| eval: TRUE
+#| echo: FALSE
+autoplot(alz_roc_curve) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+:::
+
+:::
+
+## Area Under the ROC Curve
+
+-   To summarize the model performance across the full range of decision thresholds, we compute the area under the ROC curve (AUC)
+
+-   The syntax is exactly the same as for getting the ROC curve, only we use `roc_auc` instead of `roc_curve`
+
+```{r}
+#| label: get AUC
+alz_logr_predictions |>
+  roc_auc(truth = diagnosis,
+            .fitted,
+            event_level = "second")
+
+```
+
+## Interpreting AUC
+
+::: columns
+::: {.column width="50%"}
+
+```{r}
+#| label: plot ROC curve-perfect
+#| fig-height: 12
+#| eval: TRUE
+#| echo: FALSE
+
+perfect_roc_curve <- tibble(
+  threshold = c(0, 0.5, 1),
+  sensitivity = c(1, 1, 0),
+  specificity = c(0, 1, 1)
+)
+  
+ggplot(
+  perfect_roc_curve,
+  mapping = aes(x = 1 - specificity, y = sensitivity)
+  ) +
+    geom_path() +
+  geom_abline(lty = 3) +
+    coord_equal() +
+    theme_bw() +
+  labs(title = "Perfect ROC Curve") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+:::
+
+::: {.column width="50%"}
+
+-   A "perfect" ROC curve will have three points: (1,1), (0,1), and (0,0)
+
+    -   At one threshold, all the false negatives become true negatives and none of the true positives flip
+
+-   The area under a perfect ROC curve is 1
+
+:::
+
+:::
+
+## Interpreting AUC
+
+::: columns
+::: {.column width="50%"}
+
+```{r}
+#| label: plot ROC curve-coin flip
+#| fig-height: 12
+#| eval: TRUE
+#| echo: FALSE
+coin_flip_roc_curve <- tibble(
+  threshold = seq(0, 1, by = 0.01),
+  sensitivity = 1-threshold,
+  specificity = threshold
+)
+  
+ggplot(
+  coin_flip_roc_curve,
+  mapping = aes(x = 1 - specificity, y = sensitivity)
+  ) +
+    geom_path() +
+    geom_abline(lty = 3) +
+    coord_equal() +
+    theme_bw() +
+  labs(title = "Coin Flip ROC Curve") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+:::
+
+::: {.column width="50%"}
+
+-   A "coin flip" ROC curve will have equal true positive rate and false positive rate at all thresholds
+
+    -   The dotted line on the ROC curve plot
+    
+-   The area under this ROC curve is 0.5
+
+
+:::
+
+:::
+
+## Interpreting AUC
+
+::: columns
+::: {.column width="50%"}
+
+```{r}
+#| label: plot ROC curve-5
+#| fig-height: 12
+#| eval: TRUE
+#| echo: FALSE
+autoplot(alz_roc_curve) +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+
+:::
+
+::: {.column width="50%"}
+
+```{r}
+#| label: get AUC-2
+alz_logr_predictions |>
+  roc_auc(truth = diagnosis,
+            .fitted,
+            event_level = "second")
+```
+
+
+-   Our AUC of 0.507 indicates that our model is barely better than flipping a coin to predict Alzheimer's
+
+:::
+
+:::
+
+
+## Comparing Models Using AUC
+
+-   The higher the AUC, the better the class predictions are over the entire range of possible decision thresholds
+
+    -   Higher AUC values indicate better models
+
+-   AUC values below 0.5 indicate that we will likely get better predictions by classifying observations to the *opposite* class that the model predicts
+
+    -   If AUC is far below 0.5, make sure that you didn't accidentally give R the probability of the negative class
+
+## Building Toward Brier Score: MSE
+
+-   Recall the algorithm for computing mean squared error (MSE):
+
+    -   Compute the prediction error (residual) for each observation in the holdout set
+    
+    -   Square the prediction errors
+    
+    -   Average the squared prediction errors
+    
+-   This only works when the response is quantitative!
+
+## Mean Square Error with Indicator Variables
+
+-   We convert a categorical response variable into an indicator variable
+
+    -   TRUE (1) for the positive class
+    
+    -   FALSE (0) for the negative class
+
+-   We define the "predicted value" as the probability of the positive class
+
+-   Now the actual and predicted values can be subtracted!
+
+## Brier Score
+
+-   The prediction error is then:
+
+    -   $1 - P(\text{positive})$ for an observation in the positive class
+    
+    -   $0 - P(\text{positive})$ for an observation in the negative class
+    
+-   We can then square and average these prediction errors, just like MSE!
+
+-   This average squared prediction error is called the **Brier score**
+
+## Computing Brier Score with R
+
+```{r}
+#| label: Brier score
+alz_logr_predictions |>
+  mutate(
+    pred_HC = 1 - .fitted
+  ) |>
+  brier_class(truth = diagnosis,
+            pred_HC
+  )
+```
+
+-   The `brier_class` function is one of the few in `yardstick` that do not include an `event_level` argument
+
+-   You *must* give it the probability corresponding to the **first** column in the confusion matrix 
+
+## Interpreting Brier Score
+
+-   A "perfect" model will have a Brier score of 0
+
+    -   Our predicted probability of positive is 100% for every observation in the positive class and 0% for every observation in the negative class
+
+-   A "coin flip" model will have a Brier score of 0.25
+
+    -   Our predicted probability of positive is 50% for every observation, so the squared error for each observation is 0.25 regardless of class
+
+## Interpreting Brier Score
+
+```{r}
+#| label: Brier score-2
+alz_logr_predictions |>
+  mutate(
+    pred_HC = 1 - .fitted
+  ) |>
+  brier_class(truth = diagnosis,
+            pred_HC
+  )
+```
+
+-   Our Brier score of 0.251 indicates that we are doing slightly worse than a coin flip model!
+
+## Comparing Models Using Brier Score
+
+-   The lower the Brier score, the more sure we are about the predictions that end up being correct and the less sure we are about the predictions that end up being wrong
+
+    -   Incorporates both *accuracy* and *confidence*!
+    
+    -   Lower Brier scores indicate better models
+
+-   If the Brier score is far above 0.25, make sure that you didn't accidentally give R the probability of the wrong class
+
+## Visualizing Prediction Errors
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: jittered prediction plot
+#| eval: FALSE
+#| echo: TRUE
+set.seed(8) # for jittering
+ggplot(data = alz_logr_predictions, 
+       mapping = aes(x = .fitted, 
+                     y = diagnosis)) +
+  geom_jitter(color = "navy", size = 2, 
+              width = 0, height = 0.1) +
+  labs(x = "Predicted Probability of Alzheimer's Disease",
+       y = "Diagnosis") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+::: {.column width="50%"}
+```{r}
+#| label: jittered prediction plot-2
+#| fig-height: 8
+#| eval: TRUE
+#| echo: FALSE
+set.seed(8) # for jittering
+ggplot(data = alz_logr_predictions, 
+       mapping = aes(x = .fitted, 
+                     y = diagnosis)) +
+  geom_jitter(color = "navy", size = 2, 
+              width = 0, height = 0.1) +
+  labs(x = "Predicted Probability of Alzheimer's Disease",
+       y = "Diagnosis") +
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 16)
+  )
+```
+:::
+:::
+
+-   This plot suggests the model is quite uncertain whether anyone has Alzheimer's disease
+
+## Doing the Selection - Creating the Splits
+
+```{r}
+#| label: kfold split
+set.seed(2848)
+alz_cv_split <- vfold_cv(
+  alz_training, # always use the training set
+  v = 10, # number of folds
+  repeats = 1 # only one set of 10 folds
+)
+```
+
+## Doing the Selection - Proposing the Models
+
+$$
+logit(\text{P(diagnosis = AD)}) = \beta_0 + \beta_1 (\text{age})
+$$
+
+$$
+logit(\text{P(diagnosis = AD)}) = \beta_0 + \beta_2 (\text{lstg})
+$$
+
+$$
+logit(\text{P(diagnosis = AD)}) = \beta_0 + \beta_1(\text{age}) + \beta_2 (\text{lstg})
+$$
+
+## Doing the Selection - Creating the Prediction Function
+
+```{r}
+#| label: function for prediction
+
+alz_prediction <- function(split){
+  # our input is the cross-validated split
+  
+  train <- training(split)
+  valid <- testing(split)
+
+  ## Don't forget the family = "binomial" argument!  
+  glm1 <- glm(diagnosis ~ age, data = train, family = "binomial")
+  glm2 <- glm(diagnosis ~ lstg, data = train, family = "binomial")
+  glm3 <- glm(diagnosis ~ age + lstg, data = train, family = "binomial")
+  glm_null <- glm(diagnosis ~ 1, data = train, family = "binomial") # always include the null model
+  
+  valid_predictions <- valid |>
+    mutate(
+  ## Don't forget the type = "response" argument!
+      pred1 = predict(glm1, newdata = valid, type = "response"),
+      pred2 = predict(glm2, newdata = valid, type = "response"),
+      pred3 = predict(glm3, newdata = valid, type = "response"),
+      pred_null = predict(glm_null, newdata = valid, type = "response")
+    )
+  
+  return(valid_predictions)
+}
+```
+
+## Doing the Prediction - Applying to Each Split
+
+```{r}
+#| label: map the predictions
+mapped_predictions <- map(
+  alz_cv_split$splits, # list to apply a function to
+  alz_prediction # function to apply
+)
+
+mapped_predictions[[1]] |>
+  select(pred1, pred2, pred3, pred_null, diagnosis, everything()) |>
+  slice(c(1:3))
+```
+
+## Doing the Selection - Aggregating the Results
+
+```{r}
+#| label: create df of predictions
+
+mapped_predictions_df <- mapped_predictions |>
+  bind_rows(
+    .id = "fold" # give an id column to know which fold
+  )
+
+mapped_predictions_df |>
+  dplyr::select(fold, subject_ID, diagnosis, pred1, pred2, pred3, pred_null, everything()) |>
+  slice(c(3,8,15))
+```
+
+## Doing the Selection - Evaluating the Predictions
+
+-   First let's evaluate by AUC
+
+-   The null model should have an AUC of 0.5
+
+    -   At a single decision threshold, all the True Positives should become False Negatives *and* all the False Positives should become True Negatives
+
+    -   Using pooled predictions with the null model will not do this
+
+-   We will select by best average AUC across folds
+
+## Selecting by AUC
+
+```{r}
+#| label: evaluate by auc-by fold
+glm1_auc_by_fold <- mapped_predictions_df |>
+  group_by(fold) |>
+  roc_auc(
+    truth = diagnosis,
+    pred1,
+    event_level = "second"
+  )
+glm1_auc_by_fold
+```
+
+## Compare Average AUC
+
+```{r}
+#| label: compute average AUC
+glm1_average_auc <- mapped_predictions_df |>
+  group_by(fold) |>
+  roc_auc(
+    truth = diagnosis,
+    pred1,
+    event_level = "second"
+  ) |>
+  pull(.estimate) |>
+  mean()
+
+glm1_average_auc
+```
+
+## Compare Average AUC
+
+```{r}
+#| label: compute average AUC-2
+#| eval: TRUE
+#| echo: FALSE
+glm2_average_auc <- mapped_predictions_df |>
+  group_by(fold) |>
+  roc_auc(
+    truth = diagnosis,
+    pred2,
+    event_level = "second"
+  ) |>
+  pull(.estimate) |>
+  mean()
+
+
+glm3_average_auc <- mapped_predictions_df |>
+  group_by(fold) |>
+  roc_auc(
+    truth = diagnosis,
+    pred3,
+    event_level = "second"
+  ) |>
+  pull(.estimate) |>
+  mean()
+
+glm_null_average_auc <- mapped_predictions_df |>
+  group_by(fold) |>
+  roc_auc(
+    truth = diagnosis,
+    pred_null,
+    event_level = "second"
+  ) |>
+  pull(.estimate) |>
+  mean()
+```
+
+```{r}
+#| label: output average AUC
+
+tibble(
+  model = c("Model 1", "Model 2", "Model 3", "Null Model"),
+  AUC = c(glm1_average_auc, glm2_average_auc, glm3_average_auc, glm_null_average_auc)
+  )
+
+```
+
+-   Since Model 3 has the highest average AUC across the 10 folds, we would select it as our best model
+
+## Selecting by Brier Score
+
+-   Brier score based on pooled predictions and average Brier score across folds should be close
+
+-   We will select based on average Brier score across all folds
+
+    -   There is a formula for standard error, but it's a bit complicated
+
+## Compare Average Brier Score
+
+```{r}
+#| label: compute average Brier
+glm1_average_brier <- mapped_predictions_df |>
+  mutate(pred1_HC = 1 - pred1) |>
+  group_by(fold) |>
+  brier_class(
+    truth = diagnosis,
+    pred1_HC
+  ) |>
+  pull(.estimate) |>
+  mean()
+
+glm1_average_brier
+```
+
+## Compare Average Brier Score
+
+```{r}
+#| label: compute average Brier-2
+#| eval: TRUE
+#| echo: FALSE
+glm2_average_brier <- mapped_predictions_df |>
+  mutate(pred2_HC = 1 - pred2) |>
+  group_by(fold) |>
+  brier_class(
+    truth = diagnosis,
+    pred2_HC,
+    event_level = "second"
+  ) |>
+  pull(.estimate) |>
+  mean()
+
+
+glm3_average_brier <- mapped_predictions_df |>
+  mutate(pred3_HC = 1 - pred3) |>
+  group_by(fold) |>
+  brier_class(
+    truth = diagnosis,
+    pred3_HC,
+  ) |>
+  pull(.estimate) |>
+  mean()
+
+glm_null_average_brier <- mapped_predictions_df |>
+  mutate(pred_null_HC = 1 - pred_null) |>
+  group_by(fold) |>
+  brier_class(
+    truth = diagnosis,
+    pred_null_HC,
+  ) |>
+  pull(.estimate) |>
+  mean()
+```
+
+```{r}
+#| label: output average Brier
+
+tibble(
+  model = c("Model 1", "Model 2", "Model 3", "Null Model"),
+  Brier_score = c(glm1_average_brier, glm2_average_brier, glm3_average_brier, glm_null_average_brier)
+  )
+
+```
+
+-   Since Model 3 has the lowest average Brier score across the 10 folds, we would select it as our best model
