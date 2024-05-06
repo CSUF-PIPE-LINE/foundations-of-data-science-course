@@ -803,6 +803,8 @@ tibble(
 
     -   There is a formula for standard error, but it's a bit complicated
 
+-   The Brier score for a null model will depend on the relative proportion of each class in the training set vs. validation/test set
+
 ## Compare Average Brier Score
 
 ```{r}
