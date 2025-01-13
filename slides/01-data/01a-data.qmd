@@ -30,11 +30,7 @@ editor: visual
 
 ## Data science brings together {.center}
 
-<center>
-
-Application - Computer Science - Mathematics - Statistics
-
-</center>
+<center>Application - Computer Science - Mathematics - Statistics</center>
 
 ## Three Pillars of Data Science
 
@@ -84,11 +80,7 @@ Data is a byproduct of *human decisions* about who/what to observe, what to reco
 
 ## It is critical to have well-defined research questions/objectives/goals {.center}
 
-<center>
-
-"Far better an approximate answer to the right question, which is often vague, than an exact answer to the wrong question, which can always be made precise." - John Tukey
-
-</center>
+<center>"Far better an approximate answer to the right question, which is often vague, than an exact answer to the wrong question, which can always be made precise." - John Tukey</center>
 
 ## Step 2: Design and Data Collection
 
@@ -112,7 +104,7 @@ Data is a byproduct of *human decisions* about who/what to observe, what to reco
 
 ## Pay Attention to Practical Concerns!
 
-::: columns
+::::: columns
 ::: column
 "On a scale from 0-10, how satisfied are you with our service? Press the corresponding key on your phone keypad."
 :::
@@ -120,7 +112,7 @@ Data is a byproduct of *human decisions* about who/what to observe, what to reco
 ::: column
 ![](images/phone_keypad.png){fig-alt="Phone Keypad"}
 :::
-:::
+:::::
 
 ## Step 3: Data Massaging
 
@@ -154,11 +146,7 @@ Strategically create graphical and numerical summaries that provide insight into
 
 -   Gradually increase complexity
 
-<center>
-
-**A "picture" is worth a thousand words**
-
-</center>
+<center>**A "picture" is worth a thousand words**</center>
 
 ## Exploratory Data Analysis Is a Mindset
 
@@ -166,11 +154,7 @@ Strategically create graphical and numerical summaries that provide insight into
 
 -   "Good" EDA should lead to patterns/trends/relationships that may motivate modeling aspects
 
-<center>
-
-"Exploratory data analysis is detective work" - John Tukey
-
-</center>
+<center>"Exploratory data analysis is detective work" - John Tukey</center>
 
 ## Step 5: Modeling
 
@@ -182,11 +166,7 @@ Strategically create graphical and numerical summaries that provide insight into
 
 -   Modeling allows us to extract a "signal" (trend or pattern) from data
 
-<center>
-
-**Models should be as simple as possible...but not too simple**
-
-</center>
+<center>**Models should be as simple as possible...but not too simple**</center>
 
 ## Why do we model?
 
