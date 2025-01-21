@@ -1,0 +1,324 @@
+---
+title: "Getting Data From the Internet: Student Version"
+format: html
+editor: visual
+execute:
+  echo: true
+---
+
+## Application Programming Interface (API) vs Web Scraping
+
+**API**
+
+- Usually requires access keys and/or authentication tokens
+
+- May require free or paid registration to get them
+
+- Easier to get exactly what you want
+
+**Web scraping**
+
+- Usually does not require authentication or registration
+
+- Requires more attention to ethical issues
+
+- Requires more trial-and-error to get exactly what you want
+
+## Getting Data with httr2
+
+-   The `httr2` package mostly takes care of these differences under the hood
+
+```{r}
+#| label: load httr2
+#| message: false
+#| warning: false
+library(httr2)
+```
+
+## Step 1: Create a Request
+
+```{r}
+#| label: create example request
+req <- request("https://data.fromthiswebsite.com")
+```
+
+## Step 2: Define the Request Behavior
+
+-   Add the path to the exact file or site you're looking for:
+
+```{r}
+#| label: add path
+req <- req |>
+  req_url_path(path = "path/to/file")
+```
+
+## Step 3: Run the Request
+
+-   First make sure that the request is doing what you expect
+
+```{r}
+#| label: dry run
+req |> 
+  req_dry_run()
+```
+
+-   Then actually request the file:
+
+```{r}
+#| label: request file
+#| eval: false
+
+# Don't actually run this, the site in req doesn't exist
+req |>
+  req_perform()
+```
+
+## Example Using API
+
+-   The Home Mortgage Disclosure Act (HMDA) datasets contain publicly disclosed information about mortgage decisions
+
+-   Many sites have "help" pages for their API calls that tell you how they want the request formatted
+
+-   Let's look at the [HMDA Data Browser API](https://ffiec.cfpb.gov/documentation/api/data-browser)
+
+## API Step 1: Create the Request
+
+```{r}
+#| label: create request for HMDA
+req1 <- request("https://ffiec.cfpb.gov")
+```
+
+-   Always start at the domain/subdomain level
+
+    -   You may be gathering data from multiple files or pages on the same domain
+
+    -   Easier to start with the request and modify it than create an entirely new one
+
+## API Step 2: Modify the Request
+
+```{r}
+#| label: modify file path to HMDA
+req1_file <- req1 |>
+  req_url_path(path = "v2/data-browser-api/view/csv") 
+```
+
+-   According to the documentation, we need to pass in a year parameter, an HMDA data filtering parameter, and a geographic parameter in order to get the subset of data we want
+
+## API Step 2: Add Queries
+
+-   We need to pass in a set of queries that tell the site exactly what subset we want
+
+-   We'll be working with 2022 home purchase mortgage applications in Los Angeles County
+
+```{r}
+#| label: add queries for HMDA dataset
+req1_la <- req1_file |>
+  req_url_query(
+    years = "2022",
+    loan_purposes = "1",
+    counties = "06037"
+  )
+```
+
+## API Step 3: Dry Run
+
+```{r}
+#| label: dry run for HMDA dataset
+req1_la |>
+  req_dry_run()
+```
+
+-   Always check this to make sure things came out the way you expected
+
+-   For example, the first time I wrote the query, I forgot to put "06037" in quotes and R converted it to `counties=6037`
+
+## API Step 3: Get the File
+
+```{r}
+#| label: get the file
+#| eval: false
+
+# I'm not running this in my slides
+# You should run this ONCE to get data we'll be using later
+# It should give you a 38-39 MB file, so don't keep running it!
+req1_la |>
+  req_perform(
+    path = here::here("Data/loans_lac_2022.csv")
+  )
+```
+
+-   Always add a `path` argument to `req_perform` so that the data is stored "On disk" (on your computer) rather than in R's memory
+
+## Example Using Web Scraping
+
+-   Let's grab the bios of all the Full-Time Faculty from the Math Department website
+
+-   We first need to check whether the site owner has given us permission to access that data
+
+-   By convention, bot permissions are stored in the domain's `robots.txt` file
+
+## Using robots.txt
+
+-   [CSUF's robots.txt](https://www.fullerton.edu/robots.txt) just gives a SITEMAP argument that basically points search engine bots to file containing a list of pages IT wants indexed
+
+-   More expansive versions, such as the one used by [AirBNB](https://www.airbnb.com/robots.txt), explicitly tell specific bots which pages they should *not* be sending requests to
+
+-   With these more expansive versions, look for `User-agent: *` to tell you what pages are okay to visit
+
+## Using the robotstxt package
+
+-   Rather than visiting and interpreting the site's `robots.txt` file directly, we can have R do it
+
+```{r}
+robotstxt::paths_allowed("https://airbnb.com")
+```
+
+```{r}
+robotstxt::paths_allowed("https://airbnb.com/reservation")
+```
+
+-   So our bot is okay to visit the AirBNB home page, but it does not want our bot to be making reservations
+
+## Web Scraping Step 1: Find the Page
+
+```{r}
+#| label: request data from math dept
+
+req2 <- request("https://www.fullerton.edu")|>
+  req_url_path("math/people/faculty.php")
+```
+
+## Web Scraping Step 2: Get the HTML
+
+```{r}
+#| label: dry run math dept
+req2 |>
+  req_dry_run()
+```
+
+```{r}
+#| label: get HTML on Math people page
+
+math_faculty <- req2 |>
+  req_perform()
+```
+
+## Web Scraping Step 3: Get the HTML in HTML Format
+
+-   If you look at `math_faculty`, there is nothing in that output that you can easily understand
+
+-   We need to turn the raw response into the actual HTML we're trying to parse
+
+```{r}
+#| label: convert to actual HTML
+math_faculty_html <- math_faculty |>
+  resp_body_html()
+```
+
+## Web Scraping Step 4a: Figure Out What You Need
+
+-   You will have to actually visit the page you are scraping to figure out the HTML elements that contain the data you want to extract
+
+    -   Easy way: use SelectorGadget (Chrome Extension)
+
+    -   Hard way: Inspect the website using your browser
+
+-   Pay particular attention to `class` and `id` attributes
+
+## Web Scraping Step 4b: Translate to R Code
+
+-   We will use the functions in the `rvest` package:
+
+```{r}
+#| label: load rvest
+#| message: false
+#| warning: false
+library(rvest)
+```
+
+-   By messing around in the `Inspect` window, we find that the bios we're interested in are in a `class` called "description"
+
+```{r}
+#| label: grab everything labeled description
+
+math_faculty_text <- math_faculty_html |>
+  html_elements(".description")
+```
+
+## Web Scraping Step 5: Debug
+
+```{r}
+#| label: show math_faculty_text
+print(math_faculty_text)
+```
+
+Hmm...something looks wrong
+
+- You probably won't get exactly what you want on your first attempt
+
+- Patient trial-and-error will usually find and fix the issue
+
+## Example Web Scraping Issue
+
+-   Upon further inspection, we see that the data is contained inside something called a Content Gallery, which is stored in an entirely different place on the domain
+
+```{r}
+#| label: fix URL issue
+
+req2 <- req2 |>
+  req_url_path("/math/_shared/gallery_people.php")
+```
+
+-   Now we request the data from the correct place:
+
+```{r}
+#| label: get fixed HTML
+
+math_faculty_html <- req2 |>
+  req_perform() |>
+  resp_body_html()
+```
+
+## Example Web Scraping Issue: Fixed
+
+-   And when we try to get out the `description` class:
+
+```{r}
+#| label: actually grab everything labeled description
+
+math_faculty_text <- math_faculty_html |>
+  html_elements(".description")
+
+head(math_faculty_text)
+```
+
+We actually have something to read!
+
+## Example Using Web Scraping: Finale
+
+-   Finally, we need to get the important data out of the HTML and into a format we like
+
+-   Usually we use `html_table` (for HTML tables) or `html_text`
+
+```{r}
+#| label: convert to text
+
+math_faculty_bios <- math_faculty_text |>
+  html_text()
+
+math_faculty_bios[1]
+```
+
+- Ideally, we then save our extracted data to a `.csv` file with a record of the date that we scraped it
+
+## Additional Issues with Web Scraping
+
+-   Just because it's on the Internet doesn't mean you have permission to use it
+
+    -   Usually with APIs you'll know what permissions you have before you request the data
+
+-   Be aware of the load that you are placing on the site's servers
+
+    -   Use `req_throttle` to slow down your requests
+
+    -   Use `req_cache` to cache the request so you don't need to re-download something unless it's changed
