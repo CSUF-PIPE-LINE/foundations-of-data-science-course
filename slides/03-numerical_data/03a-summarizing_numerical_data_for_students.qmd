@@ -45,7 +45,7 @@ alz <- readr::read_csv(here::here("Data", "alzheimers.csv"))
     -   **Variability**: how spread out the values tend to be along the number line
 
     -   **Shape**: where the values tend to be *relative to each other*
-    
+
     -   **Outliers**: the possible presence of unusual values
 
 ## Describing Variables in Context
@@ -57,15 +57,14 @@ Let's look at the distribution of `gmv`, representing the amount of gray matter 
 -   **Variability**: How much variation do we see in `gmv` across patients in the sample?
 
 -   **Shape**: Relative to the rest of the sample, do people tend to have higher/lower `gmv` values or to be somewhere in the middle? Are there multiple very common values?
-    
--   **Outliers**: Does any patient have an unusually high or low `gmv` value?
 
+-   **Outliers**: Does any patient have an unusually high or low `gmv` value?
 
 ## Center: Mean and Median
 
-- The mean is the *average value* of the variable
+-   The mean is the *average value* of the variable
 
-- The median is the value of the *average observation* (middle value)
+-   The median is the value of the *average observation* (middle value)
 
 ```{r}
 #| label: mean and median
@@ -76,6 +75,7 @@ alz |>
     median_gmv = median(gmv)
   )
 ```
+
 ## Center and Variability Together
 
 -   When we choose *mean* as our measure of center, the typical associated measure of variability is *standard deviation*
@@ -114,7 +114,7 @@ The average patient had a gray matter volume of about 569 cc. The middle 50% of 
 
 ## Five Number Summary
 
-- The *five number summary* divides the dataset into four quarters
+-   The *five number summary* divides the dataset into four quarters
 
     -   Each quarter contains 25% of the data
 
@@ -139,14 +139,14 @@ alz |>
 
 ## Describing Shape and Outliers
 
-- Typically done visually
+-   Typically done visually
 
-- Two main options for graphing the distribution:
+-   Two main options for graphing the distribution:
 
     -   Histogram
-    
+
     -   Box plot
-    
+
 ## Creating a Histogram
 
 ```{r}
@@ -172,13 +172,13 @@ ggplot(data = alz,
 -   We create a categorical variable by "binning" the values into intervals along the number line
 
     -   By convention, intervals are equally spaced
-    
+
     -   However, we have control over their center and width
-    
+
 -   We then place the bar over that interval on the x-axis
 
     -   This means the bars are contiguous (touching)
-    
+
     -   A gap between the bars really means a bar of height 0
 
 ## Customizing a Histogram
@@ -224,9 +224,9 @@ ggplot(data = alz,
 ```
 
 -   Major peak on the left side of the graph
-    
+
 -   Long "tail" to the right side
-    
+
 -   Looks similar to tracing your right foot
 
 ## Describing Shape with Histograms: Skewed Left
@@ -251,9 +251,9 @@ ggplot(data = alz,
 ```
 
 -   Major peak on the right side of the graph
-    
+
 -   Long "tail" to the left side
-    
+
 -   Looks similar to tracing your left foot
 
 ## Describing Shape with Histograms: Roughly Symmetric
@@ -278,9 +278,9 @@ ggplot(data = alz,
 ```
 
 -   Left and right halves of histogram look roughly like mirror images
-    
+
 -   With real data, we shouldn't expect perfect symmetry
-    
+
 -   If it's difficult to tell which direction the skew is in, call it roughly symmetric
 
 ## Identifying Outliers on Histograms
@@ -305,10 +305,10 @@ ggplot(data = alz,
 ```
 
 -   Unusually small or large values
-    
-    -   Judgment call how "unusual" 
-    
--   Look for values on the left or right side separated from the bulk of the data by a gap of several "height 0" bars 
+
+    -   Judgment call how "unusual"
+
+-   Look for values on the left or right side separated from the bulk of the data by a gap of several "height 0" bars
 
 ## Creating a Boxplot
 
@@ -356,7 +356,7 @@ ggplot(data = alz,
   )
 ```
 
-- We compute invisible fences:
+-   We compute invisible fences:
 
 $$
 Lower \ Fence = Q_1 - 1.5 \times IQR
@@ -366,13 +366,13 @@ $$
 Upper \ Fence = Q_3 + 1.5 \times IQR
 $$
 
-- Any data value *not* between the fences is considered an outlier
+-   Any data value *not* between the fences is considered an outlier
 
 ## Transforming Variables
 
-- Change units of measurement
+-   Change units of measurement
 
-- Create new variables as functions of existing variables
+-   Create new variables as functions of existing variables
 
 ```{r}
 #| label: transform variables
@@ -390,13 +390,13 @@ head(alz_transform, 3)
 
 Let's compare the distribution of `gmv` between Alzheimer's patients and healthy controls
 
-- **Center**: What number do the `gmv` values tend to be around? Does this change depending on the diagnosis?
-  
-- **Variability**: How spread out are the `gmv` values? Does this change depending on the diagnosis?
+-   **Center**: What number do the `gmv` values tend to be around? Does this change depending on the diagnosis?
 
-- **Shape**: Does the distribution of `gmv` "look the same" in each group, only potentially shifted/scaled?
+-   **Variability**: How spread out are the `gmv` values? Does this change depending on the diagnosis?
 
-- **Outliers**: For each diagnosis group, are there any values that are unusual for that group? If so, what makes them unusual?
+-   **Shape**: Does the distribution of `gmv` "look the same" in each group, only potentially shifted/scaled?
+
+-   **Outliers**: For each diagnosis group, are there any values that are unusual for that group? If so, what makes them unusual?
 
 Always note anything else that caught your attention, even if it doesn't neatly map to one of these properties
 
@@ -416,8 +416,6 @@ alz |>
 
 ## Comparing Groups with Boxplots
 
-::: columns
-::: {.column width="55%"}
 ```{r}
 #| label: multiple boxplots-1
 ggplot(data = alz, 
@@ -432,7 +430,7 @@ ggplot(data = alz,
   )
 ```
 
-- Compare center and variability between groups by reading median and IQR off the boxplots
+-   Compare center and variability between groups by reading median and IQR off the boxplots
 
 ## Customizing Boxplots by Group
 
@@ -492,15 +490,15 @@ ggplot(data = alz,
 
 ## Describing Relationships Between Numerical Variables
 
-- **Direction**: What tends to happen to `gmv` as people get older?
+-   **Direction**: What tends to happen to `gmv` as people get older?
 
-- **Form**: What functions (if any) might model the trend well? 
+-   **Form**: What functions (if any) might model the trend well?
 
-- **Strength**: How tightly does the relationship follow the trend you identified?
+-   **Strength**: How tightly does the relationship follow the trend you identified?
 
-- **Outliers**: Are there any unusual points? If so, what makes them unusual?
+-   **Outliers**: Are there any unusual points? If so, what makes them unusual?
 
-- Is there anything else that caught your attention?
+-   Is there anything else that caught your attention?
 
 ## Visualizing Linear Trends
 
@@ -520,7 +518,6 @@ ggplot(data = alz,
   )
 ```
 
-
 ## Visualizing Nonlinear Trends
 
 ```{r}
@@ -538,3 +535,5 @@ ggplot(data = alz,
     axis.text = element_text(size = 16)
   )
 ```
+:::
+::::
