@@ -224,9 +224,10 @@ alz |>
 alz |>
   mutate(
     cognition = if_else(
-      mmse >= 24, # condition
-      "Normal", # value if condition is true
-      "Impaired", # value if condition is false
+      moca >= 26, # condition
+      true = "Normal", # value if condition is true
+      false = "Impaired", # value if condition is false
+      missing = "Unknown" # value if condition is NA
     )
     ) |>
   select(subject_ID, mmse, cognition) |>
@@ -235,13 +236,13 @@ alz |>
 
 ## How Does R Evaluate This Statement?
 
--   R creates two new vectors: one of values assuming everything is `TRUE` and one assuming everything is `FALSE`
+-   R creates three new vectors: one assuming everything is `true`, one assuming everything is `false`, and one assuming that everything is `missing` and can't be evaluated
 
     -   number of elements = number of rows in the data frame
 
     -   individual values will be repeated *n* times
 
--   R then creates a third vector and puts in it the value from the `TRUE` or `FALSE` vector as appropriate for each element
+-   R then creates a fourth vector and puts in it the value from the `true` or `false` or `missing` vector as appropriate for each element
 
 -   This means we can use *vectors* as outcomes, not just individual values!
 
@@ -249,13 +250,14 @@ alz |>
 
 ```{r}
 #| label: change one value with if-else
-#| code-line-numbers: "2-8"
+#| code-line-numbers: "2-9"
 alz |>
   mutate(
     diagnosis_group = if_else(
       diagnosis == "AD", # condition
       diagnosis, # keep the value if condition is true
-      "Control", # change to "Control" if condition is false
+      "Control" # change to "Control" if condition is false
+      # if you only specify 2 options, an appropriate NA is returned for missing
     )
     ) |>
   select(subject_ID, diagnosis, diagnosis_group) |>
@@ -276,17 +278,17 @@ alz |>
       moca >= 18 ~ "Mild Impairment",
       moca >= 10 ~ "Moderate Impairment",
       moca >= 0 ~ "Severe Impairment",
-      TRUE ~ "Unknown")
+      TRUE ~ NA_character_) # need to explicitly define appropriate type of NA
     ) |>
   select(subject_ID, moca, cognition) |>
-  head(3)
+  slice(1:4)
 ```
 
 ## Tips on Using `if_else` and `case_when`
 
--   Use `if_else` if there are only 2 possible outcomes
+-   Use `if_else` if there are only 2 possible non-missing outcomes
 
--   Use `case_when` if there are more than 2 possible outcomes
+-   Use `case_when` if there are more than 2 possible non-missing outcomes
 
 -   `case_when` will return the value for the *first* condition that it evaluates as `TRUE`
 
