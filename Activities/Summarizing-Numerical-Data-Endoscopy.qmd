@@ -1,0 +1,279 @@
+---
+title: "Summarizing Numerical Data: Endoscopy Times"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, we are going to explore approximately 6000 endoscopy procedures performed at the University of Colorado Hospital in 2020 and 2021.
+
+```{r}
+#| label: do this first
+
+here::i_am("Activities/Summarizing-Numerical-Data-Endoscopy.qmd")
+```
+
+## Load Packages and Import Data
+
+We still need the `ggplot2` and `dplyr` packages from tidyverse. We'll also need the `tidyr` package, because that contains the `drop_na` function that easily replaces our `filter(!is.na(variable))` construction, but thaat package is also part of tidyverse.
+
+```{r}
+#| label: load packages
+library(tidyverse)
+```
+
+We'll be working with the `endoscopy` dataset. In this dataset, missing values are denoted with `NULL`, so we need to tell R explicitly inside `read_csv` to read any `NULL` value as missing data.
+
+```{r}
+#| label: import data 
+endoscopy <- read_csv(here::here("Data/endoscopy.csv"), na = "NULL")
+```
+
+```{r}
+#| label: check problems
+
+problems(endoscopy)
+names(endoscopy)[unique(problems(endoscopy)$col)]
+```
+
+A bunch of variables in this dataset refer to medications  given during the post-operative period. Apparently we have issues with a couple of variables related to those medications, probably corresponding to drugs that weren't administered much (so most of the column is missing). Since we don't care about those columns, we'll just let it slide. 
+
+## Data Wrangling
+
+In the original analysis, patients with unusual BMI (missing, above 100, or below 10) were removed from the dataset. Additionally, unusually long procedures were removed from the dataset.
+
+We're going to `rename` some variables in the dataset to match the acronyms used in the analysis, and then `filter` out the problematic patients and procedures.
+
+
+```{r}
+#| label: wrangle endoscopy data 
+endo_clean <- endoscopy |>
+  rename(
+    IRSI = `INROOM-SCOPEIN`,
+    SSSI = `SEDATIONSTART-SCOPEIN`,
+    SOOR = `SCOPEOUT-OUTROOM`,
+    TCL = `PROC_CASE_LENGTH`,
+    PACU_LOS = PACU_TIME
+  ) |>
+  drop_na(BMI) |>
+  filter( # I prefer one line per variable we filter based on
+    BMI >= 10 & BMI <= 100,
+    IRSI <= 120,
+    SSSI <= 120,
+    SOOR <= 120,
+    TCL <= 360,
+    PACU_LOS <= 360
+  ) # we filter based on what we want to keep!
+
+```
+
+## Summarizing One Variable
+
+Let's start by summarizing the distribution of total procedure durations (`TCL`).
+
+```{r}
+#| label: mean and sd of TCL
+
+endo_clean |>
+  summarize(
+    mean_TCL = mean(TCL),
+    sd_TCL = sd(TCL)
+    )
+```
+
+We can also get out the five-number summary instead of the mean and standard deviation:
+
+```{r}
+#| label: five number summary of TCL
+
+endo_clean |>
+  summarize(
+    min_TCL = min(TCL), 
+    q1_TCL = quantile(TCL, 0.25), 
+    med_TCL = median(TCL),
+    q3_TCL = quantile(TCL, 0.75),
+    max_TCL = max(TCL)
+  )
+```
+
+### Your Turn
+
+1.  Do you suspect that this dataset contains outlier (unusually high or low) endoscopy procedure times? Why or why not?
+
+2.  Obtain the mean, standard deviation, and five number summary of `SSSI`, which represents how long it took to insert the endoscopy scope after the patient was sedated.
+
+3.  Do you suspect that this dataset contains outlier (unusually high or low) values of `SSSI`? Why or why not?
+
+## Graphing One Numerical Variable
+
+```{r}
+#| label: boxplot of TCL
+
+ggplot(data = endo_clean,
+       mapping = aes(
+         x = TCL
+       )) +
+  geom_boxplot(fill = "lightblue") +
+  labs(
+    x = "Total Procedure Time (minutes)",
+    y = "" # no y-axis label
+  )
+```
+
+```{r}
+#| label: histogram of TCL
+
+ggplot(data = endo_clean,
+       mapping = aes(
+         x = TCL
+       )) +
+  geom_histogram(
+    center = 10,
+    binwidth = 3,
+    fill = "lightblue",
+    color = "black") +
+  labs(
+    x = "Total Procedure Time (minutes)",
+    y = "Number of Procedures"
+  )
+```
+
+### Your Turn
+
+1.  Identify the shape of the distribution of total procedure time and explain why you think it has that shape.
+
+2.  Create a boxplot of `AGE`.
+
+3.  Create a histogram showing the distribution of the patients' ages. Play around with the `center` and `binwidth` arguments (i.e., change them and re-run the chunk) until you find a histogram that "looks nice" and provides good information about the shape of the distribution.
+
+4.  Identify the shape of the distribution of patients' ages and explain why you think it has that shape.
+
+## Comparing Groups
+
+The people who collected and analyzed this data were most interested in whether changing from the "Nursing" protocol to the "Anesthesia" protocol for sedating patients undergoing endoscopies. So let's compare the distribution of procedure times under the two protocols.
+
+
+```{r}
+#| label: summarize TCL by protocol group
+
+endo_clean |>
+  group_by(SEDATION_PROVIDER) |>
+  summarize(
+    n = n(), # count the number in each group in summarize
+    mean_TCL = mean(TCL),
+    sd_TCL = sd(TCL),
+    min_TCL = min(TCL), 
+    q1_TCL = quantile(TCL, 0.25), 
+    med_TCL = median(TCL),
+    q3_TCL = quantile(TCL, 0.75),
+    max_TCL = max(TCL)
+  )
+```
+
+When we compare groups using boxplots, we should consider whether the grouping (categorical) variable is the *explanatory* or *response* variable. In this case, the protocol makes more sense as the explanatory variable, so we put it on the x-axis and make the boxplots vertical. If it made more sense as the response variable, we would put it on the y-axis and make the boxplots horizontal.
+
+```{r}
+#| label: boxplot of TCL by protocol group
+
+ggplot(data = endo_clean,
+       mapping = aes(
+         x = SEDATION_PROVIDER,
+         y = TCL
+       )) +
+  geom_boxplot() +
+  labs(
+    x = "Sedation Protocol",
+    y = "Total Procedure Time (minutes)"
+  )
+```
+
+### Your Turn
+
+1.  Do procedures tend to be faster using the "Anesthesia" or "Nursing" protocol, or is there not much difference in the center of the distribution between the two groups? In which group was there more variation in procedure duration, or is there not much difference in variability? Explain.
+
+2.  Create grouped summaries and a set of boxplots comparing the distribution of procedure length among the three different types of endoscopy `Procedure`s. Briefly summarize what you notice about the relationship.
+
+3. Repeat questions 1 and 2 for the `SSSI` variable.
+
+## Summarizing Relationships Between Numerical Variables
+
+Let's look at the relationship between `SSSI` and the total procedure length.
+
+```{r}
+#| label: scatterplot of TCL vs SSSI
+
+ggplot(data = endo_clean,
+       mapping = aes(
+         x = SSSI,
+         y = TCL
+       )) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "darkblue", 
+              linetype = "dashed", se = FALSE) +
+  geom_smooth(method = "loess", color = "darkred", se = FALSE) +
+  labs(
+    title = "Total Procedure Time vs. Sedation-to-Scope-In Time",
+    x = "Sedation-to-Scope-In Time (minutes)",
+    y = "Total Procedure Time (minutes)"
+  )
+```
+
+### Your Turn
+
+1.  We should expect that if it takes more time after the patient is sedated to insert the scope, then the overall procedure will take longer. Does the data suggest this is true?
+
+2.  Generally, we prefer models that are simpler to models that are more complex. By comparing how well the `lm` vs. `loess` smoothing methods fit the data, do you think this relationship might be modeled well using a linear (line) trend? Or is the relationship clearly nonlinear?
+
+3.  How tightly does the relationship follow the linear (`lm`) or nonlinear (`loess`) smoothed trend?
+
+4.  Are there any procedures that seem unusual? Why do they seem unusual?
+
+5. Does there appear to be a relationship between the patient's age and the total procedure time? If so, describe the relationship. If not, explain why you don't think there is.
+
+## Investigating Three-Variable Relationships
+
+We noticed an association between protocol and total procedure time. Let's see if that relationship changes depending on the patient's sex.
+
+```{r}
+#| label: boxplot of TCL by protocol group and sex
+
+ggplot(data = endo_clean,
+       mapping = aes(
+         x = SEDATION_PROVIDER,
+         y = TCL,
+         fill = SEX
+       )) +
+  geom_boxplot() +
+  labs(
+    x = "Sedation Protocol",
+    y = "Total Procedure Time (minutes)"
+  ) +
+  scale_fill_manual(values = c("darkorchid2", "turquoise3"))
+```
+
+```{r}
+#| label: scatterplot of TCL vs SSSI with sex
+
+ggplot(data = endo_clean,
+       mapping = aes(
+         x = SSSI,
+         y = TCL,
+         color = SEX
+       )) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm", 
+              linetype = "dashed", se = FALSE) +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Total Procedure Time vs. Sedation-to-Scope-In Time",
+    x = "Sedation-to-Scope-In Time (minutes)",
+    y = "Total Procedure Time (minutes)"
+  ) +
+  scale_color_manual(values = c("darkorchid2", "turquoise3"))
+```
+
+### Your Turn
+
+1. Does the relationship between sedation protocol and procedure length appear to be different for female vs. male patients? What about the relationship between SSSI and procedure length? Explain.
+
+2. Does the relationship between sedation protocol and procedure length appear to depend on the type of `Procedure`? What about the relationship between age and procedure length? Construct appropriate graphs and use them to explain your reasoning.
