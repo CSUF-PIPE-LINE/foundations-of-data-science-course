@@ -216,7 +216,7 @@ alz |>
       missing = "Unknown" # value if condition is NA
     )
     ) |>
-  select(subject_ID, mmse, cognition) |>
+  select(subject_ID, moca, cognition) |>
   head(5)
 ```
 
