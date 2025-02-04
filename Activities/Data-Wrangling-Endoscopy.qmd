@@ -1,0 +1,283 @@
+---
+title: "Data Wrangling: Endoscopy Times"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, we are going to explore approximately 6000 endoscopy procedures performed at the University of Colorado Hospital in 2020 and 2021.
+
+## Import Data and Load Packages
+
+```{r}
+#| label: define file location
+# If you have this file in a subfolder named something other than Activities, change the folder name
+# If you have this file in your main course project folder, delete the folder name
+here::i_am("Activities/Data-Wrangling-Endoscopy.qmd")
+
+# load tidyverse packages
+library(tidyverse)
+```
+
+We'll be working with the `endoscopy` dataset. In this dataset, missing values are denoted with `NULL`, but R won't recognize that. When we import the data, we will include an `na` argument inside `read_csv` to tell R how the missing data is encoded.
+
+```{r}
+#| label: import data 
+endoscopy <- read_csv(here::here("Data/endoscopy.csv"), 
+                      na = "NULL")
+```
+
+Let's check what other problems we had:
+
+```{r}
+#| label: check problems
+
+problems(endoscopy)
+names(endoscopy)[unique(problems(endoscopy)$col)]
+```
+
+A bunch of variables in this dataset refer to medications  given during the post-operative period. Apparently we have issues with a couple of variables related to those medications, probably corresponding to drugs that weren't administered much (so most of the column is missing). Since we don't care about those columns, we'll just let it slide. 
+
+## Renaming Variables
+
+There are a bunch of acronyms used in the analysis that correspond to specific (and mostly long) names. We can use the `rename` function to give those columns new names so that we're not typing out something like `INROOM-SCOPEIN` all the time.
+
+
+
+```{r}
+#| label: rename function 
+endo_clean <- endoscopy |>
+  rename(
+    IRSI = `INROOM-SCOPEIN`,
+    SSSI = `SEDATIONSTART-SCOPEIN`,
+    SOOR = `SCOPEOUT-OUTROOM`,
+    TCL = `PROC_CASE_LENGTH`,
+    PACU_LOS = PACU_TIME
+  )
+```
+
+## Subsetting Our Data
+
+### Including Only Interesting Observations
+
+In the original analysis, the following patients were removed from the dataset:
+
+* People with missing values of BMI
+* People with clearly ridiculous values of BMI (below 10 or above 100)
+* People who waited in the room for the procedure to start for more than 120 minutes (ISRI)
+* People who were sedated more than 120 minutes before the procedure started (SSSI)
+* People who spent more than 120 minutes in the room after the procedure was finished (SOOR)
+* People whose procedure took more than 360 minutes in total (TCL)
+* People who spent more than 360 minutes in the postoperative care area following the procedure (PACU_LOS)
+
+All of these situations imply that something abnormal happened during the procedure or during the data collection, and those patients should not be considered in our data analysis. We're going to subset to get rid of those patients.
+
+The key to `filter` is to remember that the conditions represent the rows that we want to *keep* in the dataset. So here we have:
+
+```{r}
+endo1 <- endo_clean |>
+  filter( # I prefer one line per variable we filter based on
+    !is.na(BMI), # this is the tricky one!
+    BMI >= 10 & BMI <= 100,
+    IRSI <= 120,
+    SSSI <= 120,
+    SOOR <= 120,
+    TCL <= 360,
+    PACU_LOS <= 360
+  )
+```
+
+Alternatively, we could include dropping rows with missing values of certain columns in its own step. We do this using the `drop_na` function (from `tidyr`, not `dplyr`, but if we're loading `tidyverse` all at once it doesn't matter).
+
+
+```{r}
+endo1 <- endo_clean |>
+  drop_na(BMI) |> # drop any rows where BMI is missing
+  filter(
+    BMI >= 10 & BMI <= 100,
+    IRSI <= 120,
+    SSSI <= 120,
+    SOOR <= 120,
+    TCL <= 360,
+    PACU_LOS <= 360
+  )
+```
+
+### Including Only Relevant Columns
+
+We have 65 variables in this dataset. If we know beforehand what variables we're going to be analyzing, we should subset to select only the variables we need, because every time we do something with this data, it costs memory, and if we can remove the variables we don't need, we may end up saving a bunch of memory. Even if we don't know exactly what we need, removing anything we probably won't need is still a good idea.
+
+A couple of other cool tricks inside `select`:
+
+1. We can use the `new name = old name` syntax to rename variables as we're selecting them.
+2. The order that we list the variables is the order that they show up in the new dataset, meaning we can use `select` to reorder variables.
+
+```{r}
+#| label: select relevant variables
+endo2 <- endo1 |>
+  select(
+    Sedation = SEDATION_PROVIDER,
+    Sex = SEX,
+    Age = AGE,
+    BMI,
+    Procedure,
+    IRSI,
+    SSSI,
+    SOOR,
+    TCL,
+    PACU_LOS,
+    Asthma,
+    LiverD
+  )
+```
+
+Let's say we want to put the procedure type (`Procedure`) second, but keep everything else in the same order. We can list the first two columns, then 
+
+```{r}
+#| label: reorder variables
+endo2  |>
+  select(
+    Sedation,
+    Procedure,
+    everything()
+  )
+```
+
+### Your Turn
+
+Using the `endo2` dataset (start over with `endo2` once you finish each problem):
+
+1. Remove the patients with missing Asthma values.
+
+2. Remove the patients who are 65 or older.
+
+3. Remove the patients who received a "DUAL" endoscopy.
+
+4. Include only the male patients with asthma and/or liver disease.
+
+## Sorting Our Data
+
+To sort data, we use the `arrange` function.
+
+```{r}
+#| label: sort by IRSI
+
+endo2 |>
+  arrange(IRSI)
+```
+
+If we want to sort in descending order, we need to use `desc`:
+
+```{r}
+#| label: sort descending by IRSI
+
+endo2 |>
+  arrange(desc(IRSI))
+```
+
+If we want to sort by multiple variables, we put them inside a comma-separated list. R will sort by the first variable listed, then break ties based on the second variable, etc.
+
+```{r}
+#| label: sort by multiple variables
+
+endo2 |>
+  arrange(
+    IRSI,
+    desc(SSSI)
+  )
+```
+
+If we have a factor variable, the "smallest" value is the first level and the "largest" value is the last level. If the categorical variable is a chracter (string) instead, it will sort in alphabetical order.
+
+```{r}
+#| label: sort in alphabetical order
+endo2 |>
+  arrange(
+    Sex,
+    IRSI,
+    desc(SSSI)
+  )
+```
+
+```{r}
+#| label: sort in reverse alphabetical order
+endo2 |>
+  arrange(
+    desc(Sex),
+    IRSI,
+    desc(SSSI)
+  )
+```
+
+### Your Turn
+
+1. What patient took the longest time from the start of sedation to the start of the procedure (`SSSI`). How long did it take?
+
+2. Find the procedure times (`TCL`) for the 5 patients who stayed the longest in the post-operative area (`PACU_LOS`).
+
+## Creating New Variables
+
+To create a new variable, we use `mutate`. We've already seen this when we converted variables from numerical to categorical, but we can use it in a whole bunch of other situations.
+
+Here we find the total time it took between the procedure and the recovery. If we're just adding a variable to an existing dataset, I find it usually easier to just overwrite the dataset.
+
+```{r}
+#| label: add total_time
+endo2 <- endo2 |>
+  mutate(
+    total_time = TCL + PACU_LOS
+    )
+
+endo2 |>
+  select(TCL, PACU_LOS, total_time)
+```
+
+### Using if_else and case_when
+
+We have already seen a way to convert `Asthma` to a factor variable, but we can also convert it to string variable using `if_else` instead. For most of our tabulation functions, it won't matter whether we choose to represent it as a factor or string, but sometimes when we do our data wrangling we really want it in one or the other format.
+
+```{r}
+#| label: convert Asthma to character
+
+endo2 <- endo2 |>
+  mutate(
+    Asthma_cat = if_else(
+      Asthma == 1,
+      true = "Asthma",
+      false = "No Asthma",
+      missing = "Unknown"
+    )
+  )
+```
+
+Similarly, we can use the `case_when` statement when we want more than 2 output categories. Here we're going to "bin" the `SSSI` variable. This is typically something you *don't* want to do when you have numerical data, since you lose information when you create the categories. However, in some situations, you have very obvious real-world boundaries; for example, you may want to look at legal vs. underage drinkers and may not care about their exact age.
+
+```{r}
+#| label: bin SSSI
+
+endo2 <- endo2 |>
+  mutate(
+    SSSI_bin = case_when(
+      SSSI <= 15 ~ "15 minutes or less",
+      SSSI <= 30 ~ "15-30 minutes",
+      SSSI <= 60 ~ "30-60 minutes",
+      SSSI > 60 ~ "Over an hour",
+      TRUE ~ NA_character_
+    )
+  )
+
+endo2 |>
+  tabyl(SSSI_bin)
+```
+
+### Your Turn
+
+1. Using the new `endo2` dataset, what sedation protocol was used for the patient with the longest `total_time`?
+
+2. Patients are divided into four groups based on BMI: Underweight (BMI < 18.5), Normal (18.5 < BMI <= 25), Overweight (25 < BMI <= 30), and Obese (BMI > 30). Create a new categorical variable in the `endo2` dataset, named `BMI_cat`, that accurately assigns each patient to one of the four groups.
+
+Questions 3 and 4 require multiple steps to solve and will require careful thought about what you need to do and in what order. I highly recommend talking the procedure through with a partner before trying to code anything, and then talking again if you don't get out what you think you should. 
+
+3. For what sedation protocol (Nursing or Anesthesia) and what endoscopy procedure did a patient have to wait the longest after entering the room for the sedation to start?
+
+4. Create a two-way table comparing the proportion of patients who spent over 1 hour in the post-operative care area (PACU) among patients with liver disease and patients without liver disease. Your table should include informative category names and not display information for patients whose liver disease status is unknown.
