@@ -1,0 +1,122 @@
+---
+title: "Summarizing Categorical Data: Mortgage Application Denials Los Angeles County"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, we are going to repeat the analysis we did for 2021 Orange County, but this time for the 2022 Los Angeles County data we downloaded.
+
+Dr. Wynne did a lot of data wrangling to make the `loans_OC` dataset more usable. We're not going to do much data wrangling yet - all we really know how to do right now is convert numeric variables to factors, but that's all we need to do in this activity.
+
+It may be useful to have the [documentation for this dataset](https://ffiec.cfpb.gov/documentation/publications/loan-level-datasets/lar-data-fields) open in a browser window as you work through this activity.
+
+## Import Data and Load Packages
+
+Every time we create a new notebook, our *very first* code chunk should indicate where the notebook is relative to the project that we've set up for the analysis.
+
+```{r}
+#| label: define file location
+# If you have this file in a subfolder named something other than Activities, change the folder name
+# If you have this file in your main course project folder, delete the folder name
+here::i_am("Activities/Summarizing-Categorical-Data-LA-mortgages.qmd")
+```
+
+The second code chunk in your data science notebook should import the data that you will be analyzing. In this activity, we will be using the *loans_lac_2022* dataset that we downloaded earlier. We'll call this data `loans` in our notebook.
+
+```{r}
+#| label: import data 
+library(readr)
+loans <- read_csv(here::here("Data/loans_lac_2022.csv"))
+```
+
+We got some issues! That's fun. Let's take a look at those issues, following the advice in the warning.
+
+```{r}
+#| label: investigate import problems
+problems(loans)
+```
+
+It looks like we have lots of issues in columns 57, 65, and 66 (among others), where R guessed that we had a logical variable but we see some numbers. This usually happens when there is a lot of missing data in the column. Fixing this issue is a bit annoying, because we have to first find the names of the columns that are problematic, and then include arguments inside our `read_csv` function that overwrite the variable types during the import.
+
+We'll use the `unique` function to find the unique column numbers that correspond to the columns with issues, then find the corresponding names.
+
+```{r}
+#| label: find import problems
+# first find which column numbers have import issues
+column_issues <- unique(problems(loans)$col)
+# then find the names of those columns
+names(loans)[column_issues]
+```
+
+This mostly makes sense - most people are not specifying more than 1 or 2 races/ethnicities on their mortgage application, so something like `co-applicant_ethnicity-3` is going to have a lot of missing data.
+
+Now that we know the problem columns, we have to override the import behavior in each column individually.
+
+```{r}
+#| label: import data with problems fixed 
+library(readr)
+loans <- read_csv(
+  here::here("Data/loans_lac_2022.csv"),
+  col_types = cols(
+    `co-applicant_ethnicity-3` = col_number(),
+    `co-applicant_ethnicity-4` = col_number(),
+    `co-applicant_ethnicity-5` = col_number(),
+    `co-applicant_race-4` = col_number(),
+    `co-applicant_race-5` = col_number(),
+    `applicant_ethnicity-4` = col_number(),
+    `applicant_ethnicity-5` = col_number(),
+    `applicant_race-4` = col_number(),
+    `applicant_race-5` = col_number(),
+    `denial_reason-4` = col_number()
+  )
+)
+```
+
+(We're unlikely to work with any of these problematic columns in this activity, so we probably could have still worked with the original dataset despite the import issues. Also, we should really replace the original data import code with this "fixed" code, but I thought it was important to show you the actual process by which the issue gets fixed.)
+
+Once you've gotten the data in, the next code chunk should load the packages that you will be using in the analysis. Here we are going to use the `tidyverse` set of packages, which can be loaded all at once, and the `janitor` package, which will help us create clean-looking tables.
+
+```{r}
+#| label: load packages
+library(tidyverse)
+library(janitor)
+```
+
+Once we've defined our notebook location, imported our data, and loaded our packages, we're ready to start our analysis.
+
+### Understanding the Data
+
+How many loan applications (exact number) are in this `loans` dataset? How many variables?
+
+## Describing One Categorical Variable with Numbers
+
+By investigating the documentation, which variable seems most useful for describing the race of the applicant(s)? Using that variable, find the number and percentage of applications submitted by applicants of each race.
+
+Investigate the documentation to find out which variable describes whether the application was approved. This should be a numerical variable in `loans`, so using the category names in the documentation, convert that variable to a factor.
+
+How many total loans were accepted (originated)? How many applicants were approved for the loan but did not accept it? How many loan applications were denied?
+
+## Describing Two Categorical Variables with Numbers
+
+Create a two-way table showing the two variables you investigated in the previous section.
+
+### Calculating Conditional Proportions with a Two-Way Table
+
+For each race, find the number and proportion of applicants of each race who were given a loan, and the number and proportion who had their application denied. (Note that the proportions will not add to 100% because some applications were not explicitly given a loan or denied.)
+
+## Describing Categorical Variables with Graphs
+
+Create a few bar graphs that visualize the variables you have investigated. It is a good idea to create bar graphs of each variable individually, then make one or two bar graphs showing the relationship between the variables.
+
+## Practice On Your Own
+
+Consider some of the other variables in the dataset. For at least two other variables (we may increase or decrease this number depending on how quickly we are working):
+
+-   Write couple of sentences in your notebook describing what the variable represents and why you think it might be interesting to look at 
+-   Make a table of the variable
+-   (if applicable) Use the documentation to identify the "code" corresponding to each number, and convert the variable to a `factor`
+-   Make two-way tables showing the relationship between the variable and a different variable of interest
+-   Visualize the variable(s) using different types of bar graphs
+-   Talk with a partner to discuss the interpretation of your tables and graphs in the real-world context
+-   After the discussion, write a few sentences in your notebook describing what you found interesting about the variable or its relationship with other variables (if there was nothing interesting, note what you *didn't see* that you thought you might have seen).
