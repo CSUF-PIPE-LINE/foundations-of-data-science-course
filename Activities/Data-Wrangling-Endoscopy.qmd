@@ -36,7 +36,7 @@ problems(endoscopy)
 names(endoscopy)[unique(problems(endoscopy)$col)]
 ```
 
-A bunch of variables in this dataset refer to medications  given during the post-operative period. Apparently we have issues with a couple of variables related to those medications, probably corresponding to drugs that weren't administered much (so most of the column is missing). Since we don't care about those columns, we'll just let it slide. 
+A bunch of variables in this dataset refer to medications  given during the post-anesthesia observation period. Apparently we have issues with a couple of variables related to those medications, probably corresponding to drugs that weren't administered much (so most of the column is missing). Since we don't care about those columns, we'll just let it slide. 
 
 ## Renaming Variables
 
@@ -68,7 +68,7 @@ In the original analysis, the following patients were removed from the dataset:
 * People who were sedated more than 120 minutes before the procedure started (SSSI)
 * People who spent more than 120 minutes in the room after the procedure was finished (SOOR)
 * People whose procedure took more than 360 minutes in total (TCL)
-* People who spent more than 360 minutes in the postoperative care area following the procedure (PACU_LOS)
+* People who spent more than 360 minutes in the post-anesthesia care area following the procedure (PACU_LOS)
 
 All of these situations imply that something abnormal happened during the procedure or during the data collection, and those patients should not be considered in our data analysis. We're going to subset to get rid of those patients.
 
@@ -145,7 +145,7 @@ endo2  |>
 
 ### Your Turn
 
-Using the `endo2` dataset (start over with `endo2` once you finish each problem):
+For each problem, start with the `endo2` dataset we created earlier; don't overwrite it. If you want to store the output, you can call the data frames `endo2a`, `endo2b`, etc.
 
 1. Remove the patients with missing Asthma values.
 
@@ -187,7 +187,7 @@ endo2 |>
   )
 ```
 
-If we have a factor variable, the "smallest" value is the first level and the "largest" value is the last level. If the categorical variable is a chracter (string) instead, it will sort in alphabetical order.
+If we have a factor variable, the "smallest" value is the first level and the "largest" value is the last level. If the categorical variable is a character (string) instead, it will sort in alphabetical order.
 
 ```{r}
 #| label: sort in alphabetical order
@@ -213,7 +213,7 @@ endo2 |>
 
 1. What patient took the longest time from the start of sedation to the start of the procedure (`SSSI`). How long did it take?
 
-2. Find the procedure times (`TCL`) for the 5 patients who stayed the longest in the post-operative area (`PACU_LOS`).
+2. Find the procedure times (`TCL`) for the 5 patients who stayed the longest in the post-anesthesia care area (`PACU_LOS`).
 
 ## Creating New Variables
 
@@ -276,8 +276,10 @@ endo2 |>
 
 2. Patients are divided into four groups based on BMI: Underweight (BMI < 18.5), Normal (18.5 < BMI <= 25), Overweight (25 < BMI <= 30), and Obese (BMI > 30). Create a new categorical variable in the `endo2` dataset, named `BMI_cat`, that accurately assigns each patient to one of the four groups.
 
-Questions 3 and 4 require multiple steps to solve and will require careful thought about what you need to do and in what order. I highly recommend talking the procedure through with a partner before trying to code anything, and then talking again if you don't get out what you think you should. 
-
 3. For what sedation protocol (Nursing or Anesthesia) and what endoscopy procedure did a patient have to wait the longest after entering the room for the sedation to start?
 
-4. Create a two-way table comparing the proportion of patients who spent over 1 hour in the post-operative care area (PACU) among patients with liver disease and patients without liver disease. Your table should include informative category names and not display information for patients whose liver disease status is unknown.
+## Your Turn: Challenge Problem
+
+This problem requires you to connect a sequence of *several* steps (including steps from previous activities). It is  unlikely that you will get the correct answer on your very first try; it will take some trial and error to figure out what you're not doing correctly. I highly recommend tackling this problem with a partner or two, so that you can think together through the series of steps you need.
+
+1. Create a two-way table comparing the proportion of patients who spent over 1 hour in the post-anesthesia care area (PACU) among patients with liver disease and patients without liver disease. Your table should include informative category names and not display information for patients whose liver disease status is unknown.
