@@ -1,0 +1,426 @@
+---
+title: "Data Wrangling with Strings and Dates: Restaurant Inspections in Los Angeles County"
+format: html
+editor: visual
+---
+
+In this activity, we're going to analyze restaurant inspections in Los Angeles County. We're going to primarily focus on manipulating two variable types: dates and character vectors (strings).
+
+```{r}
+#| label: import packages
+here::i_am("Activities/Wrangling-Strings-Dates-LA-restaurants.qmd")
+
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+#| label: import data
+facilities <- readr::read_csv(here::here("Data/facilities.csv"))
+inspections <- readr::read_csv(here::here("Data/inspections.csv"))
+#violations <- readr::read_csv(here::here("violations.csv"))
+```
+
+## Date vs Date-Time
+
+Here we are going to look at when restaurants were inspected. Date and date-time variables both describe *when* a particular event happened. The difference is that date-time variables include a time and date variables don't.
+
+Let's look at the `ACTIVITY_DATE` variable inside the `inspections` dataset.
+
+```{r}
+#| label: inspect activity date
+
+inspections$ACTIVITY_DATE[1:10]
+```
+
+Notice that these inspections are given with a date and a time of "00:00:00+00", indicating that a time was included but not actually recorded (unless every restaurant inspection happened at exactly midnight, which is ridiculous). So these are date-time variables that *should* be date variables. The best way to get rid of the time data is to use the `as_date` function:
+
+```{r}
+inspections <- inspections |>
+  mutate(
+    date = as_date(ACTIVITY_DATE)
+    )
+
+inspections |>
+  select(
+    ACTIVITY_DATE,
+    date
+  )
+```
+
+## Finding the Previous/Next Event
+
+```{r}
+#| label: all inspections for first facility
+
+inspect1 <- inspections |>
+  filter(RECORD_ID == inspections$RECORD_ID[1]) |>
+  select(
+    PROGRAM_NAME,
+    date
+  )
+
+inspect1
+```
+
+Suppose we would like to know how many days have passed between inspections of this "3RD ST CHEVRON" facility. We know that we can do this by subtracting two dates. In order to get the *previous* entry in the `date` column, we use the function `lag()`. In order to get the *next* entry in the column, we use the function `lead()`.
+
+```{r}
+#| label: demo lag and lead
+
+inspect1 |>
+  arrange(date) |>
+  mutate(
+    date_prev = lag(date),
+    date_next = lead(date)
+  )
+```
+
+
+### Your Turn
+
+1. Why did I include `arrange(date)` before creating `date_prev` and `date_next`?
+
+2. Why is the first value in `date_prev` NA? Why is the last value in `date_next` NA?
+
+3. Create a new variable in `inspect1`, called `days_since_last`, that represents how long it has been since the previous inspection.
+
+## Wrangling Text Data
+
+Sometimes our character columns represent data we would like to parse as text data instead of group names/labels. Here we introduce a few of the most common functions for dealing with string data. All of these functions are from the `stringr` package, which is automatically loaded with tidyverse.
+
+```{r}
+#| label: small dataset of strings
+
+facilities_10 <- facilities |>
+  slice(1:10) |>
+  select(
+    PROGRAM_NAME,
+    PE_DESCRIPTION
+  )
+
+facilities_10
+```
+
+### str_detect()
+
+```{r}
+#| label: str_detect on facilities
+
+str_detect(facilities_10$PE_DESCRIPTION, "HIGH RISK")
+```
+
+#### Your Turn
+
+1. What do you think `str_detect()` does?
+
+2. Which of our five major verbs (filter, select, mutate, group_by, arrange) do you think `str_detect()` would be useful for?
+
+3. What do you think the code below does?
+
+```{r}
+#| label: str_detect with filter
+
+facilities |>
+  filter(str_detect(PE_DESCRIPTION, "HIGH RISK")) |>
+  count()
+```
+
+### str_to_something()
+
+```{r}
+#| label: compare cases 
+facilities_10 |>
+  transmute(
+    original = PROGRAM_NAME,
+    lower = str_to_lower(PROGRAM_NAME),
+    title = str_to_title(PROGRAM_NAME),
+    upper = str_to_upper(title),
+  )
+```
+
+#### Your Turn
+
+1. The `transmute` function combines `mutate` and `select`: create the new columns first, then return *only* the new columns. What do you think `str_to_lower()`, `str_to_title()`, and `str_to_upper()` do?
+
+### str_extract()
+
+```{r}
+#| label: simple str_extract
+
+str_extract(facilities_10$PE_DESCRIPTION, "LOW")
+
+```
+
+#### Your Turn
+
+1. What do you think `str_extract` does?
+
+2. Based on the output below, how is `str_extract_all` different from `str_extract`? What do you think the `simplify = TRUE` argument does?
+
+```{r}
+#| label: str_extract_all
+
+str_extract_all(facilities_10$PROGRAM_NAME, "O")
+str_extract_all(facilities_10$PROGRAM_NAME, "O",
+                simplify=TRUE)
+```
+
+### Matching Multiple Words
+
+If we want to extract one of several words (for example), we put the words in between |. This code gets out "LOW" or "MODERATE" or "HIGH" from the description:
+
+```{r}
+#| label: slightly more complicated str_extract
+
+str_extract(facilities_10$PE_DESCRIPTION, "LOW|MODERATE|HIGH")
+```
+
+We can use parentheses to group these words. For example, if we want to extract "LOW RISK" or "MODERATE RISK" or "HIGH RISK", we can write this as:
+
+```{r}
+#| label: str_extract with grouping
+
+str_extract(facilities_10$PE_DESCRIPTION, "(LOW|MODERATE|HIGH) RISK")
+```
+
+### str_split()
+
+```{r}
+#| label: simple str_split
+
+str_split(facilities_10$PROGRAM_NAME, boundary("word"))
+```
+
+#### Your Turn
+
+1. What do you think `str_split` does? What do you think the argument `boundary(word)` does?
+
+2. What is different about the output of `str_split_fixed` (in the chunk below) compared to `str_split`?
+
+```{r}
+#| label: str_split_fixed
+
+str_split_fixed(facilities_10$PROGRAM_NAME, boundary("word"), n = 8)
+```
+
+3. In the chunk above, what do you think would happen if we changed `n` from 8 to 3? Copy the chunk and make the change. Did you get what you expected?
+
+### Be Careful with Special Characters
+
+We don't have to limit ourselves to just words. Any sequence of characters can be used, including spaces (as we saw in the previous example), punctuation, numbers, etc. But sometimes we do have to be a bit careful.
+
+```{r}
+#| label: error in str_extract
+#| eval: false
+str_extract(facilities_10$PE_DESCRIPTION, "(") # throws an error
+```
+
+When you get this kind of error, it's usually because you're included a symbol that also tells R *how* to parse the text. In the previous example we used "(" to group "LOW", "MODERATE", and "HIGH" together, so R is expecting something similar.
+
+To tell R that we are actually looking for the left parenthesis, we preface it with two backslashes.
+
+```{r}
+#| label: no error in str_extract
+
+str_extract(facilities_10$PE_DESCRIPTION, "\\(") # no error
+```
+
+### str_replace
+
+```{r}
+#| label: look at Chris and Pitts
+
+facilities_10$PROGRAM_NAME[2]
+str_split(facilities_10$PROGRAM_NAME,
+          boundary("word"))[[2]]
+```
+
+Notice that we dropped the "&" from "CHRIS & PITTS BBQ" when splitting this restaurant name up. If we want to keep the "&", we need to replace it with text so that R recognizes it as a word. We can replace characters (or even entire words/phrases) using `str_replace`.
+
+```{r}
+#| label: str_replace
+
+str_replace(
+  facilities_10$PROGRAM_NAME, # what string vector to look in
+  "&", # what to replace
+  "AND" # what to replace it with
+  )
+```
+
+### Regular Expressions
+
+By combining grouping symbols and special characters, we can extract *patterns* of symbols. These patterns are called regular expressions.
+
+Let's look at a few examples:
+
+```{r}
+#| label: regular expression any character symbol
+str_extract(facilities_10_desc, "\\(.+\\)")
+```
+
+The `.` indicates "any character", and the `+` indicates "one or more." So `.+` indicates "one or more of any character". Putting it between `\\(` (left parenthesis) and `\\)` (right parenthesis) means that we want to find patterns consisting of one or more characters inside parentheses. (If we're looking for an actual . or + sign we have to use `\\.` or `\\+`.)
+
+```{r regexp2}
+#| label: start regular expression
+facilities_10 |>
+  filter(
+    str_detect(PROGRAM_NAME, "^H")
+  )
+
+```
+
+The `^` special character indicates the start of the string. So `^H` indicates to find all strings that start with "H".
+
+```{r}
+#| label: end regular expression
+facilities_10 |>
+  filter(str_detect(PROGRAM_NAME, "S$")
+  )
+```
+
+The `$` special character indicates the end of the string. So `S$` indicates to find all strings that end with "S".
+
+```{r}
+#| label: regular expressions with digits
+
+str_extract(facilities_10$PE_DESCRIPTION, "[0-9]")
+```
+
+The `[0-9]` sequence of characters indicates to find any digit. Here there are multiple digits in each value of `PE_DESCRIPTION`, so R picks out the first one. If we want the rest of those numbers, we have to remember that `+` means "one or more":
+
+```{r}
+#| label: regular expressions with digits-2
+
+str_extract(facilities_10$PE_DESCRIPTION, "[0-9]+")
+```
+
+Remember that there were two sets of digits in these descriptions. To return *all* matches, instead of just the first one, we add `_all` to the name of the function
+
+```{r regexp3}
+#| label: regular expressions with digits-3
+
+str_extract_all(facilities_10$PE_DESCRIPTION, "[0-9]+") # note that this is a list
+str_extract_all(facilities_10$PE_DESCRIPTION, "[0-9]+",
+                simplify = TRUE) # note that this is a matrix
+```
+
+Uh-oh! `1,999` is not being read as a number due to the comma! We can use `str_remove` to get rid of characters we don't want to use.
+
+```{r str_remove}
+str_remove(facilities_10$PE_DESCRIPTION, ",") |>
+  str_extract_all("[0-9]+", simplify=TRUE)
+```
+
+
+## Your Turn: Challenge Problem
+
+Legends is a company that operates concessions at SoFi Stadium, the LA Coliseum, and BMO Stadium (where LAFC and Angel City FC play). Unfortunately, in this dataset, it is variously referred to as "LEGENDS HOSPITALITY, LLC", "LEGENDS SPORTS, LLC", and "LEGENDS SPORTS LLC".
+
+Your challenge is to make all of these concessions have the same `OWNER_NAME`. The HINT below indicates one possible sequence of steps to achieve this. If you want to try to figure out the steps first, don't look at it. If you want to just practice using these functions (or you give up), scroll down to the hint.
+
+
+
+
+
+
+
+
+
+
+
+#### HINT
+
+Here is one possible sequence of steps:
+
+1.  Filter the `facilities` dataset to include *only* the concessions owned by Legends. If you get any facilities in your dataset that are owned by "HOUSE OF LEGENDS INC", you have done it wrong.
+2.  Replace "HOSPITALITY" with "SPORTS" to make "LEGENDS HOSPITALITY, LLC" and "LEGENDS SPORTS, LLC" look the same
+3.  Remove the comma to make "LEGENDS SPORTS, LLC" and "LEGENDS SPORTS LLC" look the same
+
+In real data analysis, we would do this first, and then once we confirm that our code does what it's supposed to do, we would use a `mutate` function with an `if_else` or `case_when` statement to apply the changes in Steps 2 and 3 to the actual dataset.
+
+## And now for some important analysis
+
+For each inspection in the `inspections` dataset, we want to know:
+
+1.  Is the facility high, moderate, or low risk?
+2.  What year was the inspection?
+3.  When was the previous inspection of that facility?
+4.  What was the previous score?
+5.  Which employee inspected it the last time?
+6.  When was the next inspection?
+7.  How long did the facility keep that grade until the next inspection?
+
+We will use the `mutate` function to seven new variables to the dataset: one to answer each question.
+
+It's very unlikely that we're going to write the correct code to answer all of these questions correctly for each facility on the first try. So we're going to try to answer each question first on a single facility.
+
+```{r select 1 facility}
+#| label: Select one facility
+
+inspect_test <- inspections |>
+  filter(
+    RECORD_ID == inspections$RECORD_ID[5]
+  )
+
+```
+
+### Your Turn
+
+1.  Is the facility high, moderate, or low risk? In my solutions, I call the variable that answers this question `risk_level`.
+
+Since you're only working with 1 facility, you should get out the same value for all inspections in `inspect_test`. Make sure that your code also works for `inspect_test2` and `inspect_test3`.
+
+```{r}
+#| label: inspect_test2 and inspect_test3
+
+inspect_test2 <- inspections |>
+  filter(
+    RECORD_ID == inspections$RECORD_ID[6]
+  )
+
+inspect_test3 <- inspections |>
+  filter(
+    RECORD_ID == inspections$RECORD_ID[7]
+  )
+```
+
+2.  What year was the inspection? In my solutions, I call the variable that answers this question `year`.
+
+3.  When was the previous inspection of that facility? In my solutions, I call the variable that answers this question `prev_inspection`.
+
+4.  What was the previous score? In my solutions, I call the variable that answers this question `prev_score`.
+
+5.  Which employee inspected it the last time? In my solutions, I call the variable that answers this question `prev_inspector`.
+
+6.  When was the next inspection? In my solutions, I call the variable that answers this question `next_inspection`.
+
+7.  How long did the facility keep that grade until the next inspection? In my solutions, I call the variable that answers this question `time_to_next`.
+
+
+
+
+
+## My Solutions
+
+Here is my example code. I am doing this all inside a `group_by(RECORD_ID)` so that it does these steps for each inspected facility in the dataset. This takes some time, because R has to compute the appropriate `lag()` and `lead()` values within each of the over 50,000 unique `RECORD_ID`s. There are some packages that are generally a bit faster when working with giant datasets.
+
+```{r do for all restaurants}
+#| label: solution inside grouped mutate for all restaurants
+
+
+inspections_new <- inspections |>
+  group_by(RECORD_ID) |>
+  arrange(date) |>
+  mutate( 
+    risk_level = str_extract(PE_DESCRIPTION, "LOW|MODERATE|HIGH"),
+    year = year(date),
+    prev_inspection = lag(date),
+    time_since_previous = date - prev_inspection,
+    prev_score = lag(SCORE),
+    prev_inspector = lag(EMPLOYEE_ID),
+    next_inspection = lead(date),
+    time_to_next = next_inspection - date
+  )
+```
+

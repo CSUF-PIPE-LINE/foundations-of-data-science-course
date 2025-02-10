@@ -7,6 +7,11 @@ editor: visual
 
 In this activity, we are going to explore roughly 763 applications submitted by people trying to get a mortgage to buy a house in Fullerton in 2021.
 
+```{r}
+#| label: define file location
+here::i_am("Activities/Summarizing-Numerical-Data-OC-Mortgages.qmd")
+```
+
 ## Load Packages and Import Data
 
 We still need the `ggplot2` and `dplyr` packages from tidyverse.

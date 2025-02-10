@@ -1,0 +1,374 @@
+---
+title: "Wrangling Dates: Endoscopy Times"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, we are going to explore approximately 6000 endoscopy procedures performed at the University of Colorado Hospital in 2020 and 2021.
+
+## Import Data and Load Packages
+
+```{r}
+#| label: define file location
+# If you have this file in a subfolder named something other than Activities, change the folder name
+# If you have this file in your main course project folder, delete the folder name
+here::i_am("Activities/Wrangling-Dates-Endoscopy.qmd")
+
+# load tidyverse packages
+library(tidyverse)
+library(lubridate)
+```
+
+We'll be working with the `endoscopy` dataset again. Remember that this dataset had non-standard ways of describing missing data, and we run into a couple of issues with the drug variables.
+
+```{r}
+#| label: import data 
+endoscopy <- read_csv(here::here("Data/endoscopy.csv"), 
+                      na = "NULL")
+```
+
+## Representing Dates and Times
+
+```{r}
+endoscopy$SCOPE_IN_TIME[1:10]
+```
+
+By default, R will import date and date-time variables as character vectors. This is because R expects dates and date-times to be in ISO 8601 standard form:
+
+**YYYY-MM-DD Hour:Minute:Second.Millisecond**
+
+ISO 8601 allows people around the world to communicate dates and times unambiguously.
+
+We can use the `ymd_hms` family of functions in the `lubridate` package to convert dates and times into ISO 8601 standard form.
+
+First we figure out how the data is being represented inside our character vector. In this example, we have the date represented as month/day/year hour:minute. Therefore we should use the function `mdy_hm` to indicate to R that the first number it encounters is the month, the second is the day, the third is the year, the fourth is the hour, and the fifth is the minute.
+
+```{r}
+#| label: transform SCOPE_IN_TIME
+
+endoscopy2 <- endoscopy |>
+  mutate(
+    SCOPE_IN_TIME = mdy_hm(SCOPE_IN_TIME)
+  )
+
+endoscopy2$SCOPE_IN_TIME[1:10]
+```
+
+This is weird: it's adding "UTC" to all the times. "UTC" stands for "Universal Time Coordinated" and generally refers to the time at the prime meridian (through Greenwich, England).
+
+Since we know that this data was collected at the University of Colorado Hospital, we want to reflect the times in Colorado.
+
+There are lots of current and historical quirks about how places have determined what time it is. A time zone database originally compiled by Arthur David Olson and now managed by the Internet Assigned Numbers Authority (IANA) is installed with R (you also likely have a version of it somewhere if you are on a Mac or Unix system) and attempts to keep up with all of these changes.
+
+```{r}
+#| label: what time zone are we in
+
+Sys.timezone()
+```
+
+Most timezones are represented in the form "Continent/City". For example, our timezone is represented as "America/Los_Angeles". Because of those historical quirks, you want to find the time zone most similar to the place the data was collected at.
+
+To list out the entire database in R, we can use:
+
+```{r}
+#| label: time zone database
+#| eval: false
+OlsonNames()
+```
+
+By searching through this database, we find that the most similar time zone representation for this data is "America/Denver", representing the typical US Mountain Time Zone. We can now explicitly tell R to use this time zone to represent our times:
+
+```{r}
+#| label: transform SCOPE_IN_TIME with correct time zone
+
+endoscopy2 <- endoscopy |>
+  mutate(
+    SCOPE_IN_TIME = mdy_hm(SCOPE_IN_TIME, tz = "America/Denver")
+  )
+
+endoscopy2$SCOPE_IN_TIME[1:10]
+```
+
+Notice now that R has automatically figured out whether Daylight Saving Time applies to that time.
+
+### Your Turn
+
+1.  Which other variables in this dataset represent dates and times? Using a single `mutate` function, overwrite the `endoscopy2` dataset so that those variables also are in ISO 8601 format and the times are listed as in the "American/Denver" time zone.
+
+## Extracting Date Components
+
+Generally, the lubridate functions have intuitive names. `year` gets out the year, `month` gets out the month, and `day` or `mday` gets out the day of the month. We can also get out the day of the week using `wday`.
+
+```{r}
+#| label: example extract year
+
+example_dates <- endoscopy2$SCOPE_IN_TIME[1:10]
+
+year(example_dates)
+```
+
+```{r}
+#| label: example extract month
+month(example_dates)
+```
+
+```{r}
+#| label: example extract day of month
+day(example_dates)
+```
+
+```{r}
+#| label: example extract day of week
+wday(example_dates)
+```
+
+Note that the month and week are represented as numbers. To represent these variables as categorical, we use a `label = TRUE` argument:
+
+```{r}
+#| label: get month and day of week as factor
+
+month(example_dates, label = TRUE)
+wday(example_dates, label = TRUE)
+```
+
+### Your Turn
+
+1.  Using the `endoscopy2` dataset, determine how many procedures were performed on the weekend (Saturday or Sunday).
+
+## Sorting by Date
+
+```{r}
+#| label: sort by date with character vector
+
+endoscopy |>
+  arrange(SCOPE_IN_TIME) |>
+  select(Procedure, SCOPE_IN_TIME) |>
+  slice(11:20) # rows 11-20
+```
+
+Notice that when the date (or date and time) is a character vector, we don't actually sort earliest-to-latest. Here a procedure on January 11, 2021 comes earlier in the dataset than most procedures in 2020. However, when we sort based on the actual date-time vector, this isn't a problem:
+
+```{r}
+#| label: sort by date with date-time vector
+
+endoscopy2 |>
+  arrange(SCOPE_IN_TIME) |>
+  select(Procedure, SCOPE_IN_TIME) |>
+  slice(21:30) # rows 21-30
+```
+
+### Your Turn
+
+1.  Find the most recent Upper GI endoscopy in the dataset performed on a male patient of older than 65.
+
+## Adding and Subtracting Dates and Times
+
+### Adding and Subtracting Fixed Durations
+
+The generally preferred way to add and subtract a fixed duration to dates/times to create a `duration` object of the desired time scale by prefacing that scale with `d`. For example:
+
+```{r}
+#| label: durations
+
+ddays(4) # 4 days
+dseconds(2) # 2 seconds
+dmonths(10) # 10 months
+dnanoseconds(300) # 300 ns
+```
+
+Notice that R expresses all of these durations in seconds. We then add or subtract that specific number of seconds:
+
+```{r}
+#| label: add and subtract durations
+
+tibble(
+  date = example_dates,
+  six_days_later = example_dates + ddays(6),
+  three_hours_earlier = example_dates - dhours(3)
+)
+```
+
+Notice that in the second line of the output, the time increased by 1 hour when we added 6 days. This is because the "spring forward" change to Daylight Saving Time occurred on March 14 in 2021. When working with `duration` objects, R adds the correct number of seconds to the date/time, and then converts the result to the new date/time.
+
+This can lead to some unintuitive results when working with durations longer than seconds:
+
+```{r}
+#| label: add 2 months
+tibble(
+  date = example_dates,
+  five_months_earlier = example_dates - dmonths(5),
+  two_days_later = example_dates + ddays(2), # add number of seconds in 2 months
+)
+```
+
+If you want intuitive results, you need to tell R to add/subtract the desired number of periods of the desired time scale. The function to do this is the same as the function to add the duration in seconds, but  *without* the `d` in front; for example:
+
+```{r}
+#| label: add and subtract durations 2
+tibble(
+  date = example_dates,
+  five_months_earlier = example_dates - months(5), # subtract 5 from months number directly
+  two_days_later = example_dates + days(2), # add 2 to days number directly
+)
+```
+
+Think carefully about which version of adding/subtracting you need to use!
+
+### Calculating Time Differences
+
+We can directly subtract two different date-time objects to find the length of time between them. For example here, we find the amount of time that the scope was in the patient by subtracting the earlier time (`SCOPE_IN_TIME`) from the later time (`SCOPE_OUT_TIME`).
+
+```{r}
+#| label: length of time scope in
+
+# these lines should be in your solution to an earlier problem
+# endoscopy2 <- endoscopy2 |> 
+#   mutate(
+#     SCOPE_OUT_TIME = mdy_hm(SCOPE_OUT_TIME, tz = "America/Denver")
+#   )
+
+endoscopy2 |>
+  mutate(
+    SCOPE_DURATION = SCOPE_OUT_TIME - SCOPE_IN_TIME
+  ) |>
+  select(
+    SCOPE_IN_TIME,
+    SCOPE_OUT_TIME,
+    SCOPE_DURATION
+  )
+  
+```
+
+Notice that the durations are automatically calculated in seconds. If we want to express this in minutes, we need to use the `time_length` function to convert to minutes.
+
+```{r}
+#| label: convert duration to minutes
+
+endoscopy2 |>
+  mutate(
+    SCOPE_DURATION = time_length(SCOPE_OUT_TIME - SCOPE_IN_TIME, unit = "minute")
+  ) |>
+  select(
+    SCOPE_IN_TIME,
+    SCOPE_OUT_TIME,
+    SCOPE_DURATION
+  )
+  
+```
+
+Notice that without using the `time_length` function, `SCOPE_DURATION` is a variable of type `time` and has units of seconds attached, whereas with the `time_length` function, `SCOPE_DURATION` is a variable of type `dbl` and the units have disappeared.
+
+### Your Turn
+
+1.  The `as_date` function in this chunk removes the time but keeps the date. We then add one year to the dates. Why are only *some* of the `one_year_later1` dates the same as the `one_year_later2` dates?
+
+```{r}
+#| label: add 1 year
+
+tibble(
+  date = as_date(example_dates),
+  one_year_later1 = as_date(example_dates + dyears(1)),
+  one_year_later2 = as_date(example_dates + years(1))
+)
+```
+
+2.  Create a variable `IRSI` in the `endoscopy2` dataset that represents the number of minutes between the patient entering the room (`INROOM`) and the start of the procedure (`SCOPEIN`). Check your work by comparing the values of `IRSI` to the values of the existing `INROOM-SCOPEIN` variable.
+
+## Intervals
+
+In Colorado, in response to the start of the COVID-19 pandemic, executive orders barred hospitals from providing most "voluntary" or "elective" procedures, such as routine screenings for cancer via endoscopy/colonoscopy, from March 23, 2020 through April 26, 2020. [Source](https://www.coloradohealthinstitute.org/research/missed-health-care-during-covid-19)
+
+We can represent this time period as an `interval` object:
+
+```{r}
+#| label: create no_scope interval
+
+no_scope <- interval(
+  start = ymd("2020-03-23", tz = "America/Denver"),
+  end = ymd("2020-04-26", tz = "America/Denver")
+)
+
+no_scope
+```
+
+We can now use the `%within%` function to see which (if any) endoscopies were performed during this "banned" period:
+
+```{r}
+#| label: check for banned period
+
+endoscopy2 |>
+  filter(SCOPE_IN_TIME %within% no_scope)
+```
+
+What about in the equivalent time period in 2021?
+
+```{r}
+#| label: check for one year later
+
+no_scope_equivalent_2021 <- interval(
+  start = ymd("2021-03-23", tz = "America/Denver"),
+  end = ymd("2021-04-26", tz = "America/Denver")
+)
+
+endoscopy2 |>
+  filter(SCOPE_IN_TIME %within% no_scope_equivalent_2021)
+```
+
+There were 362 procedures in the same period of 2021.
+
+### Your Turn
+
+1.  The original source article for the data claims that procedures from July 1, 2021 to July 31, 2021 were not included in the dataset, to allow health care workers to adjust to the transition from Nursing to Anesthesia sedation protocol. Verify that this is true.
+
+2.  How many procedures were performed in the four-week period starting February 16, 2020? Compare this to the roughly-equivalent four-week period starting February 14, 2021.
+
+## Visualizing Time Series Data
+
+To visualize this data, we want to create a data frame in which each row represents one date. We can use `group_by` with `summarize` to do this.
+
+```{r}
+#| label: endoscopy_by_date
+
+endoscopy_by_date <- endoscopy2 |>
+  filter(
+    PROC_CASE_LENGTH <= 360
+  ) |>
+  mutate(
+    date = as_date(SCOPE_IN_TIME)
+  ) |>
+  group_by(date) |>
+  summarize(
+    n = n(),
+    mean_TCL = mean(PROC_CASE_LENGTH)
+  )
+
+head(endoscopy_by_date)
+```
+
+Notice that when we group by the date, it automatically sorts from earliest to latest date. 
+
+Now we can visualize the average procedure length over time. Typically, we use a line graph for this.
+
+```{r}
+#| label: visualize by date
+
+ggplot(endoscopy_by_date,
+       mapping = aes(x = date, y = mean_TCL)
+) +
+  geom_line(
+    color = "blue"
+  ) +
+  labs(
+    x = "Date",
+    y = "Average Procedure Length (minutes)"
+  )
+```
+
+### Your Turn
+
+1. Look at the long diagonal lines on the left and right sides of the plot. Based on what we've done so far in the activity, why do you think those lines are longer?
+
+2. Add a smoothing curve (using the "loess" method) to the plot. Why might we want to add a smoothing curve to the plot? (What information does it give us or help us see better?)
+
+3. Pick a different summary of your choice, compute that summary for each date in the dataset, and create a plot similar to the one above. What does the plot tell you about how that summary changed (or didn't change) over time?
