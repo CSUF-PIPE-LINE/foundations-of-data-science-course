@@ -18,7 +18,6 @@ library(lubridate)
 #| label: import data
 facilities <- readr::read_csv(here::here("Data/facilities.csv"))
 inspections <- readr::read_csv(here::here("Data/inspections.csv"))
-#violations <- readr::read_csv(here::here("violations.csv"))
 ```
 
 ## Date vs Date-Time
@@ -256,12 +255,12 @@ Let's look at a few examples:
 
 ```{r}
 #| label: regular expression any character symbol
-str_extract(facilities_10_desc, "\\(.+\\)")
+str_extract(facilities_10$PE_DESCRIPTION, "\\(.+\\)")
 ```
 
 The `.` indicates "any character", and the `+` indicates "one or more." So `.+` indicates "one or more of any character". Putting it between `\\(` (left parenthesis) and `\\)` (right parenthesis) means that we want to find patterns consisting of one or more characters inside parentheses. (If we're looking for an actual . or + sign we have to use `\\.` or `\\+`.)
 
-```{r regexp2}
+```{r}
 #| label: start regular expression
 facilities_10 |>
   filter(
@@ -307,7 +306,8 @@ str_extract_all(facilities_10$PE_DESCRIPTION, "[0-9]+",
 
 Uh-oh! `1,999` is not being read as a number due to the comma! We can use `str_remove` to get rid of characters we don't want to use.
 
-```{r str_remove}
+```{r}
+#| label: str_remove
 str_remove(facilities_10$PE_DESCRIPTION, ",") |>
   str_extract_all("[0-9]+", simplify=TRUE)
 ```
@@ -351,7 +351,7 @@ For each inspection in the `inspections` dataset, we want to know:
 6.  When was the next inspection?
 7.  How long did the facility keep that grade until the next inspection?
 
-We will use the `mutate` function to seven new variables to the dataset: one to answer each question.
+We will use the `mutate` function to add seven new variables to the dataset: one to answer each question.
 
 It's very unlikely that we're going to write the correct code to answer all of these questions correctly for each facility on the first try. So we're going to try to answer each question first on a single facility.
 
