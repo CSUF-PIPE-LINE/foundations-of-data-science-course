@@ -355,7 +355,7 @@ We will use the `mutate` function to add seven new variables to the dataset: one
 
 It's very unlikely that we're going to write the correct code to answer all of these questions correctly for each facility on the first try. So we're going to try to answer each question first on a single facility.
 
-```{r select 1 facility}
+```{r}
 #| label: Select one facility
 
 inspect_test <- inspections |>
@@ -405,7 +405,7 @@ inspect_test3 <- inspections |>
 
 Here is my example code. I am doing this all inside a `group_by(RECORD_ID)` so that it does these steps for each inspected facility in the dataset. This takes some time, because R has to compute the appropriate `lag()` and `lead()` values within each of the over 50,000 unique `RECORD_ID`s. There are some packages that are generally a bit faster when working with giant datasets.
 
-```{r do for all restaurants}
+```{r}
 #| label: solution inside grouped mutate for all restaurants
 
 
