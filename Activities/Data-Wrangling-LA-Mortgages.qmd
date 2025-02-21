@@ -1,0 +1,320 @@
+---
+title: "Data Wrangling: Mortgage Applications in Los Angeles County"
+format: html
+editor: visual
+---
+
+Dr. Wynne did a lot of data wrangling to make the `loans_OC` dataset more usable. In this activity, we're going to do some similar data wrangling on the `loans_lac_2022` dataset, but we're not going to repeat some of Dr. Wynne's mistakes.
+
+It may be useful to have the [documentation for this dataset](https://ffiec.cfpb.gov/documentation/publications/loan-level-datasets/lar-data-fields) open in a browser window as you work through this activity.
+
+## Import Data and Load Packages
+
+```{r}
+#| label: define file location
+# If you have this file in a subfolder named something other than Activities, change the folder name
+# If you have this file in your main course project folder, delete the folder name
+here::i_am("Activities/Data-Wrangling-LA-Mortgages.qmd")
+```
+
+```{r}
+#| label: import data with problems fixed 
+library(readr)
+loans <- read_csv(
+  here::here("Data/loans_lac_2022.csv"),
+  col_types = cols(
+    `co-applicant_ethnicity-3` = col_number(),
+    `co-applicant_ethnicity-4` = col_number(),
+    `co-applicant_ethnicity-5` = col_number(),
+    `co-applicant_race-4` = col_number(),
+    `co-applicant_race-5` = col_number(),
+    `applicant_ethnicity-4` = col_number(),
+    `applicant_ethnicity-5` = col_number(),
+    `applicant_race-4` = col_number(),
+    `applicant_race-5` = col_number(),
+    `denial_reason-4` = col_number()
+  )
+)
+```
+
+```{r}
+#| label: load packages
+library(tidyverse)
+library(janitor)
+library(httr2) # we're going to pull another dataset off the web
+library(jsonlite) # it's going to be in JSON format
+```
+
+## Subsetting Our Data
+
+### Filtering Only Interesting Observations
+
+First, let's get only the observations in which the loan was either approved or denied. Remember that an `action_taken` of 1 or 2 indicates that the loan was approved and an `action_taken` of 3 indicates that the loan was denied.
+
+```{r}
+#| label: approved or denied loans
+approved_denied <- loans |>
+  filter(
+    (action_taken == 1) | (action_taken == 2) | (action_taken == 3)
+  )
+```
+
+Alternatively (and a bit more readably), we can use `%in%` to match anything in the vector on the right:
+
+```{r}
+#| label: approved or denied loans-2
+approved_denied <- loans |>
+  filter(
+    action_taken %in% c(1, 2, 3)
+  )
+```
+
+### Selecting Only Interesting Variables
+
+We have 99 variables in this dataset. It's a good idea to subset to select only the variables we need, because every time we do something with this data, it costs memory, and if we can remove the variables we don't need, we may end up saving a bunch of memory.
+
+```{r}
+#| label: subset to interesting variables
+
+app_den2 <- approved_denied |>
+  select(
+    census_tract,
+    lei,
+    starts_with("derived"), # get every variable whose name starts with "derived"
+    total_units,
+    occupancy_type,
+    action_taken,
+    income,
+    property_value,
+    loan_amount
+  )
+```
+
+Now we only have 11 variables to worry about instead of the 99 we started with.
+
+## Creating New Variables
+
+Suppose we want to know the ratio of `loan_amount` to `income` - essentially, to scale the loan amount relative to how much money a person is making.
+
+```{r}
+#| label: create loan_to_income
+
+app_den2 <- app_den2 |>
+  mutate(
+    loan_to_income = loan_amount/(income*1000)
+    # remember, income is in thousands of dollars
+  )
+
+```
+
+### Converting Numerical to Categorical Variables
+
+We still want to convert `action_taken` to a categorical variable, but values of 1 and 2 mean the same thing. This is not a problem; in the `labels` argument, we just put the same label for both 1 and 2.
+
+Here we create a new variable named `action` to store the transformed variable, instead of overwriting `action_taken`.
+
+```{r}
+#| label: convert action_taken to categorical
+
+app_den2 <- app_den2 |>
+  mutate(
+    action = factor(action_taken, labels = c("Approved", "Approved", "Denied"))
+  )
+```
+
+### Converting Categorical to Numerical Variables
+
+There's a weird issue in the `property_value` variable (and some others): it clearly should be a numerical variable, but it's listed as having type `chr`. Investigating the issue:
+
+```{r}
+#| label: investigate property_value
+
+app_den2 |>
+  count(property_value) |>
+  tail(5) # since we have mostly numbers, they'll show up first in the category names
+
+```
+
+It appears that 435 rows have the value "Exempt." We can filter these rows out, or if we want to keep the rows, we can convert everything labeled "Exempt" to a missing value. If we use `as.numeric` to "coerce" the variable to be numeric, R will do this automatically with a warning message:
+
+```{r}
+#| label: convert property_value to numerical
+
+app_den2 <- app_den2 |>
+  mutate(
+    property_value = as.numeric(property_value)
+  )
+```
+
+Here we overwrote the `property_value` variable rather than creating a new one. In my mind, it comes down to whether you might ever use the original variable in your analysis: if there is any possibility you'll need the variable with its original type, then create a new one (like `property_value_num`); if you know you won't ever use the variable with its original type, then overwrite it - that way you won't have to remove it later.
+
+## Your Turn: Investigating the app_den2 dataset
+
+These questions start simple and gradually become more complex. I highly suggest discussing the sequence of steps you will need to answer the question with someone else. You might code a step together, see the output, and then discuss the next step, or you might discuss the entire sequence of steps together and then figure out how to code them.
+
+1.  What is the highest property value in the dataset? What do you think this property corresponds to?
+
+2.  Create a new variable, `principal`, that indicates whether or not the loan is intended for the borrower's principal residence (the place that they intend to stay at for most of the year).
+
+3.  The `income` variable refers to Gross Annual Income, which should be positive in almost all cases. How many applicants applied for a loan despite having a negative value of `income`? How many of those applicants were actually approved?
+
+4.  Among census tracts in which there were more than 50 total applications, in only two were the applicants over 80% Asian. What were the loan approval rates in those two census tracts?
+
+5.  Looking only at loans to purchase single-family homes, which census tract(s) had the highest median approved loan amount? What was that median loan value?
+
+## Merging Two Datasets
+
+Here the `lei` variable is a 20-character mess. When Dr. Wynne made the `loans_OC` file, he manually looked up the `lei` for institutions with lots of loan applications. But there's a much better way to do this.
+
+We can use the same Data Browser API that we used to download the `loans_lac_2022` dataset to also download a list of "HMDA Filers" - institutions that received a mortgage application, with their lei and institution name.
+
+```{r}
+#| label: solution for downloading the filers file
+#| eval: false 
+
+# ideally only run this chunk once to grab the data
+req1 <- request("https://ffiec.cfpb.gov")
+req1_file <- req1 |>
+  req_url_path(path = "v2/data-browser-api/view/filers")
+req1_filers <- req1_file |>
+  req_url_query(
+    years = "2022",
+    counties = "06037"
+  )
+
+req1_filers |>
+  req_dry_run()
+
+req1_filers |>
+  req_perform(
+    path = here::here("Data/filers_lac_2022.json")
+  )
+
+```
+
+This file is in JSON format, which doesn't obey our usual "spreadsheet-like" tidy data principles. That means we can't import it using our usual tricks.
+
+The `jsonlite` package handles reading and writing JSON files in R. We can use the `read_json` function to import a JSON file that we've downloaded:
+
+```{r}
+#| label: import json file
+filers_json <- jsonlite::read_json(here::here("Data/filers_lac_2022.json"))
+
+```
+
+If you look in your Environment, you'll see that R imports this file as a list instead of a data frame or tibble.
+
+If you use the usual `str()` or `glimpse()` functions here, you're going to get a giant wall of text. (Hence the `eval: false` line.)
+
+```{r}
+#| label: investigate filers_json
+#| eval: false
+
+str(filers_json)
+```
+
+Investigating this wall of text, we find that we have two variables inside the list - `institutions`, which itself is a list of lists, and `servedFrom`, which just says "cache". So we want the data inside `institutions`. The good news is that every item in that list is a list with the same four variables in it, so it just takes a little bit of trial-and-error to turn it into a data frame.
+
+```{r}
+#| label: use bind_rows to convert to df
+
+filers_df <- filers_json$institutions |>
+  bind_rows()
+```
+
+Now we're ready to merge the `app_den2` dataset with the `filers` dataset based on the common variable `lei`.
+
+```{r}
+#| label: merge app_den2 and filers data
+
+loans_filers <- left_join(
+  app_den2,
+  filers_df,
+  by = "lei"
+)
+```
+
+We're using `left_join` because we want to keep every application in the `app_den2` dataset, even if the `lei` doesn't correspond to anything in the `filers_df` dataset.
+
+## Your Turn: Investigating the Merged Dataset
+
+Combine your data wrangling and data summarization skills to answer the following questions, based on the `loans_filers` dataset. Again, the questions start off relatively simple and get more complex.
+
+1.  Find the top 10 institutions in terms of the number of applications submitted by Hispanic or Latino applicants.
+
+2.  How many institutions approved every application? Which institution approved the most applications without a denial, and how many applications did they approve?
+
+3.  Which institution's approved loans had the highest median loan amount (minimum 10 reported approved loan values)? What (if anything) do you notice about the applicants approved by that institution and/or the properties the loans were approved for?
+
+4.  Among the institutions you investigated in the previous question, four have unusually high median loan-to-income ratios for their approved loans compared to the other institutions. Which four?
+
+5.  In only one census tract did more than 50 applications come from Black or African-American applicants. Which institution handled the most applications for homes in that census tract? What is interesting about the distribution of `census_tract` for that institution?
+
+## A Complicated Example with pivot_wider
+
+Let's compare the loan approval/denial rate for white non-Hispanic vs. black non-Hispanic applicants at the institution level. We start by doing some subsetting so we only have the interesting rows/columns:
+
+```{r}
+#| label: filter to only black and white
+
+loans_bw <- loans_filers |>
+  filter(
+    derived_race %in% c("White", "Black or African American"),
+    derived_ethnicity == "Not Hispanic or Latino"
+  ) |>
+  select(derived_race, name, taken)
+```
+
+Now we'll use `group_by()` and `summarize()` to get the proportion of approved loans for each institution for each race:
+
+```{r}
+#| label: proportion approved by institution and race
+
+loan_approvals_by_race <- loans_bw |>
+  group_by(derived_race, name) |>
+  summarize(
+    n = n(),
+    pct_approved = mean(action == "Approved")
+  )
+
+```
+
+Notice that each row in our dataset is uniquely identified by a combination of race and institution. We would ideally like each row to be uniquely identified *only* by the institution, and split the two numerical columns into four: number of black applicants, proportion approved for black applicants, number of white applicants, proportion approved for white applicants.
+
+We can use the `pivot_wider` function in the `tidyr` package (part of tidyverse) to take care of this.
+
+```{r}
+#| label: pivot wider
+loan_approvals_wide <- loan_approvals_by_race |>
+  pivot_wider(
+    names_from = derived_race,
+    values_from = c(n, pct_approved)
+  )
+```
+
+We can now filter to institutions that handled at least 50 applications in both races, and plot the approval rates:
+
+```{r}
+#| label: plot approval rates
+
+loan_approvals_wide |>
+  filter(`n_Black or African American` >= 50,
+         `n_White` >= 50) |>
+  ggplot(aes(x = `pct_approved_White`, y = `pct_approved_Black or African American`)) +
+  geom_point(aes(size = `n_Black or African American`)) +
+  geom_abline(intercept = 0, slope = 1, 
+              color = "darkviolet") +
+  labs(
+    x = "Proportion Approved (White)",
+    y = "Proportion Approved (Black)"
+  ) +
+  scale_size_continuous(
+    name = "Number of Black Applications"
+  )
+```
+
+### Your Turn
+
+What do you notice when you look at this graph? What additional questions does this graph evoke?
+
+Write some code to try to find the answers to one or two of your questions.
