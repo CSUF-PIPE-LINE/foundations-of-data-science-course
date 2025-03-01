@@ -1,0 +1,100 @@
+---
+title: "Sampling Designs: Restaurant Inspections in Los Angeles County"
+format: html
+editor: visual
+---
+
+In this activity, we're going to obtain samples of different kinds from the `inspections` dataset. The techniques we learn for randomly sampling from a population are also useful for randomly dividing our collected data into a *training* set and *holdout* set for modeling.
+
+In the `inspections` dataset, we assume that our population is restaurant inspections during the time frame covered by the dataset, and that all inspections in the population are included in the dataset. For many "big" datasets, this is a dangerous assumption! However, it seems reasonable to assume that we're not missing many (if any) inspections in this dataset, and that even if we were, there wouldn't be any obvious differences between the ones in the dataset and the ones that aren't.
+
+```{r}
+#| label: import packages
+here::i_am("Activities/Sampling-Designs-LA-Restaurants.qmd")
+
+library(tidyverse)
+library(rsample)
+library(lubridate)
+```
+
+```{r}
+#| label: import data
+inspections <- readr::read_csv(here::here("Data/inspections.csv"))
+```
+
+## Sampling vs. Splitting
+
+When we *sample* from the population, we do so *before* collecting data. Since collecting data can be expensive, we decide which observations from the population we want to collect that data about before collecting it. Typically, samples are *small* (< 5%) subsets of the population.
+
+When we *split* a dataset into training and "test" sets, we do so *after* collecting data. All data in the original dataset is put in one of the two datasets, and the "test" set is immediately removed (and we don't do anything with it until we've selected our final model). Typically, the training set is the *majority* (50%-90%) of the original dataset.
+
+## Convenience Sampling
+
+In convenience sampling, our primary concern is getting data in the first place. We will get data from whatever sample is "easy" to get data from. This means that we have to be extra-thoughtful about what differences we would expect to see between the observations that are in our sample data and the ones that aren't.
+
+In a "training/test" split, convenience sampling usually refers to non-randomly splitting the dataset.
+
+For example, we can decide to train our model on *only* inspections in the city of Los Angeles, and reserve every other city to be in the test set, using the code:
+
+```{r}
+#| label: filter to one city
+
+## Code with me to create a training and test set
+
+```
+
+1. Why would training our model on *only* inspections in the city of Los Angeles be a problem?
+
+## Simple Random Sampling
+
+In simple random sampling, we obtain a list of every observation in the population that we could possibly get data from, and then randomly "pick observations out of a hat".
+
+```{r}
+#| label: simple random sampling
+
+# Code with me to modify the template to get inspections_srs
+```
+
+1. Why do we need the `set.seed` line before doing our `initial_split`? If you're not sure, try changing the number inside `set.seed`, or commenting out the line, and re-running the chunk a few times.
+
+## Stratified Random Sampling
+
+In stratified random sampling, we divide the dataset into very large groups, and then take a simple random sample from each group.
+
+In a "training/test" split, stratified random sampling usually divides the dataset based on the *response* variable to be predicted. This is especially helpful when we have a highly imbalanced categorical response (almost all of the data is in one class) or outliers in a numerical response, because it ensures that the distribution of the response variable is similar in both sets.
+
+Suppose we wanted to ensure that the proportion of A/B/C grades in our random sample is roughly the same as in our population.
+
+```{r}
+#| label: stratified random sampling
+
+# Code with me to get a stratified random sample
+```
+
+## Cluster Sampling
+
+In cluster sampling, we divide the dataset into many smaller groups, and then take a simple random sample *of* the groups.
+
+In a "training/test" split, cluster sampling usually divides the dataset to ensure that "linked" observations stay together. For example, if your dataset consists of sessions on a website, you may want all sessions from the same user in the training (or test) set rather than split between them.
+
+For example, suppose we want to ensure that if one inspection at a facility is in the sample, all of them are.
+
+```{r}
+#| label: cluster sampling
+
+# Code with me to get a cluster sample
+```
+
+1. How many inspections in the dataset were for Randy's Donuts on Manchester Blvd in Inglewood (`FACILITY_ID` == "FA0046001")? How many of those inspections ended up in each of the simple, stratified, and cluster random samples?
+
+2. Pick one other variable in the `inspections` dataset. Determine whether it would make more sense to *stratify* or *cluster* based on that variable, then write code to do either stratified random sampling or cluster random sampling based on that variable.
+
+## Time-Based Split
+
+When doing a "training-test" split, we typically don't want to predict *past* responses based on *future* information, as this doesn't make sense for modeling. Therefore, we often split based on *time*.
+
+```{r}
+#| label: split based on time
+
+# Code with me to get the first 75% of inspections
+```
