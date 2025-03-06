@@ -1,0 +1,118 @@
+City,Price,Beds,Baths,SqFt,Type,Location
+Ontario,3695,4,2,2800,House,IE
+Corona,3895,5,3,2314,House,IE
+Pomona,3480,4,3,2031,House,LA
+Orange,4200,3,2,1941,House,OC
+Baldwin Park,2995,3,2,1810,House,LA
+Corona,2900,3,2,1800,House,IE
+Ladera Ranch,4400,3,2.5,1765,Condo,OC
+Aliso Viejo,3495,2,2.5,1627,Condo,OC
+Long Beach,3750,3,2.5,1500,House,LA
+Upland,2800,2,2,1400,House,IE
+Laguna Niguel,4000,2,2.5,1344,House,OC
+Garden Grove,2100,2,2,1300,House,OC
+Chino,2550,2,2.5,1260,House,IE
+Chino,2550,2,2.5,1260,House,IE
+Long Beach,4000,3,2,1235,House,LA
+Cerritos,2995,3,2,1200,Condo,LA
+Mission Viejo,3500,3,2,1200,Condo,OC
+Laguna Beach,4995,2,2,1106,Condo,OC
+Laguna Niguel,3225,3,2,1096,Condo,OC
+Aliso Viejo,3350,2,2,975,Condo,OC
+Downey,2670,2,2,851,House,LA
+Corona,1650,2,1,750,House,IE
+Irvine,2595,1,1,668,House,OC
+Laguna Beach,1995,1,1,500,House,OC
+Irvine,3350,2,2,1213,Condo,OC
+Costa Mesa,4500,3,2.5,1480,Condo,OC
+Anaheim,4000,3,2,1346,House,OC
+Brea,3500,3,2.5,1890,House,OC
+Orange,4250,3,2,1808,House,OC
+Orange,3100,3,2.5,1450,House,OC
+Orange,2300,2,2,1150,House,OC
+Fullerton,3250,3,2,1089,House,OC
+Walnut,4000,4,3.5,2763,House,LA
+Rowland Heights,4450,4,3,2598,House,LA
+Fountain Valley,4500,4,3,2356,House,OC
+Diamond Bar,3650,4,3,2324,House,LA
+Cypress,3700,3,2.5,1799,House,OC
+Yorba Linda,3700,3,3.5,1719,House,OC
+Santa Ana,3950,3,2,1600,House,OC
+Placentia,2900,2,2.5,1528,House,OC
+Fountain Valley,3000,3,2,1370,House,OC
+La Puente,3700,3,2,1316,House,LA
+Garden Grove,3290,3,2,1200,House,OC
+Fullerton,3500,3,2,1200,House,OC
+Westminster,3500,4,2,1200,House,OC
+Anaheim,4500,3,2,1109,House,OC
+Santa Ana,3695,3,1.5,1041,House,OC
+Orange,2795,2,1,900,House,OC
+Westminster,2500,2,2,900,House,OC
+Buena Park,3300,3,2.5,1686,Condo,OC
+Yorba Linda,2950,3,2,1165,Condo,OC
+West Covina,2595,3,1.5,1151,Condo,LA
+Garden Grove,2000,2,1,978,Condo,OC
+Brea,1650,1,1,670,Condo,OC
+Tustin,1950,1,1,651,Condo,OC
+Monrovia,4800,3,3,3160,House,LA
+Walnut,4600,4,3,3122,House,LA
+Ontario,3650,5,3,2765,House,IE
+Corona,3300,5,3,2679,House,IE
+Ontario,3500,4,2.5,2455,House,IE
+Walnut,3900,4,3,2433,House,LA
+Ontario,3300,4,3,2385,House,IE
+Yorba Linda,4100,4,3,2194,Condo,OC
+Upland,2116,4,3,2116,House,IE
+West Covina,3500,4,3,2097,Condo,LA
+Fountain Valley,4395,4,2.5,2078,House,OC
+Corona,3100,3,2,2078,House,IE
+Corona,3500,4,3.5,2040,House,IE
+Arcadia,3900,3,2.5,1992,House,LA
+Monrovia,3200,3,3,1853,Condo,LA
+Azusa,3500,3,2.5,1816,Condo,LA
+Glendora,2955,3,2.5,1638,Condo,LA
+Ontario,2700,3,2.5,1554,Condo,IE
+Corona,3350,3,3,1501,House,IE
+Corona,3100,3,2,1497,Condo,IE
+Huntington Beach,2900,3,2.5,1400,Condo,OC
+Irvine,3200,3,3,1399,Condo,OC
+Azusa,3225,3,1,1325,House,LA
+La Puente,3135,3,2.5,1325,House,LA
+Huntington Beach,3695,3,2,1300,House,OC
+Pomona,2795,3,2,1273,House,LA
+Claremont,2800,2,2.5,1263,Condo,LA
+Trabuco Canyon,3500,2,2.5,1231,House,OC
+Pomona,2700,3,2,1150,House,LA
+Ontario,1800,2,1,1100,House,IE
+Ontario,2100,2,1,1092,Condo,IE
+Rancho Cucamonga,2100,2,1.5,932,Condo,IE
+Foothill Ranch,2700,2,2,924,Condo,OC
+Irvine,2445,2,1.5,900,Condo,OC
+Ontario,2000,2,1,884,House,IE
+Ontario,2450,2,1,849,House,IE
+Corona,4300,4,5,3044,Condo,IE
+Corona Del Mar,5000,4,3,3000,House,OC
+Corona,2511,4,3,2511,House,IE
+Corona,3400,4,3,2309,Condo,IE
+Corona,3100,4,3,2034,House,IE
+Fontana,3400,4,3,1967,House,IE
+Riverside,2175,3,2.5,1916,Condo,IE
+Coto de Caza,3950,3,2.5,1867,Condo,OC
+Irvine,2200,2,2,1600,Condo,OC
+Laguna Beach,4850,3,2.5,1425,Condo,OC
+Costa Mesa,2595,2,2,1400,House,OC
+Rancho Cucamonga,2750,3,2.5,1380,House,IE
+Lake Forest,3200,2,2.5,1305,Condo,OC
+Riverside,2450,3,1,1300,House,IE
+Aliso Viejo,2800,2,2.5,1260,Condo,OC
+Costa Mesa,2900,2,2,1150,House,OC
+Aliso Viejo,3145,2,2,1147,House,OC
+Laguna Niguel,2800,2,2,1120,Condo,OC
+Aliso Viejo,3250,2,2,976,Condo,OC
+Irvine,3500,2,2,916,Condo,OC
+Irvine,2600,1,1,725,Condo,OC
+Costa Mesa,3475,2,1,720,House,OC
+Arcadia,4000,3,3,2171,Condo,LA
+Temple City,3900,3,3,1661,House,LA
+Norwalk,3395,3,2,1434,House,LA
+Huntington Beach,2495,1,1,830,Condo,OC

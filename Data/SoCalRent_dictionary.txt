@@ -1,0 +1,17 @@
+Data collected for all houses and condos within a reasonably small radius of Fullerton, CA listed for rent on redfin.com May 2-9, 2022.
+
+Obvious data errors (e.g., a house with 0 bedrooms or 0 square feet) have already been removed.
+
+City: the city corresponding to the house's street address
+
+Price: the listed monthly rent
+
+Beds: the listed number of bedrooms
+
+Baths: the listed number of bathrooms
+
+SqFt: the listed square footage of the house
+
+Type: whether the housing unit was listed as a House or Condo
+
+Location: OC = Orange County, LA = Los Angeles County, IE = Inland Empire (Riverside or San Bernardino County)
