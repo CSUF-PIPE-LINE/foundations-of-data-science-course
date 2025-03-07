@@ -29,7 +29,7 @@ obs_slope <- coef(alz_lm)[2]
 -   These notes largely follow R.A. Fisher's **significance testing**
 
     -   This is *not* the philosophy taught in intro stats
-    
+
     -   However, many of the ideas are similar
 
 ## Inferential Modeling
@@ -59,7 +59,6 @@ $$
 $$
 y = \beta_0 + \beta_1 x + \text{ERROR}
 $$
-
 
 -   The null model assumes that $x$ and $y$ are unrelated
 
@@ -150,16 +149,15 @@ ggplot(data = alz,
   )
 ```
 
-
 ## Procedure for Significance Testing
 
-1.    Generate a "fake sample" from a population in which the null hypothesis is true
+1.  Generate a "fake sample" from a population in which the null hypothesis is true
 
-2.    Determine whether the "fake sample" or the observed sample is "more different" from what the null model tells us to expect
+2.  Determine whether the "fake sample" or the observed sample is "more different" from what the null model tells us to expect
 
-3.    Repeat Steps 1 and 2 until all possible fake samples have been compared to the observed one
+3.  Repeat Steps 1 and 2 until all possible fake samples have been compared to the observed one
 
-4.    Based on the comparisons, determine whether we have observed a "statistically significant" effect
+4.  Based on the comparisons, determine whether we have observed a "statistically significant" effect
 
 ## A Historical Note
 
@@ -168,7 +166,7 @@ ggplot(data = alz,
 -   At the time, the procedure could only be done with *very* small datasets
 
     -   Mathematical techniques were developed to describe what would happen as $\text{repetitions} \rightarrow \infty$
-    
+
 -   With modern computers, we can quickly approximate "all possible fake samples" by randomly generating many "fake samples"
 
 ## Generating Fake Samples
@@ -199,21 +197,22 @@ alz |>
 ```
 
 Permutation data:
+
 ```{r}
 #| label: permute-fake
 
 alz_permuted |>
     head(10)
 ```
-:::
-:::
+
+::: :::
 
 ## Generating Fake Samples with `infer`
 
 -   We don't realistically expect to create *every* possible permutation of `gmv` values
 
     -   $> 10^{128}$ possible permutations!
-    
+
 -   We randomly choose `reps = 1000` of these possible permutations
 
 ## Test Statistic
@@ -221,11 +220,10 @@ alz_permuted |>
 -   A **test statistic** quantifies the "difference" between what we observe in a sample and what we expect under the null model
 
     -   Under the null model, we expect a slope of 0
-    
-    -   We observe the slope $\hat{\beta}_1$
-    
-    -   We can compute the test statistic $\hat{\beta}_1 - 0 = \hat{\beta}_1$
 
+    -   We observe the slope $\hat{\beta}_1$
+
+    -   We can compute the test statistic $\hat{\beta}_1 - 0 = \hat{\beta}_1$
 
 ## Test Statistic with `infer`
 
@@ -298,7 +296,7 @@ alz_comparison |>
     -   Traditionally: significance level = 5%
 
     -   If the p-value is *below* the significance level, we claim that the observed effect of the predictor on the response is statistically significant
-    
+
     -   If the p-value is *above* the significance level, we claim that the observed effect is *not* statistically significant
 
 ## What Does a Significant Effect Mean?
@@ -306,17 +304,17 @@ alz_comparison |>
 -   A "statistically significant" effect literally means that the observed data "signifies" something about the true model
 
     -   Fisher was concerned about the long-run properties of scientific experiments
-    
+
     -   If the experiment "rarely fails" to show a significant effect, then we can be convinced that the true model is *not* the null model
-    
+
     -   In data science we rarely have the luxury of repeated experiments
-    
+
 ## What Does a Significant Effect Mean?
 
 -   A "statistically significant" effect literally means that the observed data "signifies" something about the true model
 
     -   If the effect *is* significant, then we say that there is *convincing evidence* that the true model includes the predictor variable
-    
+
     -   If the effect is *not* significant, then we say there is *not convincing evidence* that the true model includes the predictor variable
 
 ## Selecting a Final Model
@@ -331,33 +329,59 @@ alz_comparison |>
 
 ## Example
 
--   Our p-value is 12.5% > 5% significance level
+-   Our p-value is 12.5% \> 5% significance level
 
 -   The effect of `age` on `gmv` is *not statistically significant*
 
     -   We *do not* have convincing evidence that the true model includes `age`
-    
+
 -   The model including `age` is *not significantly better* at explaining variation in `gmv` than the null model
 
     -   We select the null model over our proposed model including `age`
 
     -   This does *not* mean that the null model is the true model
-    
+
 ## Unstated Model Assumptions
 
 -   The proposed model and the null model include several shared "unstated" assumptions
 
     -   The null model *is* the proposed model with one additional assumption $H_0: \beta_1 = 0$
 
--   Real data *never* matches these assumptions perfectly
+-   Two general types of unstated assumptions
+
+    -   Nonmathematical assumptions about relevance of data to the problem
+    
+    -   Mathematical assumptions about the **MODEL** and **ERROR** terms
+    
+## Nonmathematical Assumptions
+
+-   **Validity**: the $x$ and $y$ variables adequately represent the real-world qualities you want to model
+
+-   **Reliability**: the $x$ and $y$ variables are "stable and precise enough" that the ERROR term is not primarily due to variability in the measurement process
+
+-   **Representative sample**: the data used to fit the model comes from a sample of observations that look similar to what you would expect the population to look like
+
+## What Do We Do If Nonmathematical Assumptions Are Violated?
+
+-   We still run the model and do our inference
+
+    -   The model likely still produces accurate inference about the relationship between **some** variables in **some** population
+
+-   We express concerns about how meaningful that inference is in the real-world
+
+    -   We state conclusions **very** carefully and point out the limitations of our data to answer our questions
+
+## Mathematical Assumptions
+
+-   Real data *never* matches the mathematical assumptions perfectly
 
     -   We estimate the true **MODEL** with our regression line
-    
+
     -   We estimate the true **ERROR** with our residuals
 
     -   If the assumptions look "close to met" in the observed data, we can still use this procedure
 
-## Model Assumptions
+## Mathematical Assumptions
 
 -   **Linearity**: the true relationship between $x$ and $y$ is linear plus the ERROR term
 
@@ -389,7 +413,6 @@ ggplot(data = alz_fake,
   )
 ```
 
-
 We actually see:
 
 ```{r}
@@ -416,7 +439,7 @@ ggplot(data = alz_real,
   )
 ```
 
-## Model Assumptions
+## Mathematical Assumptions
 
 -   **Zero Mean Error**: the ERROR term is centered at 0 independently of the model predictions
 
@@ -458,7 +481,7 @@ ggplot(data = alz_real,
   )
 ```
 
-## Model Assumptions
+## Mathematical Assumptions
 
 -   **Constant Variation Error**: the ERROR term has consistent variability across the entire range of model predictions
 
@@ -500,7 +523,7 @@ ggplot(data = alz_real,
   )
 ```
 
-## Model Assumptions
+## Mathematical Assumptions
 
 -   **Independence**: the ERROR terms for each observation are independent
 
@@ -510,15 +533,14 @@ ggplot(data = alz_real,
 
     -   Generally violated if observations are closely linked in space or time
 
-    -   Sometimes we can get around this assumption by intelligently generating the fake samples
+## What Do We Do If Mathematical Assumptions Are Violated?
 
-## What Do We Do If Assumptions Are Violated?
+-   We need to change the MODEL!
 
 -   Use EDA to investigate reasonable *nonlinear* relationships
 
 -   Transform $x$ or $y$ or both
 
     -   Logarithmic or square root transforms are popular when the variable is highly skewed right
-    
+
     -   Many flexible options for piecewise functions of $x$
-    
