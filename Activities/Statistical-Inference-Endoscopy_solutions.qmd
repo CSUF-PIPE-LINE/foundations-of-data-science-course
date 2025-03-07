@@ -1,0 +1,259 @@
+---
+title: "Statistical Inference: Endoscopy Times"
+format: html
+editor: visual
+---
+
+In this activity, we will do (frequentist) statistical inference for the endoscopy data, illustrating where inference problems tend to break down.
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+here::i_am("Activities/Statistical-Inference-Endoscopy_solutions.qmd")
+
+library(tidyverse)
+library(infer)
+
+endoscopy <- read_csv(here::here("Data/endoscopy.csv"), 
+                      na = "NULL")
+```
+
+In the "Data Wrangling: Endoscopy Times" activity, we removed some of the patients from this dataset. We repeat that now:
+
+```{r}
+#| label: create endo1
+
+endo1 <- endoscopy |>
+  rename(
+    IRSI = `INROOM-SCOPEIN`,
+    SSSI = `SEDATIONSTART-SCOPEIN`,
+    SOOR = `SCOPEOUT-OUTROOM`,
+    TCL = `PROC_CASE_LENGTH`,
+    PACU_LOS = PACU_TIME
+  ) |>
+  filter(
+    !is.na(BMI),
+    BMI >= 10 & BMI <= 100,
+    IRSI <= 120,
+    SSSI <= 120,
+    SOOR <= 120,
+    TCL <= 360,
+    PACU_LOS <= 360
+  )
+
+```
+
+## Permutation Testing
+
+Our goal in this part of the activity is to determine whether changing from a Nursing to Anesthesia protocol explains a "significant" amount of variability in the length of time a patient stayed in the post-anesthesia care unit.
+
+### Step 1: Define the Models
+
+Our null model is
+
+$$
+\text{PACU_LOS} = \beta_0 + \text{ERROR}
+$$
+
+Our proposed population model is
+
+$$
+\text{PACU_LOS} = \beta_0 + \beta_1 \times (\text{Protocol = Anesthesia}) + ERROR
+$$
+
+### Step 2: Observed Value of the Test Statistic
+
+We will continue to use the R-squared value as our test statistic, because it has a fairly intuitive interpretation in terms of comparing models. Finding the observed R-squared value requires a bit more work here, because we have `SEDATION_PROVIDER` (a categorical variable), and while `lm` automatically will convert it to an indicator variable, the `infer` package will not. So let's create that indicator variable:
+
+```{r}
+endo1 <- endo1 |>
+  mutate(
+    protocol = if_else(
+      SEDATION_PROVIDER == "Anesthesia", 
+      true = 1, 
+      false = 0
+    )
+  )
+```
+
+Note that the other advantage of this approach is that we explicitly encode our reference level as opposed to letting R guess it.
+
+Now we can find the observed R-squared value using techniques in the `infer` package
+
+```{r}
+#| label: observed R-squared PACU_LOS
+
+observed_rsquared <- endo1 |>
+  specify(PACU_LOS ~ protocol) |>
+  calculate(stat = "correlation") |>
+  mutate(
+    r_squared = stat^2
+  )
+
+observed_rsquared
+```
+
+Wow...our model is explaining 0.3% of the variation in post-anesthesia stay. This perhaps shouldn't be surprising, since in our exploratory data analysis we found:
+
+```{r}
+endo1 |>
+  group_by(SEDATION_PROVIDER)|>
+  summarize(
+    n = n(),
+    mean_PACU = mean(PACU_LOS),
+    sd_PACU = sd(PACU_LOS)
+  )
+
+ggplot(
+  data = endo1,
+  mapping = aes(
+    x = SEDATION_PROVIDER,
+    y = PACU_LOS
+  )
+) +
+  geom_boxplot()
+```
+
+### Step 3: Simulated Values of the Test Statistic
+
+Now let's generate the null distribution:
+
+```{r}
+#| label: permutation test  - PACU_LOS
+
+set.seed(284)
+sim_null_dist <- endo1 |>
+  specify(PACU_LOS ~ protocol) |>
+  hypothesize(null = "independence") |>
+  generate(type = "permute", reps = 1000) |> 
+  calculate(stat = "correlation") |>
+  mutate(
+    r_squared = stat^2
+  )
+```
+
+### Step 4: Compare the Observed and Simulated Values
+
+Now we graph the null distribution:
+
+```{r}
+#| label: simulated null distribution - PACU_LOS
+
+ggplot(sim_null_dist,
+       aes(x = r_squared)
+       ) +
+  geom_histogram(bins = 10) +
+  geom_vline(
+    data = observed_rsquared,
+    aes(xintercept = r_squared),
+    color = "darkred",
+    linewidth = 1.5
+  )
+
+```
+
+And we compute the p-value. In this case it's quite obvious what the p-value should be:
+
+```{r}
+sim_null_dist |>
+  mutate(
+    meets_or_beats = (r_squared >= observed_rsquared$r_squared)
+  ) |>
+  summarize(
+    p_value = mean(meets_or_beats)
+  )
+```
+
+Remember that this isn't actually a p-value of 0 (because this observed sample is *technically* one of the samples we could have observed by doing our random swapping), but it's so small that our model explains "significantly more" of the variability in price than the null model does.
+
+### Sample Size and p-values
+
+Notice that our model barely explains any variation in PACU stay, but it's still a "significant" increase compared to the null model. This is seemingly contradictory: the model explains a "significant" amount of variation in PACU times, yet for all practical purposes it doesn't explain anything.
+
+Fisher's concept of a p-value was developed in an era in which it was exceedingly difficult to obtain large amounts of data. (And in some disciplines, it still is.) Therefore, Fisher thought about the p-value as a measure of *incompatibility* between the model and the process by which the sample data was generated.
+
+Remember that we *know* that our null model is oversimplified. Once we get "enough" data, *any* increase in explanatory ability - no matter how small - can be deemed "significant." Generally, with even ~1000 data points, p-values tend to be tiny. In a sense, there is such as thing as "too much data" when we do statistical inference this way: we may say an increase in explanatory ability is "statistically" significant, even if that increase is so small as to be practically useless.
+
+## Confidence Intervals
+
+Our goal in this part of the activity is to determine the (population-averaged) effect of switching from Nursing to Anesthesia. We're now looking to estimate the actual size of the effect, so we can directly compare our result to what we would consider a "practically" important effect.
+
+### Step 1: Define the Model
+
+Our proposed population model is
+
+$$
+\text{PACU_LOS} = \beta_0 + \beta_1 \times (\text{Protocol = Anesthesia}) + ERROR
+$$
+
+Thus, our goal is to estimate $\beta_1$, the average effect of changing from 0 (Nursing) to 1 (Anesthesia).
+
+### Step 2: Obtain Simulated Samples
+
+```{r}
+#| label: bootstrap distribution - PACU_LOS
+
+set.seed(284)
+sim_dist <- endo1 |>
+  specify(PACU_LOS ~ protocol) |>
+  generate(type = "bootstrap", reps = 1000) |> 
+  calculate(stat = "slope")
+
+```
+
+### Step 3: Calculate the Confidence Interval
+
+```{r}
+#| label: bootstrap distribution of slope
+
+ggplot(
+  data = sim_dist,
+  mapping = aes(x = stat)
+) +
+  geom_histogram(
+    bins = 20
+  ) +
+  geom_vline(
+    xintercept = quantile(sim_dist$stat, c(0.025, 0.975)),
+    color = "darkblue"
+  )
+
+```
+
+```{r}
+#| label: confidence interval
+
+ci <- sim_dist |>
+  get_confidence_interval(
+    type = "percentile",
+    level = 0.95
+  )
+
+ci
+```
+
+```{r}
+#| label: infer visualize
+
+sim_dist |>
+  visualize() +
+  shade_confidence_interval(ci)
+```
+
+### Step 4: Interpret the Confidence Interval
+
+With 95% confidence, we estimate that the population mean time spent in the PACU decreases by between 1.79 and 5.00 minutes when using the Anesthesia protocol, compared to the Nursing protocol.
+
+### What does 95% confidence mean?
+
+Suppose that the true model is in fact
+
+$$
+\text{PACU_LOS} = \beta_0 + \beta_1 \times (\text{Protocol = Anesthesia}) + ERROR
+$$
+
+and the value of $\beta_1$ is known. If we take very many random samples of endoscopies with 1094 using Anesthesia protocol and 4758 using Nursing protocol, and compute a confidence interval for each of those samples, then 95% of those confidence intervals will contain the true value of $\beta_1$.
+
+In other words, *if* $\beta_1$ is between -1.79 and -5.00, then the sample we obtained is one of the 95% "good" samples for which our confidence interval contains $\beta_1$. This is not exactly the most intuitive way of thinking about our results.
+
