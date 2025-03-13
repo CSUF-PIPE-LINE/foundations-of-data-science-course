@@ -1,0 +1,141 @@
+---
+title: "Statistical Inference: Rent Prices in Southern California"
+format: html
+editor: visual
+---
+
+In this activity, we will do (Bayesian) statistical inference for the SoCalRent data. There is a *lot* more going on under the hood here; we're just going to focus on the basics.
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+here::i_am("Activities/Bayesian-Inference-SoCalRent.qmd")
+
+library(tidyverse)
+library(rstanarm)
+
+SoCalRent1 <- read_csv(here::here("Data/SoCalRent1.csv"))
+```
+
+In the "Summarizing Linear Models" activity, we removed some of the houses from this dataset. Repeat that now:
+
+```{r}
+#| label: create SoCalRent_train
+
+
+```
+
+## Step 1: Define the Model
+
+Our proposed population model is
+
+$$
+\text{Price} = \beta_0 + \beta_1 \times \text{SqFt} + ERROR
+$$
+
+Typically we only care about our proposed population model; there is no null model to worry about.
+
+## Step 2: Define the Priors
+
+In Bayesian statistics, we must formulate an idea of what our model should look like, *before* putting any data into the model. That is, we should have an idea of what we expect $\beta_0$ to be, what we expect $\beta_1$ to be, and what we expect our **ERROR** term to look like. We formalize these ideas into *priors*, or *prior distributions*.
+
+The default priors in the `rstanarm` package are called "weakly informative". For example, the default prior for the slope term formalizes that we don't believe that there should be a very large (or very large negative) value for the slope, but that we really have no idea otherwise.
+
+## Step 3: Fit the Model
+
+```{r}
+#| label: fit Bayesian regression model
+
+```
+
+```{r}
+#| label: coefficient estimates
+
+```
+
+## Step 4: Investigate the Model
+
+```{r}
+#| label: posterior distribution
+
+
+```
+
+1.  What are these values? How do we get the slope and intercept reported earlier out of these values?
+
+```{r}
+#| label: histogram of posterior distribution
+
+```
+
+```{r}
+#| label: check a few posterior predictions
+
+
+```
+
+```{r}
+#| label: histogram of interesting predictions
+
+```
+
+1.  What looks weird about these predictions?
+
+```{r}
+#| label: posterior predictive check
+
+```
+
+1.  How do we read this graph? What is it telling us?
+
+## Step 5: Obtain Uncertainty (Credible) Intervals
+
+Assuming everything looks okay with our predictions (it doesn't, but we'll assume for now that it's okay), we can then obtain uncertainty (credible) intervals.
+
+Remember how we obtained bootstrap confidence intervals using the middle C% of our bootstrap distribution? The same idea applies to our credible intervals, but instead of using the bootstrap distribution, we use our posterior distribution.
+
+```{r}
+#| label: credible interval
+
+```
+
+By default we use 90% credible intervals, because things can get a bit weird out in the tails of the posterior distribution.
+
+1.  How do we interpret this interval?
+
+## Changing the Prior
+
+Recall our prior distribution was "weakly informative", but we have some knowledge of the housing rent market.
+
+We expect that the slope is *probably* positive, and our intuition says it's probably not greater than something like 5 or 10. We can formalize these ideas in a prior distribution.
+
+For example, a normal distribution with mean 3 and standard deviation 1.5 indicates that there's roughly a 2.5% chance of a negative slope and a 2.5% chance of a slope greater than 6. Still fairly uninformative for our purposes, but better than the default prior where we assumed a 50% of a negative slope!
+
+```{r}
+#| label: fit model with more informative prior
+
+```
+
+We inclue the `autoscale = TRUE` argument to tell R that if it can find a better prior that works with the same general idea, go ahead and do it.
+
+```{r}
+#| label: prior summary - new model
+
+```
+
+Here we see that it chose to use a standard deviation of 3.9 instead of 1.5.
+
+1.  Using this new model, obtain a histogram of the posterior distribution of the slope. Compare the new posterior distribution to the one obtained using the "weakly informative" prior.
+
+```{r}
+#| label: histogram of posterior distribution - new model
+
+```
+
+2.  Using this new model, obtain a 90% Bayesian uncertainty interval for the slope. Compare the new interval to the one obtained using the "weakly informative" prior.
+
+```{r}
+#| label: credible interval - new model
+
+```

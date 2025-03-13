@@ -1,0 +1,172 @@
+---
+title: "Frequentist vs. Bayesian Intervals: Hospital Ratings"
+format: html
+editor: visual
+---
+
+In this activity, we will model the relationship between overall hospital rating and one of the component scores from the survey.
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+here::i_am("Activities/Frequentist-Bayesian-Inference-Hospital-Scores_solutions.qmd")
+
+library(tidyverse)
+library(broom)
+library(infer)
+library(rstanarm)
+
+HCAHPS <- read_csv(here::here("Data/HCAHPS_scores.csv"))
+```
+
+We'll just look at the 289 hospitals in California. Technically, this is data from a population, but we can think of it as coming from a sample from a hypothetically infinite population of California hospitals.
+
+```{r}
+#| label: filter to just California
+scores_ca <- HCAHPS |>
+  filter(State == "CA")
+```
+
+
+## Define and Explore the Model
+
+Choose one of the following scores to serve as your response: Overall hospital rating or Recommend hospital.
+
+Choose one of the following scores to serve as your predictor of interest: Nurse communication, Doctor communication, Staff responsiveness, Communication about medicines, Discharge information, Care transition, Cleanliness, or Quietness.
+
+1. In the chunk below, create a scatterplot to explore the relationship between your predictor and response variable.
+
+```{r}
+#| label: scatterplot
+
+ggplot(
+  data = scores_ca,
+  mapping = aes(x = Medicines, y = Overall)
+) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue")
+
+```
+
+2. Briefly (1-2 sentences) describe the relationship you see.
+
+3. In the chunk below, build a linear model describing the relationship (using `lm`). Identify the slope of the least squares regression line.
+
+```{r}
+#| label: build simple linear regression model
+
+lm_Ovr_Med <- lm(
+  Overall ~ Medicines,
+  data = scores_ca)
+
+lm_Ovr_Med |>
+  tidy()
+
+```
+
+## Frequentist Confidence Interval
+
+1. In the chunk below, obtain at least 1000 bootstrap samples from `scores_ca`, fit a linear model on each bootstrap sample, and calculate the slope of that model.
+
+```{r}
+#| label: bootstrap samples and slopes with infer
+
+set.seed(2989)
+
+scores_boot_dist <- scores_ca |>
+  specify(Overall ~ Medicines) |>
+  generate(type = "bootstrap", reps = 5000) |>
+  calculate("slope")
+
+```
+
+2. In this chunk below, produce a histogram of the slopes obtained from the bootstrap samples.
+
+```{r}
+#| label: bootstrap distribution
+
+ggplot(
+  data = scores_boot_dist,
+  mapping = aes(x = stat)
+) +
+  geom_histogram(bins = 16)
+
+```
+
+3. Use the distribution to find a 95% "percentile" confidence interval for the slope.
+
+```{r}
+#| label: 95% bootstrap CI
+
+scores_boot_dist |>
+  get_confidence_interval(
+    level = 0.90
+  )
+
+```
+
+4. Write a sentence to interpret the interval.
+
+## Bayesian Uncertainty Interval
+
+Recall that in the Bayesian framework, the slope $\beta_1$ of the population model is treated as a variable with some uncertainty. 
+
+1. Obtain a Bayesian posterior distribution for $\beta_1$ in your population model. Use the default "weakly informative" prior, or choose and justify a different prior guess for the slope of the population model.
+
+```{r}
+#| label: fit the Bayesian model
+
+bayeslm_Ovr_Med <- stan_glm(
+  Overall ~ Medicines,
+  data = scores_ca,
+  prior = normal(location = 0),
+  seed = 1 # seed for reproducibility
+)
+
+```
+
+2. Graph the posterior distribution obtained in the previous chunk.
+
+```{r}
+#| label: posterior distribution histogram
+
+plot(
+  bayeslm_Ovr_Med,
+  pars = "Medicines",
+  plotfun = "hist",
+  bins = 15
+) +
+  labs(
+    title = "Posterior distribution",
+    x = "Slope corresponding to Medicines",
+    y = "Number of simulations"
+  )
+
+```
+
+
+3. In the chunk below, obtain a 90% Bayesian uncertainty interval for the slope of the population model. Then, interpret your interval.
+
+```{r}
+#| label: uncertainty interval
+
+bayeslm_Ovr_Med |>
+  posterior_interval(
+    pars = "Medicines",
+    prob = 0.9
+    )
+
+```
+
+## Comparing the Two Intervals
+
+1. Compare the bootstrap distribution (from the Frequentist section) to the posterior distribution (from the Bayesian section).
+
+2. What do you think is the *most important* difference in how the two intervals are interpreted?
+
+## A Final Thought
+
+To explore the relationship between our chosen response and the eight different predictors, we could fit eight different simple linear regression models (one for each predictor), but that doesn't make sense. From an inference point of view, fitting a simple linear regression model assumes that only *this* particular predictor is important, an assumption we violate as soon as we fit a second simple linear regression model. From a prediction point of view, fitting simple linear regression models one-at-a-time leaves out a *lot* of information that we could be using for prediction.
+
+We used simple linear regression to illustrate the basics of model building and inference, but it is *extremely* rare to see models with a single predictor in real data science.
