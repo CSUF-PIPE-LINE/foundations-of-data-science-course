@@ -1,0 +1,33 @@
+The Hospital Consumer Assessment of Healthcare Providers and Systems (HCAHPS, pronounced "H-caps") survey is a nationally-standardized survey for measuring patients' perceptions of their hospital experience. Patient responses to survey questions are converted to "linear mean scores" representing the quality of their interaction with the health care staff, the hospital environment, their understanding of what to do after leaving the hospital, and their overall experience. Each score is rated on a scale from 0-100 with higher scores indicating better patient experiences.
+
+A publicly available version of the dataset can be found at (https://data.cms.gov/provider-data/dataset/dgck-syfz#data-table). Dr. Wynne downloaded the October 2024 release of this dataset and has already done the data wrangling to include only the "linear mean score" values.
+
+Facility ID: a six-digit "CCN" for the facility (essentially the way a facility that bills Medicare for services is identified in the Medicare Provider database)
+
+Facility Name: the name of the facility
+
+Address, City, State, ZIP: the street address, city, state, and ZIP code for the facility
+
+County: the county (or county-equivalent) in which the facility is located
+
+Surveys: the number of patient surveys used to compute the scores
+
+Nurse: a score representing the degree to which patients thought their nurses communicated well with them
+
+Doctor: a score representing the degree to which patients thought their doctors communicated well with them
+
+Responsiveness: a score representing the degree to which patients received timely assistance when they pressed the call button
+
+Medicines: a score representing the degree to which patients understood the intended and possible side effects of any new medicines they took while in the hospital
+
+Discharge: a score representing the degree to which patients understood what to do to continue recovery after being discharged from the facility
+
+Transition: a score representing the degree to which patients understood the type of care they will need after being discharged from the facility
+
+Cleanliness: a score representing the degree to which patients felt their room and bathroom were clean
+
+Quietness: a score representing the degree to which patients felt the area around their room was quiet at night
+
+Overall: a score representing the overall patient rating of the hospital
+
+Recommend: a score representing the degree to which patients would recommend the hospital to their friends and family
