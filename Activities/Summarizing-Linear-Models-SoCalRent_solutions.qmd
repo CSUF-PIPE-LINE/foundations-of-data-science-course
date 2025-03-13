@@ -30,13 +30,13 @@ SoCalRent2 <- read_csv(here::here("Data/SoCalRent2.csv"))
 
 We will *only* do our data wrangling and visualization with the `SoCalRent1` dataset. We will "hold out" the `SocalRent2` dataset to assess how well our linear regression model predicts *new* data.
 
-1. Create a plot showing the relationship between rent price and square footage.
+1.  Create a plot showing the relationship between rent price and square footage.
 
-2. Write 1-2 sentences describing what you notice about the relationship. 
+2.  Write 1-2 sentences describing what you notice about the relationship.
 
-3. Which points appear to be outliers, and why (unusually small/large, unusually (in)expensive, and/or unusually (in)expensive compared to other houses of similar size)? Investigate the outliers, make a judgment call about which (if any) outliers should be thrown out before fitting the model, and justify that judgment call based on your investigation.
+3.  Which points appear to be outliers, and why (unusually small/large, unusually (in)expensive, and/or unusually (in)expensive compared to other houses of similar size)? Investigate the outliers, make a judgment call about which (if any) outliers should be thrown out before fitting the model, and justify that judgment call based on your investigation.
 
-4. Convert your judgment call(s) into logical expression(s) based on variables in the dataset, then use those logical expressions to `filter` the dataset to include only the houses you actually want to model. Call the resulting dataset `SoCalRent_train`.
+4.  Convert your judgment call(s) into logical expression(s) based on variables in the dataset, then use those logical expressions to `filter` the dataset to include only the houses you actually want to model. Call the resulting dataset `SoCalRent_train`.
 
 ## Building the Model
 
@@ -66,19 +66,19 @@ lm1 |>
 
 ## Making Predictions
 
-1. Perform the same `filter`ing on the `SoCalRent2` dataset that you did on the `SoCalRent1` dataset. Call this new dataset `SoCalRent_test`.
+1.  Perform the same `filter`ing on the `SoCalRent2` dataset that you did on the `SoCalRent1` dataset. Call this new dataset `SoCalRent_test`.
 
-2. Using the `augment` function, predict the rent price of every house in the `SoCalRent_test` dataset.
+2.  Using the `augment` function, predict the rent price of every house in the `SoCalRent_test` dataset.
 
-3. Produce a histogram of the prediction errors (residuals) for the `SoCalRent_test` dataset. Briefly describe the distribution of the residuals. Does this histogram suggest anything concerning about the accuracy of the predictions? Why or why not?
+3.  Produce a histogram of the prediction errors (residuals) for the `SoCalRent_test` dataset. Briefly describe the distribution of the residuals. Does this histogram suggest anything concerning about the accuracy of the predictions? Why or why not?
 
-4. Produce a scatterplot with the predicted (fitted) prices on the x-axis and the residuals on the y-axis. Add a linear and/or nonlinear trend to the plot (using `geom_smooth`). Does this scatterplot suggest anything concerning about the accuracy of the predictions? Why or why not?
+4.  Produce a scatterplot with the predicted (fitted) prices on the x-axis and the residuals on the y-axis. Add a linear and/or nonlinear trend to the plot (using `geom_smooth`). Does this scatterplot suggest anything concerning about the accuracy of the predictions? Why or why not?
 
 ## Regression with a Categorical Predictor
 
-1. Write 1-2 sentences describing what you notice about the relationship between house type and rent price in the `SoCalRent_train` dataset. You should support your description with at least one graph and one grouped numerical summary.
+1.  Write 1-2 sentences describing what you notice about the relationship between house type and rent price in the `SoCalRent_train` dataset. You should support your description with at least one graph and one grouped numerical summary.
 
-2. Fit a model predicting price from house type on the `SoCalRent_train` data.
+2.  Fit a model predicting price from house type on the `SoCalRent_train` data.
 
 3.  Obtain the coefficient table using the `tidy()` function, and write out the equation of the least-squares regression line.
 
@@ -90,4 +90,4 @@ lm1 |>
 
 7.  Does this interpretation make sense in the context of the collected data? Why or why not?
 
-8. Using the `augment` function, predict the rent price of every house in the `SoCalRent_test` dataset. What do you notice about these predictions? Does (should) it surprise you?
+8.  Using the `augment` function, predict the rent price of every house in the `SoCalRent_test` dataset. What do you notice about these predictions? Does (should) it surprise you?
