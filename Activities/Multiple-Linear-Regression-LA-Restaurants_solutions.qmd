@@ -1,0 +1,194 @@
+---
+title: "Fitting and Summarizing Linear Models: Los Angeles Restaurant Scores"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, our goal in this activity is to build a model to predict a restaurant inspection's score based on the point deductions from the previous inspection of the facility.
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+here::i_am("Activities/Multiple-Linear-Regression-LA-restaurants.qmd")
+
+library(tidyverse)
+library(broom)
+library(rsample)
+library(yardstick)
+
+inspections <- readr::read_csv(here::here("Data/inspections.csv"))
+violations <- readr::read_csv(here::here("Data/violations.csv"))
+```
+
+## Data Preparation
+
+In order to build our model, we're going to need to:
+
+* Pivot the violations data frame so that each row represents an inspection, not a violation
+* Determine which inspections have previous inspections
+* Merge the two datasets so that the score on the current inspection is matched with the point deductions from the previous inspection
+
+### Pivoting the violations data
+
+We'll use the `pivot_wider` function in the `tidyr` package to take care of this.
+
+```{r}
+#| label: pivot the violations data
+
+violations2 <- violations |>
+  pivot_wider(
+    id_cols = SERIAL_NUMBER,
+    names_from = VIOLATION_CODE,
+    values_from = POINTS,
+    values_fn = sum,
+    values_fill = 0
+  )
+```
+
+Here the `values_fn` indicates that if we see the same `VIOLATION_CODE` for the same inspection more than once, add their point deductions together. This can happen if, for example, both a minor and major deduction are observed. The `values_fill` indicates that any missing data when we pivot should be replaced with a 0.
+
+We'll get rid of the COVID-related violations that probably aren't applicable with new data. There are also a few violations marked "W"; I'm not sure what the difference between "F" and "W" is, but there are so few "W" violations that here we're probably okay cutting down to just the 53 violations marked "F":
+
+```{r}
+#| label: remove COVID-variables
+
+violations2 <- violations2 |>
+      select(
+        SERIAL_NUMBER,
+        starts_with("F")
+        )
+```
+
+### Filtering the inspections
+
+In the "Wrangling Strings and Dates" activity, we used the `lag` function to find the previous inspection. Here we want to get the previous value of `SERIAL_NUMBER`, and then remove any inspections that don't have a previous `SERIAL_NUMBER`.
+
+```{r}
+#| label: filter inspections
+
+inspections2 <- inspections |>
+  mutate(
+    date = as_date(ACTIVITY_DATE)
+  ) |>
+  group_by(RECORD_ID) |>
+  arrange(date) |>
+  mutate( 
+    prev_inspection = lag(SERIAL_NUMBER)
+  ) |>
+  drop_na(prev_inspection)
+
+```
+
+### Merging the two datasets
+
+We could use either a left join or an inner join here. A left join will keep the inspections for facilities where no violations were found on the previous inspection, but we'll have to update all the NA's to 0's. An inner join will keep only the inspections where a violation was found on the previous inspection, which means we'll lose some data.
+
+```{r}
+#| label: merge inspections and violations
+
+inspections_joined <- inspections2 |>
+  inner_join(
+    violations2 ,
+    by = join_by(prev_inspection == SERIAL_NUMBER)
+  )
+
+```
+
+### Training-Test Split
+
+Now that we have our merged dataset, we're ready to do a training-test split. Note that we have to be careful here because if there are multiple inspections from the same restaurant, they should all go in either the training or test set, but we probably don't care too much if there are time overlaps between the two sets.
+
+Let's put 80% of the data in the training set and 20% in the test set.
+
+```{r}
+#| label: training_test split
+
+inspect_split <- inspections_joined |>
+  group_initial_split(
+    prop = 0.80,
+    group = RECORD_ID
+  )
+  
+
+inspect_train <- training(inspect_split)
+inspect_test <- testing(inspect_split)
+```
+
+We could instead do a bit more data wrangling so that we only had the most recent inspection from each restaurant.
+
+### Feature Selection and Engineering
+
+This is still a fairly large number of variables. It's not truly ridiculous, but it's probably more than we want to deal with by ourselves. In a real data science project, we could use a model that is better able to deal with complexity than `lm` is, or we could use domain knowledge to narrow down to a smaller number of important variables.
+
+For the purposes of this activity, let's look at the violation codes and decide on three or four that are interesting or where we think that restaurants with those violations on a previous inspection might have lower scores on the next inspection.
+
+```{r}
+#| label: look at violation descriptions
+
+violations |>
+  filter(
+    str_detect(VIOLATION_CODE, "^F")
+    ) |>
+  select(
+    VIOLATION_DESCRIPTION,
+        VIOLATION_CODE
+  ) |>
+  arrange(VIOLATION_DESCRIPTION) |>
+  unique()
+```
+
+Come up with one or two other characteristics of the restaurant or inspection that might affect the score. Then, use `select` to create a new training set that contains only the `RECORD_ID`, `PROGRAM_NAME`, `SCORE`, and predictor variables of interest. You may have to use `mutate` to create a variable describing the characteristic(s) of interest before using `select`.
+
+```{r}
+#| label: prep training set for modeling
+
+inspect_train2 <- inspect_train |>
+  mutate(
+    risk_level = stringr::str_extract(PE_DESCRIPTION, "LOW|MODERATE|HIGH")
+  ) |>
+  select(
+    RECORD_ID,
+    PROGRAM_NAME,
+    SCORE,
+    SERVICE_DESCRIPTION,
+    risk_level,
+    prev_inspection,
+    F044,
+    F033,
+    F007
+  )
+```
+
+## Building the Model
+
+We are finally ready to build our model. Build the multiple linear regression model predicting `SCORE` from the predictors of interest. Remember that you should be using the final training dataset that contains all of the predictors of interest!
+
+```{r}
+#| label: build model 
+
+lm_inspect <- lm(
+  SCORE ~ risk_level + SERVICE_DESCRIPTION + F044 + F033 + F007,
+  data = inspect_train2
+)
+
+lm_inspect |>
+  tidy()
+```
+
+## Evaluating Model Performance
+
+1.  Prepare the test set the same way you prepared the training set for modeling (that is, do the same feature selection and engineering). 
+
+2.  Using the `augment` function, predict the score of every inspection in the test set.
+
+3. Obtain the mean absolute error (MAE) and root-mean-squared error (RMSE) for the test set. Do these numbers suggest anything concerning about the accuracy of the predictions? Why or why not?
+
+4. Do you believe that it is appropriate to use a symmetric cost function such as MAE or RMSE (that is, a cost function where predicting too high and predicting too low are considered equally bad)? Why or why not?
+
+5.  Produce a histogram of the prediction errors (residuals) for the test set. Briefly describe the distribution of the residuals. Does this histogram suggest anything concerning about the accuracy of the predictions? Why or why not?
+
+6.  Produce a scatterplot with the predicted (fitted) scores on the x-axis and the residuals on the y-axis. Does this scatterplot suggest anything concerning about the accuracy of the predictions? Why or why not?
+
+7. Our model assumes that in the population, the ERROR term is roughly normally distributed. What in the data suggests that this is *not* a good assumption? (HINT: think about the response variable, `SCORE`)
