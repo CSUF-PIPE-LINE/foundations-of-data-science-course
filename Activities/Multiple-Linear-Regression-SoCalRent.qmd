@@ -1,0 +1,135 @@
+---
+title: "Fitting and Summarizing Linear Models: Rent Prices in Southern California (Part 2)"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+In this activity, our goal in this activity is to build a model to predict the listed rent price of a house (in 2022).
+
+The SoCalRent1 dataset contains information about 183 houses or condos available to rent within a "reasonable distance" of Fullerton in May 2022.
+
+The SoCalRent2 dataset contains information about an additional 117 houses or condos available to rent during the same time period.
+
+See the SoCalRent data dictionary for descriptions of the variables.
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+here::i_am("Activities/Multiple-Linear-Regression-SoCalRent.qmd")
+
+library(tidyverse)
+library(broom)
+library(yardstick)
+library(rstanarm)
+
+SoCalRent1 <- read_csv(here::here("Data/SoCalRent1.csv"))
+SoCalRent2 <- read_csv(here::here("Data/SoCalRent2.csv"))
+```
+
+```{r}
+#| label: filter SoCalRent1 to get SoCalRent_train
+
+```
+
+## Building the Model
+
+We will now build a *multiple* regression model, indicating we are predicting price using more than one predictor variable. Here we will use `SqFt`, `Beds`, and `Baths` as predictor variables.
+
+```{r}
+#| label: build model including Beds and Baths
+
+```
+
+### Investigating the Model
+
+1.  Use the output to write out the equation of the least-squares regression line.
+
+2.  Write a sentence to interpret the slope corresponding to `Beds` in the model.
+
+3.  Does this interpretation make sense in the context of the collected data? Why or why not?
+
+### Making Predictions
+
+1.  Perform the same `filter`ing on the `SoCalRent2` dataset that you did on the `SoCalRent1` dataset. Call this new dataset `SoCalRent_test`.
+
+2.  Using the `augment` function, predict the rent price of every house in the `SoCalRent_test` dataset.
+
+3. Obtain the mean absolute error (MAE) and root-mean-squared error (RMSE) for the `SoCalRent_test` dataset. Do these numbers suggest anything concerning about the accuracy of the predictions? Why or why not?
+
+4.  Produce a histogram of the prediction errors (residuals) for the `SoCalRent_test` dataset. Briefly describe the distribution of the residuals. Does this histogram suggest anything concerning about the accuracy of the predictions? Why or why not?
+
+5.  Produce a scatterplot with the predicted (fitted) prices on the x-axis and the residuals on the y-axis. Add a linear and/or nonlinear trend to the plot (using `geom_smooth`). Does this scatterplot suggest anything concerning about the accuracy of the predictions? Why or why not?
+
+
+## Bayesian Modeling
+
+When we make a Bayesian model, we need to put a prior distribution on each coefficient in the model. We will use the `autoscale = TRUE` argument to tell R to pick better priors for the `scale` (standard deviation of the prior distribution).
+
+1. What would be a reasonable "prior guess" for the slope relating Price and each of the three predictors in the model? We will use these guesses as the `location` (mean) of our `normal` prior distribution.
+
+```{r}
+#| label: bayesian model
+
+```
+
+2. Create a set of three histograms showing the posterior distributions of the slopes corresponding to `SqFt`, `Beds`, and `Baths`.
+
+```{r}
+#| label: histograms of posterior distributions
+
+```
+
+3. Obtain 90% uncertainty intervals for the slopes.
+
+```{r}
+#| label: uncertainty intervals
+
+```
+
+### Making Predictions the Bayesian Way
+
+When we are predicting rent price, we (in theory) know the square footage, number of bedrooms, and number of baths, but we are uncertain about the price.
+
+We can use *each one* of the 4000 simulated "possible population models" to make a prediction for the test set.
+
+```{r}
+#| label: create SoCalRent_test from SoCalRent2
+
+
+```
+
+```{r}
+#| label: make predictions with bayeslm
+
+```
+
+Notice: each column represents one of the houses in the `SoCalRent_test` dataset and each row represents one of the 4000 population models.
+
+```{r}
+#| label: plot posterior predictive distribution for first house
+
+
+```
+
+1. Does anything look weird about these predictions? 
+
+2. Obtain posterior predictive intervals for each house in the `SoCalRent_test` dataset. Determine whether each interval contains the true Price. 
+
+```{r}
+#| label: posterior predictive intervals
+
+
+```
+
+3. For which houses does our model "miss" with the posterior predictive intervals? Do they have anything in common that might give insight into a better model?
+
+4. How does the proportion of "correctly predicted" rent prices compare to probability chosen for the posterior predictive intervals?
+
+5. Produce a plot comparing the posterior predictive intervals to the actual rent prices in the test set.
+
+```{r}
+#| label: plot ppis with geom_segment
+
+```
