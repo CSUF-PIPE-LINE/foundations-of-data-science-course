@@ -1,0 +1,114 @@
+---
+title: "Logistic Regression: Classifying Encelia Flowers"
+format: html
+editor: visual
+---
+
+```{r}
+#| label: do this first
+here::i_am("Activities/Logistic-Regression-Encelia.qmd")
+
+library(tidyverse)
+library(broom)
+library(rsample)
+library(yardstick)
+```
+
+## Fullerton Encelia data
+
+Southern California is home to two native species in the *Encelia* genus, *californica* and *farinosa*. *Encelia californica* is found in more coastal regions and *Encelia farinosa* is found in more inland desert regions.
+
+Increasingly in Orange County, *farinosa* is planted near roadsides and in other areas where *californica* is native. The two plants hybridize easily, so it is not uncommon to see in the wild a plant that has some characteristics of *californica* and some characteristics of *farinosa*.
+
+The Fullerton Arboretum has many exemplars of both species. Our goal is to build a model that can "discriminate" between *californica* and *farinosa*. Such models might later be used by botanists to, much like Fisher did, investigate how a putative hybrid can be discriminated from the two parent species.
+
+## Collecting the Data
+
+The *Encelia* genus belongs to the same family as daisies and sunflowers. Like daisies and sunflowers, the "flower" is composed of several different flowers. The brownish or orangish central part is called a "disk" and contains the true flowers. The parts that look like yellow petals are called "ray flowers" and are sterile.
+
+1. What characteristics of the flowers might we be able to measure, similarly to the iris data? Let's try to come up with at least four numerical predictors.
+
+2. Split up into pairs to record measurements on 10 *californica* and 10 *farinosa* flowers per pair. You may find it easiest if one person holds the ruler and the other takes a picture with their cell phone, then you both look at the picture and determine the measurement value to the nearest tenth of a centimeter (just like the iris data). You can keep the same jobs or rotate. Record your values on the paper provided.
+
+3. Once you have data on your set of 20 flowers, find the Encelia Classification Data link on Canvas and enter the data for your 20 flowers into the spreadsheet. (If everyone is here, that means we will have 50 flowers of each species, just like the iris data!)
+
+## Exploring the Data
+
+First we'll need to download the dataset that contains the measurements we recorded and import it into R.
+
+```{r}
+#| label: import encelia data
+
+```
+
+1. Create a training set consisting of roughly 80% of each species, and a test set consisting of the remaining flowers.
+
+```{r}
+#| label: split training-test
+
+
+```
+
+2. Like we did with the `iris_train` data, make dot plots and scatterplots to explore the differences between the two species in the training set. Describe any differences you see between the species.
+
+## Building the Logistic Regression Model
+
+Let's build a logistic regression model that includes all of the measurements we recorded.
+
+```{r}
+#| label: build model with all predictors
+
+```
+
+## Making Predictions
+
+Now we'll make predictions on the remaining *Encelia* flowers.
+
+```{r}
+#| label: make predictions on the test set
+
+```
+
+1. The `.fitted` column contains the probability of being which species? How do you know?
+
+```{r}
+#| label: check contrasts
+
+```
+
+2. Use the `.fitted` column to create three more columns in the dataset:
+
+* The predicted probability of being *californica*
+* The predicted probability of being *farinosa*
+* The predicted species, using a 50% decision threshold
+
+```{r}
+#| label: class predictions
+
+```
+
+3. Obtain a confusion matrix showing the number of correctly and incorrectly classified flowers of each type in the test set. What proportion of flowers are classified correctly?
+
+```{r}
+#| label: confusion matrix
+
+```
+
+```{r}
+#| label: obtain overall % correct
+
+```
+
+4. Using the test set, create a dot plot showing the predicted probability of being *californica* (or *farinosa*) for flowers in each class. Then, compute the Brier score on the test set.
+
+```{r}
+#| label: actual class vs. predicted probabilities
+
+
+```
+
+```{r}
+#| label: compute Brier score
+
+
+```
