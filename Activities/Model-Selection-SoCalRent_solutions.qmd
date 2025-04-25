@@ -1,0 +1,382 @@
+---
+title: "Model Selection for Regression: Rent Prices in Southern California"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+here::i_am("Activities/Model-Selection-SoCalRent_solutions.qmd")
+
+library(tidyverse)
+library(broom)
+library(rsample)
+library(yardstick)
+
+SoCalRent1 <- read_csv(here::here("Data/SoCalRent1.csv"))
+SoCalRent2 <- read_csv(here::here("Data/SoCalRent2.csv"))
+
+```
+
+In this activity we are going to try to predict the rent price from information about the house.
+
+In the "Summarizing Linear Models" activity, we removed some of the houses from this dataset. Repeat that now:
+
+```{r}
+#| label: create SoCalRent_train
+
+
+```
+
+## Setting Up our Cross-Validation
+
+Remember that we have already partitioned our houses into the training and test sets.
+
+We create our folds using the training set. We'll use 10-fold cross-validation, which puts about 18 observations in each of the folds.
+
+```{r}
+#| label: v-fold cv setup
+set.seed(4676)
+SoCalRent_cv <- vfold_cv(
+  SoCalRent_train,
+  v = 10,
+  repeats = 1
+)
+```
+
+## Fitting the Models
+
+Next, we create our function that's going to fit the model on all but one fold and make predictions on the other fold.
+
+Here we're going to make our prediction based only on a single predictor: `SqFt`
+
+```{r}
+#| label: function for prediction
+
+SoCalRent_prediction <- function(split){
+  # our input is the cross-validated split
+  
+  train <- analysis(split)
+  valid <- assessment(split)
+  
+  lm_sqft <- lm(Price ~ SqFt, data = train)
+
+  valid_predictions <- valid |>
+    mutate(
+      pred_sqft = predict(lm_sqft, newdata = valid),
+    )
+  
+  return(valid_predictions)
+}
+```
+
+Now we map the predictions over all the folds:
+
+```{r}
+#| label: map the predictions
+mapped_predictions_df <- map(
+  SoCalRent_cv$splits,
+  SoCalRent_prediction
+) |>
+  bind_rows(
+    .id = "fold"
+  )
+
+mapped_predictions_df |>
+  select(
+    fold, City, SqFt, Price, pred_sqft
+  )
+```
+
+Then we look at how well-calibrated the model is:
+
+```{r}
+#| label: predicted vs observed plot
+ggplot(data = mapped_predictions_df,
+       aes(x = Price, y = pred_sqft)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(
+    title = "Model 1: Square Footage Only",
+    x = "Rent Price",
+    y = "Predicted Price"
+    )
+```
+
+```{r}
+#| label: residual vs. fit plot
+
+mapped_predictions_df |>
+  mutate(
+    .resid = Price - pred_sqft
+  ) |>
+ggplot(
+  mapping = aes(x = pred_sqft, y = .resid)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Model 1: Square Footage Only",
+    x = "Predicted Price",
+    y = "Residual"
+    )
+```
+
+After looking at our calibration, we can evaluate the model by RMSE:
+
+```{r}
+#| label: look at RMSE
+
+lm_sqft_rmse <- mapped_predictions_df |>
+  group_by(fold) |>
+  rmse(
+    truth = Price,
+    estimate = pred_sqft
+  ) |>
+  ungroup() |>
+  summarize(
+    mean_rmse = mean(.estimate),
+    se_rmse = sd(.estimate)/sqrt(10)
+  )
+
+lm_sqft_rmse
+```
+
+### Your Turn
+
+1.  How well-calibrated is our model? Are there some median values that our model is having difficulty predicting at all accurately?
+
+2.  Inside the `SoCalRent_prediction` function, fit four more multiple linear regression models. Three of them can use any combination of predictors (`SqFt`, `Beds`, `Baths`, `Type`, `Location`) you want, but the fourth should be the null model. Modify the function so that `valid_predictions` contains the predictions from all five models.
+
+Note that we really *should* be deciding on these models based on our exploratory data analysis; however, here our focus is on learning model selection, so we'll just make some models to select from.
+
+```{r}
+#| label: function for prediction with everything
+
+SoCalRent_prediction2 <- function(split){
+  # our input is the cross-validated split
+  
+  train <- analysis(split)
+  valid <- assessment(split)
+  
+  lm1 <- lm(Price ~ SqFt, data = train)
+  lm2 <- lm(Price ~ SqFt + Location, data = train)
+  lm3 <- lm(Price ~ SqFt + Beds + Baths, data = train)
+  lm4 <- lm(Price ~ SqFt + Type + Location, data = train)
+  lm_null <- lm(Price ~ 1, data = train)
+  
+  valid_predictions <- valid |>
+    mutate(
+      pred1 = predict(lm1, newdata = valid),
+      pred2 = predict(lm2, newdata = valid),
+      pred3 = predict(lm3, newdata = valid),
+      pred4 = predict(lm4, newdata = valid),
+      pred_null = predict(lm_null, newdata = valid)
+    )
+  
+  return(valid_predictions)
+}
+```
+
+3.  Re-run the chunk with the `SoCalRent_prediction` function, then re-run the chunk creating `mapped_predictions_df`. Produce a calibration and/or residual vs. fit plot for the other 4 models.
+
+```{r}
+#| label: map the predictions
+mapped_predictions_df2 <- map(
+  SoCalRent_cv$splits,
+  SoCalRent_prediction2
+) |>
+  bind_rows(
+    .id = "fold"
+  )
+```
+
+```{r}
+#| label: calibration plots - model 2
+ggplot(data = mapped_predictions_df2,
+       aes(x = Price, y = pred2)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(
+    title = "Model 2: Square Footage and Location",
+    x = "Price",
+    y = "Predicted Price"
+    )
+
+mapped_predictions_df2 |>
+  mutate(
+    .resid = Price - pred2
+  ) |>
+ggplot(
+  mapping = aes(x = pred2, y = .resid)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Model 2: Square Footage and Location",
+    x = "Predicted Price",
+    y = "Residual"
+    )
+
+```
+
+```{r}
+#| label: calibration plots - model 3
+ggplot(data = mapped_predictions_df2,
+       aes(x = Price, y = pred3)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(
+    title = "Model 3: Square Footage, Beds, Baths",
+    x = "Price",
+    y = "Predicted Price"
+    )
+
+mapped_predictions_df2 |>
+  mutate(
+    .resid = Price - pred3
+  ) |>
+ggplot(
+  mapping = aes(x = pred3, y = .resid)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Model 3: Square Footage, Beds, Baths",
+    x = "Predicted Price",
+    y = "Residual"
+    )
+
+```
+
+```{r}
+#| label: calibration plots - model 4
+ggplot(data = mapped_predictions_df2,
+       aes(x = Price, y = pred4)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(
+    title = "Model 4: Square Footage, Type, Location",
+    x = "Price",
+    y = "Predicted Price"
+    )
+
+mapped_predictions_df2 |>
+  mutate(
+    .resid = Price - pred4
+  ) |>
+ggplot(
+  mapping = aes(x = pred4, y = .resid)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Model 4: Square Footage, Type, Location",
+    x = "Predicted Price",
+    y = "Residual"
+    )
+
+```
+
+```{r}
+#| label: calibration plots - null model
+ggplot(data = mapped_predictions_df2,
+       aes(x = Price, y = pred_null)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(
+    title = "Null Model",
+    x = "Price",
+    y = "Predicted Price"
+    )
+
+mapped_predictions_df2 |>
+  mutate(
+    .resid = Price - pred_null
+  ) |>
+ggplot(
+  mapping = aes(x = pred_null, y = .resid)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    title = "Null Model",
+    x = "Predicted Price",
+    y = "Residual"
+    )
+
+```
+
+4.  Do any of your models appear to be noticeably better calibrated than the other(s)? Why or why not?
+
+The predictions are pretty bad for all of the models I chose, but the null model is certainly the worst.
+
+5.  Rewrite the "look at RMSE" chunk to get the average cross-validated RMSE and its standard error for each of the five models. It may be easiest to first use `pivot_longer` followed by `group_by` and `rmse` to get the RMSE on each fold for each model.
+
+```{r}
+#| label: all rmse
+all_rmse <- mapped_predictions_df2 |>
+  pivot_longer(
+    cols = starts_with("pred"),
+    names_to = "model",
+    values_to = ".fitted"
+  ) |>
+  group_by(model, fold) |>
+  rmse(
+    truth = Price,
+    estimate = .fitted
+  ) |>
+  ungroup() |>
+  group_by(model) |>
+  summarize(
+    mean_rmse = mean(.estimate),
+    se_rmse = sd(.estimate)/sqrt(10)
+  )
+
+all_rmse
+```
+
+6.  Which model appears to be making the best predictions on new data? Why?
+
+The model with square footage and location has the lowest average RMSE.
+
+The "one-standard-error" rule of thumb suggests to find the model with the minimum average RMSE and add the standard error of that mean to get an "RMSE bound." All models with RMSE under that bound are considered to be competitive, and we almost always select the simplest competitive model.
+
+7.  Using this "one-standard-error" rule of thumb, would you select a different model than you selected in Question 6? If so, which one would you select instead and why? If not, why not?
+
+No. Our bound is roughly 1259 and the only simpler model has a higher average RMSE.
+
+## Making Final Predictions
+
+### Your Turn
+
+1.  For the model you selected in the previous section, re-fit it on the *full* training set, and make predictions on the test set.
+
+```{r}
+#| label: final model
+
+lm_final <- lm(
+  Price ~ SqFt + Location,
+  data = SoCalRent_train
+  )
+
+predict_final <- lm_final |>
+  augment(
+    newdata = SoCalRent_test
+  )
+
+head(predict_final)
+```
+
+2.  Obtain the RMSE on the test set. Compare this value to the RMSE you obtained in the previous section.
+
+```{r}
+#| label: check final model
+
+predict_final |>
+  rmse(
+    truth = Price,
+    estimate = .fitted
+  )
+
+```
+
+This rmse is actually lower than what we got via cross-validation. I suspect that the massive outlier in our training set was artificially inflating the RMSE.

@@ -1,0 +1,131 @@
+---
+title: "Model Selection for Regression: Housing Loan Applications in Orange County"
+author: "Your Name Here!"
+format: html
+editor: visual
+---
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+here::i_am("Activities/Model-Selection-OC-Mortgages.qmd")
+
+library(tidyverse)
+library(broom)
+library(rsample)
+library(yardstick)
+
+loans <- read_csv(here::here("Data/loans_OC.csv"))
+```
+
+In this activity we are going to try to predict the median property value (or at least median property value for which loans were applied for) in a census tract from the demographic information about the tract. 
+
+```{r}
+#| label: summarize each tract
+
+loans2 <- loans |>
+  mutate(
+    property_value_1000 = property_value/1000
+  )
+
+tracts <- loans2 |>
+  filter(
+    !is.na(property_value_1000),
+    !is.na(census_tract)
+         ) |>
+  group_by(census_tract) |>
+  summarize(
+    applications = n(),
+    population = mean(tract_population),
+    minority = mean(tract_minority_population_percent),
+    income = mean(tract_to_msa_income_percentage),
+    median_value = median(property_value_1000)
+  ) |>
+  filter(
+    applications >= 10,
+    income > 0
+  )
+```
+
+We end up with 542 tracts that have at least 10 applications and a valid income (as a percentage of the median income in the LA/OC area).
+
+## Setting Up our Cross-Validation
+
+We first immediately split our 542 tracts into a training and test split. We're going to just use the regular `initial_split` function.
+
+```{r}
+#| label: initial split
+
+```
+
+Next we create our folds using the training set. We'll use 10-fold cross-validation, which puts about 43 observations in each of the folds.
+
+```{r}
+#| label: v-fold cv setup
+
+```
+
+## Fitting the Models
+
+Next, we create our function that's going to fit the model on all but one fold and make predictions on the other fold.
+
+Here we're going to make our prediction based on `population` and `minority`.
+
+```{r}
+#| label: function for prediction
+
+```
+
+Now we map the predictions over all the folds:
+
+```{r}
+#| label: map the predictions
+
+```
+
+Then we look at how well-calibrated the model is:
+
+```{r}
+#| label: predicted vs observed plot
+
+```
+
+```{r}
+#| label: residual vs. fit plot
+
+```
+
+After looking at our calibration, we can evaluate the model by RMSE:
+
+```{r}
+#| label: look at RMSE
+
+```
+
+### Your Turn
+
+1.  How well-calibrated is our model? Are there some median values that our model is having difficulty predicting at all accurately?
+
+2.  Inside the `tracts_prediction` function, fit four more multiple linear regression models: one using `population` and `income` as predictors, one using `minority` and `income`, one using all three predictors, and the null model. Also, modify the function so that `valid_predictions` contains the predictions from all five models.
+
+3.  Re-run the chunk with the `tracts_prediction` function, then re-run the chunk creating `mapped_predictions_df`. Produce a calibration and/or residual vs. fit plot for the other 4 models.
+
+4.  Do any of your models appear to be noticeably better calibrated than the other(s)? Why or why not?
+
+5.  Rewrite the "look at RMSE" chunk to get the average cross-validated RMSE and its standard error for each of the four models. It may be easiest to first use `pivot_longer` followed by `group_by` and `rmse` to get the RMSE on each fold for each model.
+
+6.  Which model appears to be making the best predictions on new data? Why?
+
+The "one-standard-error" rule of thumb suggests to find the model with the minimum average RMSE and add the standard error of that mean to get an "RMSE bound." All models with RMSE under that bound are considered to be competitive, and we almost always select the simplest competitive model.
+
+7. Using this "one-standard-error" rule of thumb, would you select a different model than you selected in Question 6? If so, which one would you select instead and why? If not, why not?
+
+## Making Final Predictions
+
+### Your Turn
+
+1.  For the model you selected in the previous section, re-fit it on the *full* training set, and make predictions on the test set.
+
+2.  Obtain the RMSE on the test set. Compare this value to the RMSE you obtained in the previous section.
+
