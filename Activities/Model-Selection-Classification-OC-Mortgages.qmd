@@ -1,0 +1,172 @@
+---
+title: "Model Selection for Classification: Housing Loan Applications in Orange County"
+format: html
+editor: visual
+---
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+
+here::i_am("Activities/Model-Selection-Classification-OC-Mortgages.qmd")
+
+library(tidyverse)
+library(rsample)
+library(janitor)
+library(broom)
+library(yardstick)
+library(probably)
+
+loans <- read_csv(here::here("Data/loans_OC.csv"))
+```
+
+To massage the data, we'll start by getting only the loans for housing in Fullerton with a known `property_value`. We'll then create `loan_amount_1000` and `property_value_1000` (as we've done in previous activities) and convert `loan_to_value_ratio` into percent so we don't make a one-unit increase larger than the range of the variable. We'll also explicitly convert `action` to a factor variable because we need to do that for our logistic regression models, and we'll define the reference level for `ethnicity`.
+
+```{r}
+#| label: get only loans from fullerton
+
+loans_fullerton <- loans |>
+  filter(city == "Fullerton",
+         !is.na(property_value)) |>
+  mutate(
+    loan_amount_1000 = loan_amount/1000,
+    property_value_1000 = property_value/1000,
+    loan_to_value_ratio = loan_amount_1000/property_value_1000*100,
+    action = action |>
+      as.factor(), # convert to factor
+    ethnicity = ethnicity |>
+      as.factor() |> # convert ethnicity to factor
+      relevel(ref = "Not Hispanic or Latino")
+)
+```
+
+Now we'll do our training/test split.
+
+```{r}
+#| label: initial split
+set.seed(15858)
+loans_split <- loans_fullerton |>
+  initial_split(
+    strata = action,
+    prop = 0.80
+  )
+
+loans_train <- training(loans_split)
+loans_test <- testing(loans_split)
+```
+
+
+## Setting Up our Cross-Validation
+
+We create our folds using the training set. We'll use 5-fold cross-validation.
+
+```{r}
+#| label: v-fold cv setup
+
+```
+
+## Feature Selection
+
+1. Define four different subsets of predictors to investigate in your logistic regression model. Consider including:
+
+-   loan amount, property value, and/or loan-to-value ratio
+-   demographic information (age, sex, ethnicity, race): note that if you choose race we might have to think about how to recode it
+-   the census tract, or information about it
+
+## Cross-Validation
+
+### Create the Function
+
+We first create our function that's going to fit all models on all but one fold and make predictions on the other fold.
+
+```{r}
+#| label: function for prediction
+
+loans_prediction <- function(split){
+  # our input is the cross-validated split
+  
+  train <- analysis(split)
+  valid <- assessment(split)
+  
+  ## glm null model
+  glm0 <- glm(action ~ 1, data = train, family = "binomial")
+  ## Add more GLMs here
+  
+  valid_predictions <- valid |>
+    mutate(
+      prob0 = predict(glm0, newdata = valid, type = "response"),
+    ## Add more probabilities here
+
+    )
+  
+  return(valid_predictions)
+}
+```
+
+### Map the Function Over All Folds
+
+```{r}
+#| label: map the predictions
+
+```
+
+### Investigate Model Performance
+
+First we need to figure out whether we are predicting the probability of Approved or Not approved. The easiest way to do this is with the contrasts function:
+
+```{r}
+#| label: what are we predicting
+
+
+```
+
+Since "Not approved" is a 1, we are predicting the probability of not approved.
+
+However, to obtain the Brier scores, we need to give the `brier_class` function the probability of being Approved (since that's the first level).
+
+```{r}
+#| label: all predictions
+
+```
+
+1. Why is the mean Brier score so low for even the null model?
+
+### Investigate Model Calibration
+
+Investigating model calibration is a bit more difficult with classification models because we need to think about how the "observed proportion" works. We can use some plotting functions in the `probably` package to think about this automatically:
+
+```{r}
+#| label: event rate vs prediction window plot
+
+```
+
+Note that there is some weirdness here that I haven't been able to fully figure out. Part of the issue is that the default ranges are 0-0.10, 0.10-0.20, etc. and there isn't a clear way to customize these ranges. 
+
+## Select a Model
+
+1. Select one of your models as the final model, fit it on the entire training set, and then predict the probability of being approved/not approved for each application in the test set.
+
+```{r}
+#| label: final model
+
+
+```
+
+## Evaluate the Final Model
+
+We don't know what decision threshold our actual decision maker will be using, so one reasonable idea is to investigate the model performance across the entire range of possible decision thresholds.
+
+1.  Create and plot a receiver operating characteristic (ROC) curve for the test set predictions.
+
+```{r}
+#| label: create ROC Curve as tibble
+
+```
+
+```{r}
+#| label: plot ROC curve
+
+```
+
+2. How do we read this plot? What does `sensitivity` indicate about the predictions? What does `1 - specificity` indicate about the predictions?
