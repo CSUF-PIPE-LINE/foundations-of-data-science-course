@@ -1,0 +1,253 @@
+---
+title: "Designing for Accessibility"
+format: html
+editor: visual
+---
+
+When we create tables and graphs in exploratory data analysis, we usually don't care too much about what the graphs look like. As long as "future us" can figure out what we were graphing, why, and what we noticed in the output (including comments and text helps!), the graph itself doesn't matter too much.
+
+However, when we are creating tables and graphs to communicate to someone else (perhaps *many* other people), it's important to acknowledge that not everyone will experience the figures the same way we do. 
+
+In this activity, we will highlight some ways we can make our figures more accessible to people with visual impairment.
+
+We will be Rendering the document at several points during this activity, so that we can see what the figure would look like in our browser.
+
+## Load Packages, Import Data, Massage Data
+
+```{r}
+#| label: do this first
+
+here::i_am("Activities/Designing-for-Accessibility.qmd")
+
+library(tidyverse)
+library(colorBlindness)
+
+loans <- read_csv(here::here("Data/loans_OC.csv"))
+
+loans_oc <- loans |>
+  filter(!is.na(property_value)) |>
+  mutate(
+    loan_amount_1000 = loan_amount/1000,
+    property_value_1000 = property_value/1000,
+    loan_to_value_ratio = loan_amount_1000/property_value_1000*100,
+    action = action |>
+      as.factor(), # convert to factor
+    ethnicity = ethnicity |>
+      as.factor() |> # convert ethnicity to factor
+      relevel(ref = "Not Hispanic or Latino")
+)
+```
+
+## Designing Better Figures
+
+```{r}
+#| label: simple figure
+
+my_plot <- ggplot(
+  data = loans_oc,
+  mapping = aes(
+    x = property_value_1000, 
+    y = loan_amount_1000, 
+    color = action)
+) +
+  geom_point()
+
+
+print(my_plot)
+```
+
+Let's count the issues with this figure.
+
+1. The x and y-axis labels are just the variable names
+2. The legend could be improved and/or relocated
+3. The color scheme leaves something to be desired
+4. We are plotting "only" 23,293 data points and the bottom left looks like a giant mush 
+
+### Fixing Axis Labels
+
+As we've seen in other activities, we can add a `labs` function to our plot to add or overwrite axis labels.
+
+```{r}
+#| label: add axis labels
+
+```
+
+What if we want to, for example, make the title bold and centered? Changes to specific elements of the plot are taken care of by `theme`. Sometimes you do have to search the [ggplot2 documentation](https://ggplot2.tidyverse.org/reference/theme.html) for the name of the thing you're trying to edit. Alternatively, the [R Graphics Cookbook](https://r-graphics.org/) can get you up and running quickly.
+
+After some documentation search, we can determine that the name of the thing we want to change is `plot.title`. We can then add our customization inside the `theme` function.
+
+```{r}
+#| label: add axis labels-2
+
+```
+
+### Fixing the Font Size
+
+This is one of my personal pet peeves: when you have something projected, the audience can't zoom in to see the text at a size they can read, but the graph is presented with the default font sizes; this means that people at the back or sides of the room may have difficulty reading axis labels, annotations, and other text on your plot. This is especially problematic when you have a big room and a tiny screen or out-of-focus projector (for example, most computer lab classrooms I've taught in).
+
+```{r}
+#| label: fix font sizes
+
+```
+
+If you need to break up your really long title onto multiple lines, use "\n" (for a new line):
+
+```{r}
+#| label: new line in title
+
+```
+
+### Changing the Color Scheme
+
+In our code, we mapped `action` to the `color` attribute. Since `action` is a factor variable, we'll need to use `scale_color_discrete` to change the colors. If you're using a custom palette like I typically prefer to do, use `scale_color_manual` instead.
+
+```{r}
+#| label: new color scheme
+
+```
+
+Now we need to fix the giant blob of color. When we're plotting many data points, it's easiest to use an `alpha` argument to represent transparency. Generally, the more points that are overlapping with each other, the lower you want alpha to be. However, if you make alpha too low, then individual points (such as outliers) might become nearly invisible.
+
+```{r}
+#| label: fig-add-alpha
+#| fig-cap: "Plot with alpha = 0.7"
+
+```
+
+This looks a bit better to me - we can see the not-approved loans a bit better.
+
+#### Accessible Color Schemes
+
+People with color blindness and visual impairment may struggle to read your figure. We generally worry about two color issues:
+
+1. Colors that could be indistinguishable to people with color blindness
+2. Colors that do not contrast sufficiently
+
+Look at @fig-add-alpha. Does it appear that the purple and gold are distinguishable from each other? What about from the gray background?
+
+We can use the `cvdPlot` function from the `colorBlindness` package, among other options, to simulate what our plot would look like to people with different types of visual impairments.
+
+```{r}
+#| label: check colorblindness
+
+```
+
+This isn't as bad as I thought it was going to be, but you can clearly see that the gold dots are disappearing in a couple of those plots. This indicates that they probably don't have high enough contrast with the gray background. How do we get around this?
+
+1. The absolute best way is to include redundancies: map the same variable to a different attribute of the plot such as size or shape.
+2. If the points are nearly invisible, that's a sign that the contrast between the foreground (points) and background (the gray part) is too low.
+
+So generally, we want a light background/dark foreground (or the opposite) with contrasting colors and redundancies built in. The `colorBlindness` package contains hex codes for colors that "should" work well with each other. Then it's a matter of finding ones that work well with your background.
+
+```{r}
+#| label: suggested colors
+
+```
+
+One nice thing about working in RStudio is that when you put in a color name recognized by R, RStudio will highlight the background and text in that color so you can preview what it will look like. 
+
+```{r}
+#| label: fix color scheme
+
+```
+
+```{r}
+#| label: check colorblindness again
+
+```
+
+This feels better to me. I'm personally not a fan of the default gray theme (I prefer `theme_bw`), but I can see where the gray background works better for people viewing in dark mode.
+
+### Fixing the Legend
+
+To fix the legend, we first have to figure out which attribute of the plot is being mapped to which part of the legend. Since here the `action` variable is being mapped to color, we can add arguments to `scale_color_manual` to fix the legend text. We can then use additional arguments in `theme` to fine-tune how we want the legend to look.
+
+Here are a few things I might want to do:
+
+1. By default, the legend is placed outside the plot on the right side of the figure. When category names are long, this can seriously cut into the actual plotting area.
+2. We might want to change (or remove) some of the text in the legend
+
+```{r}
+#| label: fix legend
+
+```
+
+Well, this fixed the color scheme legend, but then we broke the shape legend. So we have to fix that as well:
+
+```{r}
+#| label: fix legend for shape too
+
+```
+
+Now that we've fixed the legend itself, let's move it around.
+
+```{r}
+#| label: move legend
+
+```
+
+If we want the legend to disappear entirely:
+
+```{r}
+#| label: make legend disappear
+
+```
+
+Note that you only really want the legend to disappear when it is painfully obvious without the legend what something corresponds to. For example, if we were to use faceting:
+
+```{r}
+#| label: facet
+
+
+```
+
+The facet titles already (mostly) give the legend away. To fix the facet labels we have to use a `labeller` function:
+
+```{r}
+#| label: facet with labeller
+
+```
+
+### Fixing Axis Scales
+
+When you have data points that vary over many order of magnitude, you will generally get a plot like this: lots of points in the bottom left, not many points elsewhere. The good thing about this default scheme is you can tell if the relationship is linear. The bad thing is that all your points are clumped in the bottom left, and the relationship probably isn't linear.
+
+In these situations, it's best to plot the variable on the logarithmic scale; that is, each tick mark represents a factor of 10 rather than an additive increase.
+
+```{r}
+#| label: change axis scale
+
+
+```
+
+Look! Now the points are still a giant mush, but we've mostly gotten things out of the bottom left, and it's much clearer now that the further to the bottom-left we go, the more likely it is that the loan application will be denied.
+
+## Cross-References and Captions
+
+Let's say we've just made our awesome plot and we want to reference it in the text.
+
+We first put the code that creates the plot we are outputting in its own chunk with its own label. We start the label with `fig-` to signify that the output is a figure.
+
+We then add a caption to the figure using the `fig-cap` option. (It's a good idea to include a caption anyway, but it's absolutely necessary for the cross-references to work correctly.)
+
+```{r}
+#| label: fig-my-awesome-figure
+#| fig-cap: "Loan Amount vs. Property Value"
+
+
+```
+
+Now we can refer to the figure in our markdown text: as seen in @fig-my-awesome-figure, lower loan amounts and property values were more likely to be denied. (Note: you will have to Render the file to see what this looks like.)
+
+## Alternative Text
+
+Adding a caption is great. Adding a cross-reference is great too. But for people who rely on screen readers, the figure is just skipped over entirely. To fix this issue, we can add alternative text (or "alt text") to the plot.
+
+```{r}
+#| label: fig-my-awesome-figure-2
+#| fig-cap: "Loan Amount vs. Property Value"
+#| fig-alt: "A plot showing property value, in thousands of dollars, on the horizontal axis and loan amount, in thousands of dollars, on the vertical axis. Details explained in the text below."
+
+```
+
+You won't actually see the alternative text for @fig-my-awesome-figure-2 when you load the page, but if you Inspect the page, you'll see it.
