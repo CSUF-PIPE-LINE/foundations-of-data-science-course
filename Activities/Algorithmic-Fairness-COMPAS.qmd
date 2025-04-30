@@ -7,20 +7,19 @@ editor: visual
 
 ## Copyright Notice
 
-This activity is modified from the original [Jupyter notebook](https://github.com/ds-modules/HCE-Materials/blob/main/COMPAS/COMPAS Project.ipynb) developed by Berkeley Data Science Modules and is therefore governed by the following BSD 3-Clause License:
+This activity is modified from the original [Jupyter notebook](https://github.com/ds-modules/HCE-Materials/blob/main/COMPAS/COMPAS%20Project.ipynb) developed by Berkeley Data Science Modules and is therefore governed by the following BSD 3-Clause License:
 
 BSD 3-Clause License
 
-Copyright (c) 2020, Berkeley Data Science Modules
-All rights reserved.
+Copyright (c) 2020, Berkeley Data Science Modules All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
-3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+3.  Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
@@ -53,9 +52,9 @@ compas <- read_csv(here::here("Data/compas-scores-two-years.csv"))
 
 COMPAS (Correctional Offender Management Profiling for Alternative Sanctions) is a commercial tool produced by the for-profit company Northpointe (acquired by equivant) known as a recidivism risk assessment system. **Tools like COMPAS are used to predict the risk of future crimes for an individual who has entered the US criminal justice system by outputting a risk score from 1-10**. While COMPAS was initially intended to aid decisions made by probation officers on treatment and supervision of those who are incarcerated, Northpointe has since emphasized the scalability of the tool to "fit the needs of many different decision points" including pre-screening assessments, pretrial release decisions (whether or not to hold an arrested individual in jail until their trial), and post-trial next steps for the defendant ([Northpointe](https://www.northpointeinc.com/files/downloads/FAQ_Document.pdf)). These algorithms are believed by many to provide the ability to make the court system more just by removing or correcting for bias of criminal justice officials.
 
-1. Explain 3 parties that are impacted by the COMPAS tool. In what ways are they impacted? (Can you think of impacts beyond those in the courtroom for at least one of your examples?)
+1.  Explain 3 parties that are impacted by the COMPAS tool. In what ways are they impacted? (Can you think of impacts beyond those in the courtroom for at least one of your examples?)
 
-2. Based on your initial reading, what is one problem of the criminal justice system that the COMPAS tool could potentially alleviate? What is one potential problem that using the COMPAS algorithm could introduce?
+2.  Based on your initial reading, what is one problem of the criminal justice system that the COMPAS tool could potentially alleviate? What is one potential problem that using the COMPAS algorithm could introduce?
 
 ## Data Wrangling
 
@@ -74,19 +73,19 @@ compas <- compas |>
 glimpse(compas)
 ```
 
-1. What does one row in this dataset represent?
+1.  What does one row in this dataset represent?
 
-2. There are some columns in this dataset with the same name. (It turns out they contain duplicate data.) How does R deal with this when the data is imported?
+2.  There are some columns in this dataset with the same name. (It turns out they contain duplicate data.) How does R deal with this when the data is imported?
 
 **Sensitive features** are attributes within a dataset that are given special consideration and treatment for potential legal, social, or ethical reasons. Often, these features are recognized and protected by antidiscrimination or privacy laws. One example of a sensitive feature is age.
 
 **Proxy variables** are variables that are assumed to be highly associated with a variable that cannot (because it cannot be measured) or should not (because it is a sensitive feature protected by law) be included in the model. The assumption is that they can, in a sense, "stand in" for the sensitive feature in a model.
 
-3. Identify two sensitive features in the dataset, other than age.
+3.  Identify two sensitive features in the dataset, other than age.
 
-4. Pick one of the sensitive features you have identified. Identify at least two proxy variables that could be used instead of that sensitive feature.
+4.  Pick one of the sensitive features you have identified. Identify at least two proxy variables that could be used instead of that sensitive feature.
 
-5. As a data scientist, why is it important to give special consideration to these kinds of features?
+5.  As a data scientist, why is it important to give special consideration to these kinds of features?
 
 In order to replicate ProPublica's analysis, we will restrict our information to variables representing the severity of the charge, number of priors, demographics (e.g., age, sex), COMPAS recidivism risk score, and whether each person was accused of a crime within two years.
 
@@ -155,22 +154,21 @@ compas_select <- compas_select |>
   )
 ```
 
-1. Create a logistic regression model to predict the chance of a defendant being classified as "high risk" based on their sex, age category (not the actual `age`!), race, number of previous arrests, seriousness of the crime, and future criminal behavior (`two_year_recid`).
+1.  Create a logistic regression model to predict the chance of a defendant being classified as "high risk" based on their sex, age category (not the actual `age`!), race, number of previous arrests, seriousness of the crime, and future criminal behavior (`two_year_recid`).
 
 ```{r}
 #| label: logistic regression model
 
 ```
 
-
-2. Obtain the table of coefficients. Which features appear to be the most predictive? How do you interpret "most predictive"?
+2.  Obtain the table of coefficients. Which features appear to be the most predictive? How do you interpret "most predictive"?
 
 ```{r}
 #| label: tidy table of coefficients
 
 ```
 
-3. Interpret the coefficient corresponding to the `raceAfrican-American` variable in the model.
+3.  Interpret the coefficient corresponding to the `raceAfrican-American` variable in the model.
 
 ```{r}
 #| label: get odds ratio
@@ -183,31 +181,30 @@ In order to answer this question and understand the ways in which bias is presen
 
 In this analysis, we are **not** using the results of the logistic regression model; we are using the COMPAS risk assessment score as the prediction and `two_year_recid` as the truth.
 
-1. What would a False Positive be in the context of this analysis? What would a False Negative be?
+1.  What would a False Positive be in the context of this analysis? What would a False Negative be?
 
-2. In the `compas_select` dataset, create the factor variable `.pred_COMPAS` with levels "yes" (if the defendant received a score of 5 or higher) and "no" (if the defendant received a score of 4 or lower). Create the factor variable `recid` with levels "yes" (if the defendant recidivated within two years) and "no" (if the defendant did not).
+2.  In the `compas_select` dataset, create the factor variable `.pred_COMPAS` with levels "yes" (if the defendant received a score of 5 or higher) and "no" (if the defendant received a score of 4 or lower). Create the factor variable `recid` with levels "yes" (if the defendant recidivated within two years) and "no" (if the defendant did not).
 
 ```{r}
 #| label: create .pred_COMPAS and recid
 
 ```
 
-
-3. Using the new dataset, obtain a confusion matrix and calculate the FPR and FNR for `African-American` defendants only.
+3.  Using the new dataset, obtain a confusion matrix and calculate the FPR and FNR for `African-American` defendants only.
 
 ```{r}
 #| label: Afr-Am FPR and FNR
 
 ```
 
-4. Obtain a confusion matrix and calculate the FPR and FNR for `Caucasian` defendants only.
+4.  Obtain a confusion matrix and calculate the FPR and FNR for `Caucasian` defendants only.
 
 ```{r}
 #| label: FPR and FNR for Caucasian
 
 ```
 
-6. The **relative risk** represents the ratio of two proportions or probabilities; that is, **how many times more likely** an outcome is in one group than another. Compute the relative risk of being a false positive for `African-American` defendants compared to `Caucasian` defendants. What about the relative risk of being a false negative?
+6.  The **relative risk** represents the ratio of two proportions or probabilities; that is, **how many times more likely** an outcome is in one group than another. Compute the relative risk of being a false positive for `African-American` defendants compared to `Caucasian` defendants. What about the relative risk of being a false negative?
 
 ```{r}
 #| label: relative risk of FPR
@@ -219,17 +216,17 @@ In this analysis, we are **not** using the results of the logistic regression mo
 
 ```
 
-7. What is the importance of overprediction and underprediction in regard to ProPublica's analysis? How might these observations have real impacts on the defendants who receive scores?
+7.  What is the importance of overprediction and underprediction in regard to ProPublica's analysis? How might these observations have real impacts on the defendants who receive scores?
 
 ### Thinking About Fairness
 
-1. What problems does ProPublica highlight in the COMPAS algorithm?
+1.  What problems does ProPublica highlight in the COMPAS algorithm?
 
-2. How would you describe ProPublica's definition of fairness, after learning and utilizing the metrics they used?
+2.  How would you describe ProPublica's definition of fairness, after learning and utilizing the metrics they used?
 
-3. Why do you think ProPublica chose to investigate bias between races rather than a different sensitive feature? (Hint: think about how ProPublica's conclusions reflect the racial disparities in our current criminal justice system.)
+3.  Why do you think ProPublica chose to investigate bias between races rather than a different sensitive feature? (Hint: think about how ProPublica's conclusions reflect the racial disparities in our current criminal justice system.)
 
-4. What is ProPublica's agenda as an investigative journalism organization? How do we see this in their analysis and conclusions?
+4.  What is ProPublica's agenda as an investigative journalism organization? How do we see this in their analysis and conclusions?
 
 We mentioned earlier that Northpointe disagreed with ProPublica's argument that the COMAPS algorithm is racially biased. Now that we've analyzed ProPublica's perspective and seen the way in which they define and operationalize the concept of fairness, let's move on to Northpointe's.
 
@@ -241,22 +238,22 @@ In the wake of criticism from ProPublica and other researchers alike, Northpoint
 
 Upon examining their tool's fairness through accuracy equity and predictive parity (which are metrics that were left out of ProPublica's analysis), as well as the model was not trained with a race feature, NorthPointe concluded that their algorithm treats all citizens and specified groups equally, and therefore does not exhibit signs of bias or inequality for specified groups.
 
-1. One of Northpointe's [main criticisms](https://go.volarisgroup.com/rs/430-MBX-989/images/ProPublica_Commentary_Final_070616.pdf) of ProPublica's logistic regression analysis was that, "The standard practice for predictive models is to include future recidivism as the outcome in the model and the risk score as the predictor in the model." Why do you think this is standard practice?
+1.  One of Northpointe's [main criticisms](https://go.volarisgroup.com/rs/430-MBX-989/images/ProPublica_Commentary_Final_070616.pdf) of ProPublica's logistic regression analysis was that, "The standard practice for predictive models is to include future recidivism as the outcome in the model and the risk score as the predictor in the model." Why do you think this is standard practice?
 
-2. Re-fit your logistic regression model using `two_year_recid` as the response and `risk_score` as a predictor. How does this change the interpretation of the coefficient for `raceAfrican-American` in the model?
+2.  Re-fit your logistic regression model using `two_year_recid` as the response and `risk_score` as a predictor. How does this change the interpretation of the coefficient for `raceAfrican-American` in the model?
 
 ```{r}
 #| label: logistic regression model predicting recid
 
 ```
 
-3. Why do you think Northpointe's algorithm does not make use of race data? What are the legal and/or ethical implications of using a sensitive feature such as race in a model like this?
+3.  Why do you think Northpointe's algorithm does not make use of race data? What are the legal and/or ethical implications of using a sensitive feature such as race in a model like this?
 
 ### Accuracy Equity: Is each group being discriminated against equally?
 
 Instead of analyzing and comparing the model errors FNR and FPR, Northpointe utilized the complement of FNR, known variously as TPR (True Positive Rate), sensitivity, or recall, paired with the FPR to prove what they refer to as **Accuracy Equity** through the use of a *ROC Curve*. Accuracy equity, according to [Northpointe](https://go.volarisgroup.com/rs/430-MBX-989/images/ProPublica_Commentary_Final_070616.pdf), is exhibited in the model "if it can discriminate recidivists and nonrecidivists equally well for two different groups such as blacks and whites." We use ROC curves and, specifically, the Area Under the Curve (AUC) to understand how much a model is capable of distinguishing between two classes.
 
-1. Using `decile_score` as the prediction and `recid` as the response, visualize a ROC curve for `African-American` defendants and calculate the area under the curve. Then, repeat the process for `Caucasian` defendants.
+1.  Using `decile_score` as the prediction and `recid` as the response, visualize a ROC curve for `African-American` defendants and calculate the area under the curve. Then, repeat the process for `Caucasian` defendants.
 
 ```{r}
 #| label: ROC for black defendants
@@ -278,11 +275,11 @@ Instead of analyzing and comparing the model errors FNR and FPR, Northpointe uti
 
 ```
 
-2. Compare the ROC curves and AUC for the two racial groups. What do you notice about them?
+2.  Compare the ROC curves and AUC for the two racial groups. What do you notice about them?
 
-3. What could Northpointe take away from this comparison to prove their point? Is accuracy equity being represented here? (Hint: Is each racial group being discriminated against equally?)
+3.  What could Northpointe take away from this comparison to prove their point? Is accuracy equity being represented here? (Hint: Is each racial group being discriminated against equally?)
 
-4. Using `geom_text`, add the decile scores (in the `.threshold` variable) onto the ROC curves. What do you notice about the location of `5` (the threshold used by ProPublica when computing FPR and FNR) on the two graphs?
+4.  Using `geom_text`, add the decile scores (in the `.threshold` variable) onto the ROC curves. What do you notice about the location of `5` (the threshold used by ProPublica when computing FPR and FNR) on the two graphs?
 
 ```{r}
 #| label: add decile scores to ROC curves
@@ -294,31 +291,31 @@ Instead of analyzing and comparing the model errors FNR and FPR, Northpointe uti
 
 In addition to the metric outlined above, Northpointe also utilized positive predictive values (ppv) to explore the likelihood of defendants to reoffend, and to therefore prove that **Predictive Parity** is achieved. Predictive parity, according to [Northpointe](https://go.volarisgroup.com/rs/430-MBX-989/images/ProPublica_Commentary_Final_070616.pdf), is exhibited in a model "if the classifier obtains similar predictive values for two different groups such as blacks and whites, for example, the probability of recidivating, given a high risk score, is similar for blacks and whites." Let's explore how they analyzed this.
 
-1. Using the confusion matrix you obtained earlier, calculate the positive predictive value and negative predictive value for African-American defendants. You can check your answers by summarizing the confusion matrix (using `summary`) and finding the `ppv` and `npv` values in the output. Then, repeat the analysis for Caucasian defendants.
+1.  Using the confusion matrix you obtained earlier, calculate the positive predictive value and negative predictive value for African-American defendants. You can check your answers by summarizing the confusion matrix (using `summary`) and finding the `ppv` and `npv` values in the output. Then, repeat the analysis for Caucasian defendants.
 
 ```{r}
 #| label: ppv and npv
 
 ```
 
-2. Use the metrics you calculated to fill in the table below.
+2.  Use the metrics you calculated to fill in the table below.
 
-| | **White** | **Black** |
-|:---:|---:|---:|
-| Labeled higher risk, but  didn't reoffend | % | % |
-| Labeled lower risk, but did reoffend | % | % |
+|                                          | **White** | **Black** |
+|:----------------------------------------:|----------:|----------:|
+| Labeled higher risk, but didn't reoffend |        \% |        \% |
+|   Labeled lower risk, but did reoffend   |        \% |        \% |
 
-3. What do you notice about the positive predictive values for each group? What about the negative predictive values?
+3.  What do you notice about the positive predictive values for each group? What about the negative predictive values?
 
-4. What could Northpointe conclude from these findings? Is predictive parity represented here? (Hint: Is the likelihood of recidivism, given a risk assessment, relatively equal for each racial group?)
+4.  What could Northpointe conclude from these findings? Is predictive parity represented here? (Hint: Is the likelihood of recidivism, given a risk assessment, relatively equal for each racial group?)
 
-5. How would you describe Northpointe's definition of fairness, after learning and utilizing the metrics they used? How is this different from your description of ProPublica's definition of fairness?
+5.  How would you describe Northpointe's definition of fairness, after learning and utilizing the metrics they used? How is this different from your description of ProPublica's definition of fairness?
 
-6. If anything, what are ProPublica and Northpointe each not considering in their definitions of fairness? (Hint: Think about other predictive accuracy metrics and/or the historical context of policing data.)
+6.  If anything, what are ProPublica and Northpointe each not considering in their definitions of fairness? (Hint: Think about other predictive accuracy metrics and/or the historical context of policing data.)
 
 ## Part 3: Yet Another Definition of Fairness
 
-In this section, you will go through yet another metric and definition used to evaluate fairness in machine learning: **disparate impact**. Disparate impact is a legal doctrine that determines if there is unintended discrimination towards a protected class ([Society for Human Resource Management](https://www.shrm.org/resourcesandtools/tools-and-samples/hr-qa/pages/disparateimpactdisparatetreatment.apsx)). In machine learning, disparate impact is a metric to evaluated fairness in a model. It is a form of bias within an algorithm that reflects systemic discrimination when a model's outputs are dependent on a **sensitive feature** (the protecteed class). This is often considered unintentional (like the legal doctrine) due to the fact that the sensitive feature is omitted from the model, though it is still correlated with the output through proxy variables ([Wang, Ustun, and Calmon](https://arxiv.org/pdf/1801.05398)).
+In this section, you will go through yet another metric and definition used to evaluate fairness in machine learning: **disparate impact**. Disparate impact is a legal doctrine that determines if there is unintended discrimination towards a protected class ([Society for Human Resource Management](https://www.shrm.org/resourcesandtools/tools-and-samples/hr-qa/pages/disparateimpactdisparatetreatment.apsx)). In machine learning, disparate impact is a metric to evaluated fairness in a model. It is a form of bias within an algorithm that reflects systemic discrimination when a model's outputs are dependent on a **sensitive feature** (the protected class). This is often considered unintentional (like the legal doctrine) due to the fact that the sensitive feature is omitted from the model, though it is still correlated with the output through proxy variables ([Wang, Ustun, and Calmon](https://arxiv.org/pdf/1801.05398)).
 
 Now you will evaluate the fairness of the tool (as Northpointe and ProPublica did) by measuring the bias reflected in the outputs of the model, but you will remove it to actually change those outputs and therefore eliminate the dependencies between the risk scores and the race feature. In order to computationally remeve the disparate impact that we quantiy, we can use tools such as the `fairmodels` R package ([Wisniewski and Biecek](https://modeloriented.github.io/fairmodels/)).
 
@@ -326,14 +323,14 @@ Now you will evaluate the fairness of the tool (as Northpointe and ProPublica di
 
 First, let's visualize the disparity that we would like to remove from the dataset. In order to do that we need to distinguish between a "privileged" group and an "unprivileged" group. In technical terms, the privileged group receives higher scores from a trained model, so therefore the African-American defendants will be considered "privileged" and the Caucasian defendants will be considered "unprivileged" in this case.
 
-1. First, create a new data frame, `compas_bw`, containing only the information for African-American and Caucasian defendants. Using this new data frame, plot the `decile_score` values for African-American and Caucasian defendants separately by race. It may be easiest to use faceted histograms.
+1.  First, create a new data frame, `compas_bw`, containing only the information for African-American and Caucasian defendants. Using this new data frame, plot the `decile_score` values for African-American and Caucasian defendants separately by race. It may be easiest to use faceted histograms.
 
 ```{r}
 #| label: histogram of decile scores
 
 ```
 
-2. What do you notice about how the distribution of decile scores differs between the two racial groups?
+2.  What do you notice about how the distribution of decile scores differs between the two racial groups?
 
 Now, we need to quantify the disparate impact we are seeing in the plot. In machine learning, we can understand disparate impact as the ratio of proportions of observations in the "positive" class for the "unprivileged" group compared to the "privileged" group.
 
@@ -343,14 +340,14 @@ $$
 
 where $Y = 1$ indicates, in this model, that the defendant received a high score.
 
-2. Calculate the proportion of African-American individuals that have a `decile_score` above 4. Then, repeat the analysis for Caucasian individuals.
+2.  Calculate the proportion of African-American individuals that have a `decile_score` above 4. Then, repeat the analysis for Caucasian individuals.
 
 ```{r}
 #| label: decile_scores by race
 
 ```
 
-3. Calculate the disparate impact using the numbers calculated in the previous question.
+3.  Calculate the disparate impact using the numbers calculated in the previous question.
 
 ```{r}
 #| label: disparate impact
@@ -360,7 +357,7 @@ where $Y = 1$ indicates, in this model, that the defendant received a high score
 
 If the relative risk of a positive outcome for unprivileged individuals compared to privileged individuals is less than 80%, there is a disparate impact violation. In order to stop a trained model from replicating these biases in its output, we can use a Disparate Impact Remover to remove the bias we just calculated.
 
-4. Use the `disparate_impact_remover` function from `fairmodels` to transform the decile scores for African American and Caucasian defendants. Note that the function is a bit sensitive , so run the pre-processing code in the chunk below first.
+4.  Use the `disparate_impact_remover` function from `fairmodels` to transform the decile scores for African American and Caucasian defendants. Note that the function is a bit sensitive , so run the pre-processing code in the chunk below first.
 
 ```{r}
 #| label: pre-process di remover
@@ -382,14 +379,14 @@ di_removed <- compas_bw |>
   )
 ```
 
-5. Plot the modified `decile_score` values for African-American and Caucasian defendants separately by race. It may be easiest to use faceted histograms.
+5.  Plot the modified `decile_score` values for African-American and Caucasian defendants separately by race. It may be easiest to use faceted histograms.
 
 ```{r}
 #| label: di-removed histograms
 
 ```
 
-6. What has changed between the two sets of histograms? Please explained why this change has happened.
+6.  What has changed between the two sets of histograms? Please explained why this change has happened.
 
 ```{r}
 #| label: disparate impact removed
@@ -397,17 +394,17 @@ di_removed <- compas_bw |>
 
 ```
 
-7. How would you describe the **disparate impact** definition of fairness, after learning and utilizing these new metrics?
+7.  How would you describe the **disparate impact** definition of fairness, after learning and utilizing these new metrics?
 
-8. How does this definition of fairness differ from ProPublica's and Northpointe's?
+8.  How does this definition of fairness differ from ProPublica's and Northpointe's?
 
 ### Considering Expertise Outside of Data Science
 
 Just now, you used your technical data science skills to computationally remove bias from the data set. By removing bias, we've made the outputs of the algorithm statistically fair in regards to one definition of fairness. However, it is important to consider many types of knowledge and experiences beyond data science expertise when analyzing and creating an algorithm like COMPAS. As such, you will think through issues of expertise and fairness in the next set of questions.
 
-1. Now that you've gone through several definitions of fairness, how would you add to or revise your answer to the question this activity started with: Explain 3 parties that are impacted by the COMPAS tool. In what ways are they impacted?
+1.  Now that you've gone through several definitions of fairness, how would you add to or revise your answer to the question this activity started with: Explain 3 parties that are impacted by the COMPAS tool. In what ways are they impacted?
 
-2. What expertise and lived experiences are necessary to understand and critically think about the issues produced by COMPAS?
+2.  What expertise and lived experiences are necessary to understand and critically think about the issues produced by COMPAS?
 
 ## Part 4: Conclusion
 
@@ -415,12 +412,12 @@ Just now, you used your technical data science skills to computationally remove 
 
 We've now gone through three definitions of fairness, each one with a different idea of how to operationalize fairness and to judge whether or not an algorithm is fair. As a data scientist, you may encounter situations where you will need to make decisions that affect real-world outcomes and people! Let's try to do this for COMPAS.
 
-1. If you have to decide between the three definitions of fairness above, which definition do you think would make "fair" decisions for everyone who goes through the court system? What values did you consider as you made this decision? If you cannot come to a decision, what challenges did you come across when considering this?
+1.  If you have to decide between the three definitions of fairness above, which definition do you think would make "fair" decisions for everyone who goes through the court system? What values did you consider as you made this decision? If you cannot come to a decision, what challenges did you come across when considering this?
 
-2. Take a step back and think about how different actors who created, utilize, and are affected by COMPAS would consider which definition is most fair. (For example, judges, defendants, police, policy makers, community members.) Pick two relevant actors, and discuss what they would value in *their own* definitions of fairness. Of the three definitions you have explored, which would they decide is most fair from the perspective of that actor? If you don't think they'd choose any of the three definitions, explain why.
+2.  Take a step back and think about how different actors who created, utilize, and are affected by COMPAS would consider which definition is most fair. (For example, judges, defendants, police, policy makers, community members.) Pick two relevant actors, and discuss what they would value in *their own* definitions of fairness. Of the three definitions you have explored, which would they decide is most fair from the perspective of that actor? If you don't think they'd choose any of the three definitions, explain why.
 
 Choosing one definition of fairness can be incredibly difficult when you need to consider all the actors at play. Throughout this module, we have examined where and how the COMPAS algorithm is appropriate to use. It is also important to recognize the problems that are not solvable by an algorithm and think through how we can make the ecosystem that COMPAS is in (which includes but is not limited to the legal system, affected communities, the tech industry, etc.) more equitable.
 
-3. What issues that are relevant to the COMPAS ecosystem but outside of the algorithm itself need to be addressed to create a more equitable system, with or without the algorithm?
+3.  What issues that are relevant to the COMPAS ecosystem but outside of the algorithm itself need to be addressed to create a more equitable system, with or without the algorithm?
 
 You've now begun to think through the very complex systems in which the COMPAS algorithm functions. **Congratulations!** Through considering a few of the differing definitions of fairness connected to COMPAS, hopefully you can begin to understand some of the human contexts of creating algorithms that intentionally affect people and their decision-making.
